@@ -54,7 +54,7 @@ services:
       - .:/app
     environment:
       DATABASE_URL: "postgresql://godentrenet:godentrenet_pass@db:5432/godentrenet"
-    command: sh -c "npm install --silent && npx prisma migrate deploy"
+    command: sh -c "apk add --no-cache openssl && npm install --silent && npx prisma migrate deploy"
     depends_on:
       - db
     restart: "no"
