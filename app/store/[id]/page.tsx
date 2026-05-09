@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useState } from "react";
-import { getQrCode } from "@/actions/evolution";
+import { getStoreQrCode } from "@/actions/store";
 
 type QrState =
   | { status: "idle" }
@@ -20,11 +20,11 @@ export default function StorePage({
   const [qrState, setQrState] = useState<QrState>({ status: "idle" });
 
   async function handleConnect() {
-    console.log("[STORE PAGE] solicitando QR Code para instância:", id);
+    console.log("[STORE PAGE] solicitando QR Code para storeId:", id);
     setQrState({ status: "loading" });
 
     try {
-      const result = await getQrCode(id);
+      const result = await getStoreQrCode(id);
 
       console.log(
         "[STORE PAGE] QR Code recebido, tamanho (chars):",

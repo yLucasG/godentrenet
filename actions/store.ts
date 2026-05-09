@@ -31,3 +31,22 @@ export async function createStore(name: string): Promise<{
 
   return { success: true, storeId: store.id, instanceName };
 }
+
+export async function getStoreQrCode(storeId: string): Promise<{ qrcode: string }> {
+  console.log(`[STORE ACTION] buscando instância para storeId=${storeId}`);
+
+  const store = await prisma.store.findUnique({ where: { id: storeId } });
+
+  if (!store) {
+    throw new Error(`Loja não encontrada: ${storeId}`);
+  }
+
+  if (!store.evolutionInstanceName) {
+    throw new Error(`Loja ${storeId} não possui instância Evolution configurada`);
+  }
+
+  console.log(`[STORE ACTION] instanceName resolvido: "${store.evolutionInstanceName}"`);
+
+  const { getQrCode } = await import("@/actions/evolution");
+  return getQrCode(store.evolutionInstanceName);
+}
