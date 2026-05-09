@@ -80,68 +80,70 @@ export async function getQrCode(
   instanceName: string
 ): Promise<{ qrcode: string }> {
   const endpoint = `${EVO_URL}/instance/connect/${encodeURIComponent(instanceName)}`;
+  const MAX_ATTEMPTS = 6;
+  const DELAY_MS = 2000;
 
-  console.log(`[EVO ACTION CONNECT] → GET ${endpoint}`);
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    console.log(`[EVO ACTION CONNECT] tentativa ${attempt}/${MAX_ATTEMPTS} → GET ${endpoint}`);
 
-  const res = await fetch(endpoint, {
-    method: "GET",
-    headers: {
-      apikey: EVO_KEY,
-    },
-    // Nunca usa cache — o QR expira em ~60 s
-    cache: "no-store",
-  });
+    const res = await fetch(endpoint, {
+      method: "GET",
+      headers: { apikey: EVO_KEY },
+      cache: "no-store",
+    });
 
-  // Lê sempre como texto antes de tentar o parse
-  const raw = await res.text();
-  console.log(`[EVO ACTION CONNECT] status=${res.status} body=${raw}`);
+    const raw = await res.text();
+    console.log(`[EVO ACTION CONNECT] status=${res.status} body=${raw}`);
 
-  if (!res.ok) {
-    console.error(
-      `[EVO ACTION CONNECT] falha ao obter QR Code da instância "${instanceName}": status=${res.status} body=${raw}`
+    if (!res.ok) {
+      console.error(`[EVO ACTION CONNECT] erro HTTP ${res.status} na tentativa ${attempt}: ${raw}`);
+      throw new Error(
+        `Evolution API retornou ${res.status} ao conectar instância "${instanceName}": ${raw}`
+      );
+    }
+
+    let parsed: Record<string, unknown>;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      console.error(`[EVO ACTION CONNECT] resposta não é JSON válido: ${raw}`);
+      throw new Error(`Resposta inesperada da Evolution API (não-JSON): ${raw}`);
+    }
+
+    // Normaliza as chaves onde a Evolution pode devolver o base64
+    const base64Candidates = [
+      parsed?.qrcode,
+      (parsed?.qrcode as Record<string, unknown>)?.base64,
+      parsed?.base64,
+      parsed?.code,
+    ];
+
+    const raw64 = base64Candidates.find(
+      (v) => typeof v === "string" && v.length > 0
+    ) as string | undefined;
+
+    if (raw64) {
+      const qrcode = raw64.startsWith("data:")
+        ? raw64
+        : `data:image/png;base64,${raw64}`;
+
+      console.log(
+        `[EVO ACTION CONNECT] QR Code obtido na tentativa ${attempt} para "${instanceName}" (${qrcode.length} chars).`
+      );
+      return { qrcode };
+    }
+
+    // QR ainda não disponível — instância inicializando
+    console.log(
+      `[EVO ACTION CONNECT] QR não disponível na tentativa ${attempt}, aguardando ${DELAY_MS}ms...`
     );
-    throw new Error(
-      `Evolution API retornou ${res.status} ao conectar instância "${instanceName}": ${raw}`
-    );
+
+    if (attempt < MAX_ATTEMPTS) {
+      await new Promise((resolve) => setTimeout(resolve, DELAY_MS));
+    }
   }
 
-  let parsed: Record<string, unknown>;
-  try {
-    parsed = JSON.parse(raw);
-  } catch {
-    console.error(`[EVO ACTION CONNECT] resposta não é JSON válido: ${raw}`);
-    throw new Error(`Resposta inesperada da Evolution API (não-JSON): ${raw}`);
-  }
-
-  // Normaliza as chaves onde a Evolution pode devolver o base64
-  const base64Candidates = [
-    parsed?.qrcode,
-    (parsed?.qrcode as Record<string, unknown>)?.base64,
-    parsed?.base64,
-    parsed?.code,
-  ];
-
-  const raw64 = base64Candidates.find(
-    (v) => typeof v === "string" && v.length > 0
-  ) as string | undefined;
-
-  if (!raw64) {
-    console.error(
-      `[EVO ACTION CONNECT] base64 não encontrado no payload: ${raw}`
-    );
-    throw new Error(
-      `QR Code não disponível para instância "${instanceName}". A instância pode já estar conectada ou o QR expirou.`
-    );
-  }
-
-  // Garante o prefixo correto para uso direto em <img src="...">
-  const qrcode = raw64.startsWith("data:")
-    ? raw64
-    : `data:image/png;base64,${raw64}`;
-
-  console.log(
-    `[EVO ACTION CONNECT] QR Code obtido com sucesso para "${instanceName}" (${qrcode.length} chars).`
+  throw new Error(
+    `QR Code não gerado após ${MAX_ATTEMPTS} tentativas para "${instanceName}". Tente novamente em alguns segundos.`
   );
-
-  return { qrcode };
 }
