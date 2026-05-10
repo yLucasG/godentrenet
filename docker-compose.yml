@@ -16,6 +16,14 @@ services:
     networks:
       - godentrenet_network
 
+  redis:
+    image: redis:7-alpine
+    container_name: godentrenet_redis
+    restart: unless-stopped
+    command: redis-server --save "" --appendonly no
+    networks:
+      - godentrenet_network
+
   evolution:
     image: atendai/evolution-api:v2.2.3
     container_name: godentrenet_evolution
@@ -29,6 +37,10 @@ services:
       DATABASE_PROVIDER: "postgresql"
       DATABASE_CONNECTION_URI: "postgresql://godentrenet:godentrenet_pass@db:5432/godentrenet"
       DATABASE_CONNECTION_CLIENT_NAME: "evolution_api"
+      CACHE_REDIS_ENABLED: "true"
+      CACHE_REDIS_URI: "redis://redis:6379"
+      CACHE_REDIS_PREFIX_KEY: "evolution"
+      CACHE_REDIS_SAVE_INSTANCES: "false"
       SERVER_TYPE: "http"
       SERVER_PORT: "8080"
       LOG_LEVEL: "ERROR,WARN,DEBUG,INFO,LOG,VERBOSE,DARK,WEBHOOKS"
@@ -43,6 +55,7 @@ services:
       - evolution_instances:/evolution/instances
     depends_on:
       - db
+      - redis
     networks:
       - godentrenet_network
 
