@@ -62,12 +62,9 @@ export async function POST(req: NextRequest) {
     return jid;
   }
 
-  // Em grupos responde no grupo (remoteJid); em privado resolve @lid → sender
-  const rawReplyTo = isGroup
-    ? remoteJidRaw
-    : remoteJidRaw?.endsWith("@lid")
-    ? sender
-    : remoteJidRaw;
+  // Sempre responde no privado para quem enviou (grupos ou não)
+  // Evita erro de criptografia de grupo (not-acceptable) e melhora UX
+  const rawReplyTo = remoteJidRaw?.endsWith("@lid") ? sender : (isGroup ? sender : remoteJidRaw);
 
   const replyTo = rawReplyTo ? normalizeBrNumber(rawReplyTo) : rawReplyTo;
 
