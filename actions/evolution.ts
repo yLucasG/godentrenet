@@ -64,7 +64,46 @@ export async function createInstance(
   }
 
   console.log(`[EVO ACTION CREATE] instância criada com sucesso:`, parsed);
+
+  await configureWebhook(instanceName);
+
   return { success: true, instanceName };
+}
+
+// ---------------------------------------------------------------------------
+// configureWebhook
+// ---------------------------------------------------------------------------
+// Configura o webhook na instância para apontar para o Next.js.
+// Chamado automaticamente após createInstance para garantir que toda
+// instância nova já tenha o webhook ativo sem precisar de configuração manual.
+// ---------------------------------------------------------------------------
+export async function configureWebhook(instanceName: string): Promise<void> {
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
+  const webhookUrl = `${BASE_URL}/api/webhook/evolution`;
+  const endpoint = `${EVO_URL}/webhook/set/${encodeURIComponent(instanceName)}`;
+
+  console.log(`[EVO ACTION WEBHOOK] configurando webhook: ${webhookUrl}`);
+
+  const res = await fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", apikey: EVO_KEY },
+    body: JSON.stringify({
+      webhook: {
+        enabled: true,
+        url: webhookUrl,
+        webhookByEvents: false,
+        webhookBase64: false,
+        events: ["MESSAGES_UPSERT"],
+      },
+    }),
+  });
+
+  const raw = await res.text();
+  console.log(`[EVO ACTION WEBHOOK] status=${res.status} body=${raw}`);
+
+  if (!res.ok) {
+    console.error(`[EVO ACTION WEBHOOK] falha ao configurar webhook: ${raw}`);
+  }
 }
 
 // ---------------------------------------------------------------------------
