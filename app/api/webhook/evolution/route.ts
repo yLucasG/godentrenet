@@ -35,11 +35,6 @@ export async function POST(req: NextRequest) {
   const key = messagePayload?.key as Record<string, unknown> | undefined;
   const fromMe = key?.fromMe as boolean | undefined;
 
-  // Ignora mensagens enviadas pela própria instância
-  if (fromMe === true) {
-    return NextResponse.json({ received: true }, { status: 200 });
-  }
-
   // Extrai texto (conversation ou extendedTextMessage)
   const message = messagePayload?.message as Record<string, unknown> | undefined;
   const textRaw =
