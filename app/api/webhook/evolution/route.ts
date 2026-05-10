@@ -49,6 +49,10 @@ export async function POST(req: NextRequest) {
   const instanceName = (body?.instance as string | undefined) ?? "";
   const isGroup = remoteJid?.endsWith("@g.us") ?? false;
 
+  if (fromMe === true) {
+    return NextResponse.json({ received: true }, { status: 200 });
+  }
+
   // grupo → responde no privado para quem enviou (key.participant)
   // privado → responde para remoteJid
   const rawReplyTo = isGroup ? participant : remoteJid;
