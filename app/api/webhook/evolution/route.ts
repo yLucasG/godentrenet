@@ -49,13 +49,21 @@ export async function POST(req: NextRequest) {
   const instanceName = (body?.instance as string | undefined) ?? "";
   const isGroup = remoteJid?.endsWith("@g.us") ?? false;
 
+  const botSender = body?.sender as string | undefined;
+
+  // fromMe=true → dono testando do próprio celular. Responde para body.sender (número do bot)
+  // assim o dono vê a resposta no próprio celular para validar o funcionamento.
+  // fromMe=false + @lid → Evolution não consegue enviar; ignora.
+  // fromMe=false + @s.whatsapp.net → responde normalmente.
+  let rawReplyTo: string | undefined;
   if (fromMe === true) {
-    return NextResponse.json({ received: true }, { status: 200 });
+    rawReplyTo = botSender;
+  } else if (isGroup) {
+    rawReplyTo = participant && !participant.endsWith("@lid") ? participant : undefined;
+  } else {
+    rawReplyTo = remoteJid && !remoteJid.endsWith("@lid") ? remoteJid : undefined;
   }
 
-  // grupo → responde no privado para quem enviou (key.participant)
-  // privado → responde para remoteJid
-  const rawReplyTo = isGroup ? participant : remoteJid;
   const replyTo = rawReplyTo ? normalizeBrNumber(rawReplyTo) : undefined;
 
   console.log(
