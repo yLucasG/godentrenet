@@ -7,10 +7,6 @@ const EVO_KEY = process.env.EVOLUTION_API_KEY ?? "";
 // createInstance
 // ---------------------------------------------------------------------------
 // Registra uma nova instância WhatsApp na Evolution API vinculada a uma loja.
-//
-// Comportamento especial:
-//   - HTTP 403 com body contendo "already" → instância já existe, retorna ok.
-//   - Qualquer outro erro HTTP → lança exceção com o body bruto para rastreio.
 // ---------------------------------------------------------------------------
 export async function createInstance(
   storeId: string,
@@ -34,12 +30,10 @@ export async function createInstance(
     }),
   });
 
-  // Lê sempre como texto antes de tentar o parse — evita erros de JSON inválido
   const raw = await res.text();
   console.log(`[EVO ACTION CREATE] status=${res.status} body=${raw}`);
 
   if (!res.ok) {
-    // 403 + body indicando que a instância já existe → não é um erro real
     if (res.status === 403 && raw.toLowerCase().includes("already")) {
       console.log(
         `[EVO ACTION CREATE] instância "${instanceName}" já existe — seguindo sem erro.`
@@ -59,23 +53,22 @@ export async function createInstance(
   try {
     parsed = JSON.parse(raw);
   } catch {
-    // Resposta não é JSON — ainda assim a instância foi criada (2xx)
     console.log(`[EVO ACTION CREATE] resposta 2xx não-JSON, assumindo sucesso.`);
   }
 
   console.log(`[EVO ACTION CREATE] instância criada com sucesso:`, parsed);
 
+  // Mantemos o webhook ativo para você receber logs ou salvar conversas no futuro
   await configureWebhook(instanceName);
+
+  // NOVA AÇÃO: Configura automaticamente a instância recém-criada no Typebot!
+  await configureTypebot(instanceName);
 
   return { success: true, instanceName };
 }
 
 // ---------------------------------------------------------------------------
 // configureWebhook
-// ---------------------------------------------------------------------------
-// Configura o webhook na instância para apontar para o Next.js.
-// Chamado automaticamente após createInstance para garantir que toda
-// instância nova já tenha o webhook ativo sem precisar de configuração manual.
 // ---------------------------------------------------------------------------
 export async function configureWebhook(instanceName: string): Promise<void> {
   const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
@@ -107,13 +100,40 @@ export async function configureWebhook(instanceName: string): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
-// getQrCode
+// configureTypebot (NOVO)
 // ---------------------------------------------------------------------------
-// Solicita o QR Code de conexão de uma instância existente.
-//
-// A Evolution pode retornar o base64 dentro de diferentes chaves dependendo
-// da versão; esta função normaliza todos os casos conhecidos e garante que o
-// prefixo "data:image/png;base64," esteja presente para uso direto em <img>.
+// Diz para a Evolution interceptar as mensagens desta instância e buscar as
+// respostas no fluxo visual do Typebot, evitando o Next.js como intermediário.
+// ---------------------------------------------------------------------------
+export async function configureTypebot(instanceName: string): Promise<void> {
+  const endpoint = `${EVO_URL}/typebot/set/${encodeURIComponent(instanceName)}`;
+  console.log(`[EVO ACTION TYPEBOT] configurando: ${endpoint}`);
+
+  const res = await fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", apikey: EVO_KEY },
+    body: JSON.stringify({
+      enabled: true,
+      url: "http://typebot-viewer:3000", // Nome do container do viewer no Docker
+      typebot: "fluxo-padaria", // Este deve ser o Public ID do fluxo que você publicará no Typebot
+      expire: 20,
+      keywordFinish: "#SAIR",
+      delayMessage: 1000,
+      unknownMessage: "Mensagem não reconhecida",
+      listeningFromMe: false
+    }),
+  });
+
+  const raw = await res.text();
+  console.log(`[EVO ACTION TYPEBOT] status=${res.status} body=${raw}`);
+
+  if (!res.ok) {
+    console.error(`[EVO ACTION TYPEBOT] falha ao configurar typebot: ${raw}`);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// getQrCode
 // ---------------------------------------------------------------------------
 export async function getQrCode(
   instanceName: string
@@ -149,7 +169,6 @@ export async function getQrCode(
       throw new Error(`Resposta inesperada da Evolution API (não-JSON): ${raw}`);
     }
 
-    // Normaliza as chaves onde a Evolution pode devolver o base64
     const base64Candidates = [
       parsed?.qrcode,
       (parsed?.qrcode as Record<string, unknown>)?.base64,
@@ -172,7 +191,6 @@ export async function getQrCode(
       return { qrcode };
     }
 
-    // QR ainda não disponível — instância inicializando
     console.log(
       `[EVO ACTION CONNECT] QR não disponível na tentativa ${attempt}, aguardando ${DELAY_MS}ms...`
     );

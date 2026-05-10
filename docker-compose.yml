@@ -98,9 +98,52 @@ services:
     networks:
       - godentrenet_network
 
+  typebot-db:
+    image: postgres:15
+    container_name: godentrenet_typebot_db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=typebot
+      - POSTGRES_PASSWORD=typebot_pass
+    volumes:
+      - typebot_data:/var/lib/postgresql/data
+    networks:
+      - godentrenet_network
+
+  typebot-builder:
+    image: baptistearno/typebot-builder:latest
+    container_name: godentrenet_typebot_builder
+    restart: unless-stopped
+    ports:
+      - "8081:3000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:typebot_pass@typebot-db:5432/typebot
+      - NEXTAUTH_URL=http://entrenet.tech:8081
+      - NEXT_PUBLIC_VIEWER_URL=http://entrenet.tech:8082
+      - ADMIN_EMAIL=seu@email.com
+    depends_on:
+      - typebot-db
+    networks:
+      - godentrenet_network
+
+  typebot-viewer:
+    image: baptistearno/typebot-viewer:latest
+    container_name: godentrenet_typebot_viewer
+    restart: unless-stopped
+    ports:
+      - "8082:3000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:typebot_pass@typebot-db:5432/typebot
+      - NEXT_PUBLIC_VIEWER_URL=http://entrenet.tech:8082
+    depends_on:
+      - typebot-db
+    networks:
+      - godentrenet_network
+
 volumes:
   postgres_data:
   evolution_instances:
+  typebot_data:
 
 networks:
   godentrenet_network:
