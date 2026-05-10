@@ -4,6 +4,47 @@ import { getStoreByInstanceName } from "@/actions/store";
 const EVO_URL = process.env.EVOLUTION_API_URL ?? "http://localhost:8080";
 const EVO_KEY = process.env.EVOLUTION_API_KEY ?? "";
 
+// Resolve @lid JID para número de telefone via API de contatos da Evolution
+async function resolveJid(instanceName: string, jid: string): Promise<string> {
+  if (!jid.endsWith("@lid")) return jid;
+
+  try {
+    const res = await fetch(
+      `${EVO_URL}/chat/findContacts/${encodeURIComponent(instanceName)}?where=${encodeURIComponent(JSON.stringify({ id: jid }))}`,
+      { headers: { apikey: EVO_KEY } }
+    );
+    if (!res.ok) return jid;
+
+    const contacts = await res.json() as unknown[];
+    if (Array.isArray(contacts)) {
+      for (const c of contacts) {
+        const obj = c as Record<string, unknown>;
+        // Tenta pegar remoteJid @s.whatsapp.net ou phoneNumber
+        const remoteJid = obj.remoteJid as string | undefined;
+        if (remoteJid && !remoteJid.endsWith("@lid")) return remoteJid;
+        const phone = (obj.phoneNumber ?? obj.phone) as string | undefined;
+        if (phone) return `${phone}@s.whatsapp.net`;
+      }
+    }
+    console.log(`[WEBHOOK EVOLUTION] @lid não resolvido para ${jid}, contatos retornados:`, JSON.stringify(contacts));
+  } catch (err) {
+    console.error("[WEBHOOK EVOLUTION] erro ao resolver @lid:", err);
+  }
+
+  return jid;
+}
+
+// Normaliza número BR de 8 dígitos adicionando o 9 (ex: 5587XXXXXXXX → 55879XXXXXXXX)
+function normalizeBrNumber(jid: string): string {
+  const match = jid.match(/^(\d+)(@.+)$/);
+  if (!match) return jid;
+  const [, num, suffix] = match;
+  if (/^55\d{2}\d{8}$/.test(num)) {
+    return `55${num.slice(2, 4)}9${num.slice(4)}${suffix}`;
+  }
+  return jid;
+}
+
 export async function POST(req: NextRequest) {
   let body: Record<string, unknown>;
 
@@ -14,7 +55,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ received: true }, { status: 200 });
   }
 
-  // Log bruto — primeira coisa após o parse
   console.log("[WEBHOOK RECEBIDO]", JSON.stringify(body, null, 2));
 
   const event = body?.event as string | undefined;
@@ -22,7 +62,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ received: true }, { status: 200 });
   }
 
-  // Extrai payload da mensagem (formato array ou direto)
   const data = body?.data as Record<string, unknown> | undefined;
   const messagePayload = (() => {
     const messages = data?.messages as unknown[] | undefined;
@@ -35,7 +74,6 @@ export async function POST(req: NextRequest) {
   const key = messagePayload?.key as Record<string, unknown> | undefined;
   const fromMe = key?.fromMe as boolean | undefined;
 
-  // Extrai texto (conversation ou extendedTextMessage)
   const message = messagePayload?.message as Record<string, unknown> | undefined;
   const textRaw =
     (message?.conversation as string | undefined) ??
@@ -45,29 +83,15 @@ export async function POST(req: NextRequest) {
 
   const instanceName = (body?.instance as string | undefined) ?? "";
   const remoteJidRaw = key?.remoteJid as string | undefined;
-  // Em grupos, o remetente real fica em key.participant; body.sender é o número do bot
   const participant = key?.participant as string | undefined;
 
-  // Detecta se é mensagem de grupo (@g.us)
   const isGroup = remoteJidRaw?.endsWith("@g.us") ?? false;
 
-  // Normaliza número BR de 8 dígitos adicionando o 9 (ex: 5587XXXXXXXX → 55879XXXXXXXX)
-  function normalizeBrNumber(jid: string): string {
-    const match = jid.match(/^(\d+)(@.+)$/);
-    if (!match) return jid;
-    const [, num, suffix] = match;
-    if (/^55\d{2}\d{8}$/.test(num)) {
-      return `55${num.slice(2, 4)}9${num.slice(4)}${suffix}`;
-    }
-    return jid;
-  }
-
-  // Responde no privado para quem enviou:
-  // - grupo: usa key.participant (remetente real no grupo)
-  // - privado: usa key.remoteJid diretamente (@lid ou @s.whatsapp.net)
+  // grupo → responde no privado para key.participant
+  // privado → usa remoteJid; se @lid, resolve para número real
   const rawReplyTo = isGroup ? participant : remoteJidRaw;
-
-  const replyTo = rawReplyTo ? normalizeBrNumber(rawReplyTo) : rawReplyTo;
+  const resolvedReplyTo = rawReplyTo ? await resolveJid(instanceName, rawReplyTo) : rawReplyTo;
+  const replyTo = resolvedReplyTo ? normalizeBrNumber(resolvedReplyTo) : resolvedReplyTo;
 
   console.log(
     `[WEBHOOK EVOLUTION] instance="${instanceName}" isGroup=${isGroup} fromMe=${fromMe} texto="${textRaw}" replyTo="${replyTo}"`
