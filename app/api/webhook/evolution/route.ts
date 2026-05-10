@@ -55,12 +55,26 @@ export async function POST(req: NextRequest) {
   // Detecta se é mensagem de grupo (@g.us)
   const isGroup = remoteJidRaw?.endsWith("@g.us") ?? false;
 
+  // Normaliza número BR de 8 dígitos adicionando o 9 (ex: 5587XXXXXXXX → 55879XXXXXXXX)
+  function normalizeBrNumber(jid: string): string {
+    const match = jid.match(/^(\d+)(@.+)$/);
+    if (!match) return jid;
+    const [, num, suffix] = match;
+    // BR com DDD: 55 + 2 dígitos DDD + 8 dígitos → insere 9
+    if (/^55\d{2}\d{8}$/.test(num)) {
+      return `55${num.slice(2, 4)}9${num.slice(4)}${suffix}`;
+    }
+    return jid;
+  }
+
   // Em grupos responde no grupo (remoteJid); em privado resolve @lid → sender
-  const replyTo = isGroup
+  const rawReplyTo = isGroup
     ? remoteJidRaw
     : remoteJidRaw?.endsWith("@lid")
     ? sender
     : remoteJidRaw;
+
+  const replyTo = rawReplyTo ? normalizeBrNumber(rawReplyTo) : rawReplyTo;
 
   console.log(
     `[WEBHOOK EVOLUTION] instance="${instanceName}" isGroup=${isGroup} fromMe=${fromMe} texto="${textRaw}" replyTo="${replyTo}"`
