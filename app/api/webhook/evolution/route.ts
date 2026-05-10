@@ -10,37 +10,25 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json();
   } catch {
-    // Body inválido — loga e retorna 200 para a Evolution não reprovar o endpoint
     console.error("[WEBHOOK EVOLUTION] body não é JSON válido.");
     return NextResponse.json({ received: true }, { status: 200 });
   }
 
-  // Log bruto — deve ser a primeira coisa após o parse para não perder nada
+  // Log bruto — primeira coisa após o parse
   console.log("[WEBHOOK RECEBIDO]", JSON.stringify(body, null, 2));
 
-  // ------------------------------------------------------------------
-  // Filtra apenas o evento messages.upsert
-  // ------------------------------------------------------------------
   const event = body?.event as string | undefined;
-
   if (event !== "messages.upsert") {
     return NextResponse.json({ received: true }, { status: 200 });
   }
 
-  // ------------------------------------------------------------------
-  // Extrai os dados da mensagem
-  // A Evolution envia o payload dentro de body.data.messages[] ou
-  // body.data diretamente, dependendo da versão. Tratamos os dois casos.
-  // ------------------------------------------------------------------
+  // Extrai payload da mensagem (formato array ou direto)
   const data = body?.data as Record<string, unknown> | undefined;
-
   const messagePayload = (() => {
-    // Formato array: data.messages[0]
     const messages = data?.messages as unknown[] | undefined;
     if (Array.isArray(messages) && messages.length > 0) {
       return messages[0] as Record<string, unknown>;
     }
-    // Formato direto: data (a própria mensagem)
     return data;
   })();
 
@@ -52,11 +40,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ received: true }, { status: 200 });
   }
 
-  // ------------------------------------------------------------------
-  // Extrai o texto da mensagem (suporta conversation e extendedTextMessage)
-  // ------------------------------------------------------------------
+  // Extrai texto (conversation ou extendedTextMessage)
   const message = messagePayload?.message as Record<string, unknown> | undefined;
-
   const textRaw =
     (message?.conversation as string | undefined) ??
     ((message?.extendedTextMessage as Record<string, unknown> | undefined)
@@ -64,66 +49,51 @@ export async function POST(req: NextRequest) {
     "";
 
   const instanceName = (body?.instance as string | undefined) ?? "";
+  const remoteJidRaw = key?.remoteJid as string | undefined;
+  const sender = body?.sender as string | undefined;
+
+  // Detecta se é mensagem de grupo (@g.us)
+  const isGroup = remoteJidRaw?.endsWith("@g.us") ?? false;
+
+  // Em grupos responde no grupo (remoteJid); em privado resolve @lid → sender
+  const replyTo = isGroup
+    ? remoteJidRaw
+    : remoteJidRaw?.endsWith("@lid")
+    ? sender
+    : remoteJidRaw;
 
   console.log(
-    `[WEBHOOK EVOLUTION] evento=messages.upsert instance="${instanceName}" fromMe=${fromMe} texto="${textRaw}"`
+    `[WEBHOOK EVOLUTION] instance="${instanceName}" isGroup=${isGroup} fromMe=${fromMe} texto="${textRaw}" replyTo="${replyTo}"`
   );
 
-  // ------------------------------------------------------------------
-  // Responde ao comando @hello (case insensitive, trim para segurança)
-  // ------------------------------------------------------------------
   if (textRaw.trim().toLowerCase() === "@hello") {
-    const remoteJidRaw = key?.remoteJid as string | undefined;
-
-    // @lid é o novo formato interno do WhatsApp — a Evolution rejeita no sendText.
-    // Usa o campo sender (ex: 5511...@s.whatsapp.net) que sempre vem no formato correto.
-    const sender = body?.sender as string | undefined;
-    const remoteJid = remoteJidRaw?.endsWith("@lid") ? sender : remoteJidRaw;
-
-    if (!remoteJid || !instanceName) {
-      console.error(
-        "[WEBHOOK EVOLUTION] @hello recebido mas remoteJid ou instanceName ausente — não é possível responder."
-      );
+    if (!replyTo || !instanceName) {
+      console.error("[WEBHOOK EVOLUTION] @hello sem destinatário — ignorando.");
       return NextResponse.json({ received: true }, { status: 200 });
     }
 
-    const sendEndpoint = `${EVO_URL}/message/sendText/${encodeURIComponent(instanceName)}`;
-
     const store = await getStoreByInstanceName(instanceName);
-    const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "http://entrenet.tech:3000";
-    const storeUrl = store
-      ? `${BASE_URL}/${store.evolutionInstanceName}`
-      : BASE_URL;
+    const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://entrenet.tech";
+    const storeUrl = store ? `${BASE_URL}/${store.evolutionInstanceName}` : BASE_URL;
     const replyText = `Acesse a loja -> ${storeUrl}`;
 
-    console.log(
-      `[WEBHOOK EVOLUTION] @hello detectado — enviando resposta para ${remoteJid} via ${sendEndpoint}`
-    );
-    console.log(`[WEBHOOK EVOLUTION] loja resolvida: "${store?.name}" → ${storeUrl}`);
+    console.log(`[WEBHOOK EVOLUTION] @hello → respondendo para ${replyTo} com: ${replyText}`);
 
     try {
-      const sendRes = await fetch(sendEndpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          apikey: EVO_KEY,
-        },
-        body: JSON.stringify({
-          number: remoteJid,
-          text: replyText,
-        }),
-      });
-
-      const sendRaw = await sendRes.text();
-      console.log(
-        `[WEBHOOK EVOLUTION] resposta do sendText: status=${sendRes.status} body=${sendRaw}`
+      const sendRes = await fetch(
+        `${EVO_URL}/message/sendText/${encodeURIComponent(instanceName)}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json", apikey: EVO_KEY },
+          body: JSON.stringify({ number: replyTo, text: replyText }),
+        }
       );
+      const sendRaw = await sendRes.text();
+      console.log(`[WEBHOOK EVOLUTION] sendText status=${sendRes.status} body=${sendRaw}`);
     } catch (err) {
-      // Loga o erro mas não deixa estourar — a Evolution precisa receber 200
       console.error("[WEBHOOK EVOLUTION] erro ao chamar sendText:", err);
     }
   }
 
-  // Sempre 200 — a Evolution marca o webhook como inativo se receber outro status
   return NextResponse.json({ received: true }, { status: 200 });
 }
