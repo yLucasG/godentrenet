@@ -72,7 +72,12 @@ export async function POST(req: NextRequest) {
   // Responde ao comando @hello (case insensitive, trim para segurança)
   // ------------------------------------------------------------------
   if (textRaw.trim().toLowerCase() === "@hello") {
-    const remoteJid = key?.remoteJid as string | undefined;
+    const remoteJidRaw = key?.remoteJid as string | undefined;
+
+    // @lid é o novo formato interno do WhatsApp — a Evolution rejeita no sendText.
+    // Usa o campo sender (ex: 5511...@s.whatsapp.net) que sempre vem no formato correto.
+    const sender = body?.sender as string | undefined;
+    const remoteJid = remoteJidRaw?.endsWith("@lid") ? sender : remoteJidRaw;
 
     if (!remoteJid || !instanceName) {
       console.error(
