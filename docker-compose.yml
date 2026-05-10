@@ -122,6 +122,13 @@ services:
       - NEXT_PUBLIC_VIEWER_URL=http://entrenet.tech:8082
       - ADMIN_EMAIL=seu@email.com
       - ENCRYPTION_SECRET=minha_chave_secreta_typebot_1234
+      - DISABLE_SIGNUP=false
+      - SMTP_USERNAME=fake_user
+      - SMTP_PASSWORD=fake_pass
+      - SMTP_HOST=fake_host
+      - NEXT_PUBLIC_SMTP_FROM=fake@email.com
+      - GITHUB_CLIENT_ID=Ov23lix8QTWLdCV4x90u
+      - GITHUB_CLIENT_SECRET=b5d80409eaa2d2437bdde6c80d80778b397dc883
     depends_on:
       - typebot-db
     networks:
