@@ -91,6 +91,7 @@ services:
       DATABASE_URL: "postgresql://godentrenet:godentrenet_pass@db:5432/godentrenet"
       EVOLUTION_API_URL: "http://evolution:8080"
       EVOLUTION_API_KEY: "sua_chave_global"
+      NEXT_PUBLIC_BASE_URL: "https://entrenet.tech"
     depends_on:
       - db
       - evolution
