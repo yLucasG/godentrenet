@@ -45,9 +45,6 @@ services:
       CACHE_REDIS_SAVE_INSTANCES: "false"
       QRCODE_LIMIT: "30"
       QRCODE_COLOR: "#198754"
-      CONFIG_SESSION_PHONE_VERSION: "2.3000.1039171941"
-      CONFIG_SESSION_PHONE_CLIENT: "Chrome"
-      CONFIG_SESSION_PHONE_NAME: "Chrome"
       LOG_LEVEL: "ERROR,WARN,DEBUG,INFO,LOG,VERBOSE,DARK,WEBHOOKS"
       LOG_COLOR: "true"
       LOG_BAILEYS: "error"
@@ -56,7 +53,7 @@ services:
       STORE_MESSAGE_UP: "true"
       STORE_CONTACTS: "true"
       STORE_CHATS: "true"
-      # ESTA LINHA É A CHAVE DO SUCESSO:
+      # LINHA OBRIGATÓRIA ABAIXO:
       TYPEBOT_ENABLED: "true"
     volumes:
       - evolution_instances:/evolution/instances
