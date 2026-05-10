@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getStoreByInstanceName } from "@/actions/store";
 
 const EVO_URL = process.env.EVOLUTION_API_URL ?? "http://localhost:8080";
 const EVO_KEY = process.env.EVOLUTION_API_KEY ?? "";
@@ -88,9 +89,17 @@ export async function POST(req: NextRequest) {
 
     const sendEndpoint = `${EVO_URL}/message/sendText/${encodeURIComponent(instanceName)}`;
 
+    const store = await getStoreByInstanceName(instanceName);
+    const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "http://entrenet.tech:3000";
+    const storeUrl = store
+      ? `${BASE_URL}/${store.evolutionInstanceName}`
+      : BASE_URL;
+    const replyText = `Acesse a loja -> ${storeUrl}`;
+
     console.log(
       `[WEBHOOK EVOLUTION] @hello detectado — enviando resposta para ${remoteJid} via ${sendEndpoint}`
     );
+    console.log(`[WEBHOOK EVOLUTION] loja resolvida: "${store?.name}" → ${storeUrl}`);
 
     try {
       const sendRes = await fetch(sendEndpoint, {
@@ -101,7 +110,7 @@ export async function POST(req: NextRequest) {
         },
         body: JSON.stringify({
           number: remoteJid,
-          text: "Glória a Deus conseguimos GODENTRENET",
+          text: replyText,
         }),
       });
 

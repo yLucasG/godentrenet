@@ -32,6 +32,18 @@ export async function createStore(name: string): Promise<{
   return { success: true, storeId: store.id, instanceName };
 }
 
+export async function getStoreByInstanceName(instanceName: string) {
+  return prisma.store.findFirst({
+    where: { evolutionInstanceName: instanceName },
+  });
+}
+
+export async function getStoreBySlug(slug: string) {
+  return prisma.store.findFirst({
+    where: { evolutionInstanceName: slug },
+  });
+}
+
 export async function getStoreQrCode(storeId: string): Promise<{ qrcode: string }> {
   console.log(`[STORE ACTION] buscando instância para storeId=${storeId}`);
 
