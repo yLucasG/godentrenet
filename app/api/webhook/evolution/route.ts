@@ -64,13 +64,8 @@ export async function POST(req: NextRequest) {
 
   // Responde no privado para quem enviou:
   // - grupo: usa key.participant (remetente real no grupo)
-  // - privado @lid: usa key.remoteJid normalizado
-  // - privado normal: usa key.remoteJid
-  const rawReplyTo = isGroup
-    ? participant
-    : remoteJidRaw?.endsWith("@lid")
-    ? remoteJidRaw.replace("@lid", "@s.whatsapp.net")
-    : remoteJidRaw;
+  // - privado: usa key.remoteJid diretamente (@lid ou @s.whatsapp.net)
+  const rawReplyTo = isGroup ? participant : remoteJidRaw;
 
   const replyTo = rawReplyTo ? normalizeBrNumber(rawReplyTo) : rawReplyTo;
 
