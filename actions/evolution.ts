@@ -106,7 +106,8 @@ export async function configureWebhook(instanceName: string): Promise<void> {
 // respostas no fluxo visual do Typebot, evitando o Next.js como intermediário.
 // ---------------------------------------------------------------------------
 export async function configureTypebot(instanceName: string): Promise<void> {
-  const endpoint = `${EVO_URL}/typebot/set/${encodeURIComponent(instanceName)}`;
+  // ATENÇÃO: Na v2, o endpoint correto é /typebot/create/ e não /typebot/set/
+  const endpoint = `${EVO_URL}/typebot/create/${encodeURIComponent(instanceName)}`;
   console.log(`[EVO ACTION TYPEBOT] configurando: ${endpoint}`);
 
   const res = await fetch(endpoint, {
@@ -115,12 +116,15 @@ export async function configureTypebot(instanceName: string): Promise<void> {
     body: JSON.stringify({
       enabled: true,
       url: "http://typebot-viewer:3000", // Nome do container do viewer no Docker
-      typebot: "fluxo-padaria", // Este deve ser o Public ID do fluxo que você publicará no Typebot
+      typebot: "fluxo-padaria", // Este deve ser o Public ID do fluxo no Typebot
+      triggerType: "all", // Aciona o bot para qualquer mensagem que chegar
       expire: 20,
       keywordFinish: "#SAIR",
       delayMessage: 1000,
       unknownMessage: "Mensagem não reconhecida",
-      listeningFromMe: false
+      listeningFromMe: false,
+      stopBotFromMe: false,
+      keepOpen: false
     }),
   });
 
