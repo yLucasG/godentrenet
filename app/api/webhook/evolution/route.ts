@@ -45,7 +45,8 @@ export async function POST(req: NextRequest) {
 
   const instanceName = (body?.instance as string | undefined) ?? "";
   const remoteJidRaw = key?.remoteJid as string | undefined;
-  const sender = body?.sender as string | undefined;
+  // Em grupos, o remetente real fica em key.participant; body.sender é o número do bot
+  const participant = key?.participant as string | undefined;
 
   // Detecta se é mensagem de grupo (@g.us)
   const isGroup = remoteJidRaw?.endsWith("@g.us") ?? false;
@@ -55,16 +56,21 @@ export async function POST(req: NextRequest) {
     const match = jid.match(/^(\d+)(@.+)$/);
     if (!match) return jid;
     const [, num, suffix] = match;
-    // BR com DDD: 55 + 2 dígitos DDD + 8 dígitos → insere 9
     if (/^55\d{2}\d{8}$/.test(num)) {
       return `55${num.slice(2, 4)}9${num.slice(4)}${suffix}`;
     }
     return jid;
   }
 
-  // Sempre responde no privado para quem enviou (grupos ou não)
-  // Evita erro de criptografia de grupo (not-acceptable) e melhora UX
-  const rawReplyTo = remoteJidRaw?.endsWith("@lid") ? sender : (isGroup ? sender : remoteJidRaw);
+  // Responde no privado para quem enviou:
+  // - grupo: usa key.participant (remetente real no grupo)
+  // - privado @lid: usa key.remoteJid normalizado
+  // - privado normal: usa key.remoteJid
+  const rawReplyTo = isGroup
+    ? participant
+    : remoteJidRaw?.endsWith("@lid")
+    ? remoteJidRaw.replace("@lid", "@s.whatsapp.net")
+    : remoteJidRaw;
 
   const replyTo = rawReplyTo ? normalizeBrNumber(rawReplyTo) : rawReplyTo;
 
