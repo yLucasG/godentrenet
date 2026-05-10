@@ -49,13 +49,21 @@ export async function POST(req: NextRequest) {
   const instanceName = (body?.instance as string | undefined) ?? "";
   const isGroup = remoteJid?.endsWith("@g.us") ?? false;
 
-  const botSender = body?.sender as string | undefined;
-
   // Destino: participant (grupo) ou remoteJid (privado)
-  // Se @lid (Evolution não suporta envio), usa botSender como fallback
-  // para que o dono do bot ao menos veja a resposta no próprio celular.
   const target = isGroup ? participant : remoteJid;
-  const rawReplyTo = target?.endsWith("@lid") ? botSender : target;
+
+  // Busca o número real caso o WhatsApp tenha enviado o contato mascarado como @lid
+  const senderPn = key?.senderPn as string | undefined;
+
+  let rawReplyTo = target;
+
+  if (target?.endsWith("@lid")) {
+    if (senderPn) {
+      // Se a Evolution forneceu o número real (senderPn), formatamos e usamos ele
+      rawReplyTo = senderPn.includes("@") ? senderPn : `${senderPn}@s.whatsapp.net`;
+    }
+    // Se não houver senderPn, mantém o target (@lid) e tenta enviar assim mesmo
+  }
 
   const replyTo = rawReplyTo ? normalizeBrNumber(rawReplyTo) : undefined;
 
