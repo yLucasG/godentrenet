@@ -121,6 +121,7 @@ services:
       - NEXTAUTH_URL=http://entrenet.tech:8081
       - NEXT_PUBLIC_VIEWER_URL=http://entrenet.tech:8082
       - ADMIN_EMAIL=seu@email.com
+      - ENCRYPTION_SECRET=uma_chave_super_segura_de_32_caracteres_aqui
     depends_on:
       - typebot-db
     networks:
@@ -135,6 +136,7 @@ services:
     environment:
       - DATABASE_URL=postgresql://postgres:typebot_pass@typebot-db:5432/typebot
       - NEXT_PUBLIC_VIEWER_URL=http://entrenet.tech:8082
+      - ENCRYPTION_SECRET=uma_chave_super_segura_de_32_caracteres_aqui
     depends_on:
       - typebot-db
     networks:
