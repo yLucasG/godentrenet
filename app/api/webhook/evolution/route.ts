@@ -4,37 +4,6 @@ import { getStoreByInstanceName } from "@/actions/store";
 const EVO_URL = process.env.EVOLUTION_API_URL ?? "http://localhost:8080";
 const EVO_KEY = process.env.EVOLUTION_API_KEY ?? "";
 
-// Resolve @lid JID para número de telefone via API de contatos da Evolution
-async function resolveJid(instanceName: string, jid: string): Promise<string> {
-  if (!jid.endsWith("@lid")) return jid;
-
-  try {
-    const res = await fetch(
-      `${EVO_URL}/chat/findContacts/${encodeURIComponent(instanceName)}?where=${encodeURIComponent(JSON.stringify({ id: jid }))}`,
-      { headers: { apikey: EVO_KEY } }
-    );
-    if (!res.ok) return jid;
-
-    const contacts = await res.json() as unknown[];
-    if (Array.isArray(contacts)) {
-      for (const c of contacts) {
-        const obj = c as Record<string, unknown>;
-        // Tenta pegar remoteJid @s.whatsapp.net ou phoneNumber
-        const remoteJid = obj.remoteJid as string | undefined;
-        if (remoteJid && !remoteJid.endsWith("@lid")) return remoteJid;
-        const phone = (obj.phoneNumber ?? obj.phone) as string | undefined;
-        if (phone) return `${phone}@s.whatsapp.net`;
-      }
-    }
-    console.log(`[WEBHOOK EVOLUTION] @lid não resolvido para ${jid}, contatos retornados:`, JSON.stringify(contacts));
-  } catch (err) {
-    console.error("[WEBHOOK EVOLUTION] erro ao resolver @lid:", err);
-  }
-
-  return jid;
-}
-
-// Normaliza número BR de 8 dígitos adicionando o 9 (ex: 5587XXXXXXXX → 55879XXXXXXXX)
 function normalizeBrNumber(jid: string): string {
   const match = jid.match(/^(\d+)(@.+)$/);
   if (!match) return jid;
@@ -47,51 +16,70 @@ function normalizeBrNumber(jid: string): string {
 
 export async function POST(req: NextRequest) {
   let body: Record<string, unknown>;
-
   try {
     body = await req.json();
   } catch {
-    console.error("[WEBHOOK EVOLUTION] body não é JSON válido.");
     return NextResponse.json({ received: true }, { status: 200 });
   }
 
   console.log("[WEBHOOK RECEBIDO]", JSON.stringify(body, null, 2));
 
-  const event = body?.event as string | undefined;
-  if (event !== "messages.upsert") {
+  if (body?.event !== "messages.upsert") {
     return NextResponse.json({ received: true }, { status: 200 });
   }
 
   const data = body?.data as Record<string, unknown> | undefined;
   const messagePayload = (() => {
     const messages = data?.messages as unknown[] | undefined;
-    if (Array.isArray(messages) && messages.length > 0) {
-      return messages[0] as Record<string, unknown>;
-    }
+    if (Array.isArray(messages) && messages.length > 0) return messages[0] as Record<string, unknown>;
     return data;
   })();
 
   const key = messagePayload?.key as Record<string, unknown> | undefined;
   const fromMe = key?.fromMe as boolean | undefined;
+  const remoteJid = key?.remoteJid as string | undefined;
+  const participant = key?.participant as string | undefined;
 
   const message = messagePayload?.message as Record<string, unknown> | undefined;
   const textRaw =
     (message?.conversation as string | undefined) ??
-    ((message?.extendedTextMessage as Record<string, unknown> | undefined)
-      ?.text as string | undefined) ??
+    ((message?.extendedTextMessage as Record<string, unknown> | undefined)?.text as string | undefined) ??
     "";
 
   const instanceName = (body?.instance as string | undefined) ?? "";
-  const remoteJidRaw = key?.remoteJid as string | undefined;
-  const participant = key?.participant as string | undefined;
+  const isGroup = remoteJid?.endsWith("@g.us") ?? false;
 
-  const isGroup = remoteJidRaw?.endsWith("@g.us") ?? false;
+  // grupo → privado para quem enviou (key.participant)
+  // privado @s.whatsapp.net → remoteJid direto
+  // privado @lid → tenta resolver via contacts API com timeout de 3s
+  let replyJid: string | undefined;
 
-  // grupo → responde no privado para key.participant
-  // privado → usa remoteJid; se @lid, resolve para número real
-  const rawReplyTo = isGroup ? participant : remoteJidRaw;
-  const resolvedReplyTo = rawReplyTo ? await resolveJid(instanceName, rawReplyTo) : rawReplyTo;
-  const replyTo = resolvedReplyTo ? normalizeBrNumber(resolvedReplyTo) : resolvedReplyTo;
+  if (isGroup) {
+    replyJid = participant;
+  } else if (remoteJid?.endsWith("@lid")) {
+    try {
+      const res = await fetch(
+        `${EVO_URL}/chat/findContacts/${encodeURIComponent(instanceName)}?where=${encodeURIComponent(JSON.stringify({ id: remoteJid }))}`,
+        { headers: { apikey: EVO_KEY }, signal: AbortSignal.timeout(3000) }
+      );
+      if (res.ok) {
+        const contacts = await res.json() as Record<string, unknown>[];
+        const found = Array.isArray(contacts) ? contacts[0] : null;
+        const phoneJid = (found?.remoteJid ?? found?.phoneNumber) as string | undefined;
+        if (phoneJid && !phoneJid.endsWith("@lid")) {
+          replyJid = phoneJid;
+        }
+      }
+    } catch { /* timeout ou erro — ignora */ }
+
+    if (!replyJid) {
+      console.warn(`[WEBHOOK EVOLUTION] @lid não resolvido: ${remoteJid} — ignorando @hello`);
+    }
+  } else {
+    replyJid = remoteJid;
+  }
+
+  const replyTo = replyJid ? normalizeBrNumber(replyJid) : undefined;
 
   console.log(
     `[WEBHOOK EVOLUTION] instance="${instanceName}" isGroup=${isGroup} fromMe=${fromMe} texto="${textRaw}" replyTo="${replyTo}"`
@@ -99,7 +87,7 @@ export async function POST(req: NextRequest) {
 
   if (textRaw.trim().toLowerCase() === "@hello") {
     if (!replyTo || !instanceName) {
-      console.error("[WEBHOOK EVOLUTION] @hello sem destinatário — ignorando.");
+      console.error("[WEBHOOK EVOLUTION] @hello sem destinatário válido — ignorando.");
       return NextResponse.json({ received: true }, { status: 200 });
     }
 
