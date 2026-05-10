@@ -49,37 +49,10 @@ export async function POST(req: NextRequest) {
   const instanceName = (body?.instance as string | undefined) ?? "";
   const isGroup = remoteJid?.endsWith("@g.us") ?? false;
 
-  // grupo → privado para quem enviou (key.participant)
-  // privado @s.whatsapp.net → remoteJid direto
-  // privado @lid → tenta resolver via contacts API com timeout de 3s
-  let replyJid: string | undefined;
-
-  if (isGroup) {
-    replyJid = participant;
-  } else if (remoteJid?.endsWith("@lid")) {
-    try {
-      const res = await fetch(
-        `${EVO_URL}/chat/findContacts/${encodeURIComponent(instanceName)}?where=${encodeURIComponent(JSON.stringify({ id: remoteJid }))}`,
-        { headers: { apikey: EVO_KEY }, signal: AbortSignal.timeout(3000) }
-      );
-      if (res.ok) {
-        const contacts = await res.json() as Record<string, unknown>[];
-        const found = Array.isArray(contacts) ? contacts[0] : null;
-        const phoneJid = (found?.remoteJid ?? found?.phoneNumber) as string | undefined;
-        if (phoneJid && !phoneJid.endsWith("@lid")) {
-          replyJid = phoneJid;
-        }
-      }
-    } catch { /* timeout ou erro — ignora */ }
-
-    if (!replyJid) {
-      console.warn(`[WEBHOOK EVOLUTION] @lid não resolvido: ${remoteJid} — ignorando @hello`);
-    }
-  } else {
-    replyJid = remoteJid;
-  }
-
-  const replyTo = replyJid ? normalizeBrNumber(replyJid) : undefined;
+  // grupo → responde no privado para quem enviou (key.participant)
+  // privado → responde para remoteJid
+  const rawReplyTo = isGroup ? participant : remoteJid;
+  const replyTo = rawReplyTo ? normalizeBrNumber(rawReplyTo) : undefined;
 
   console.log(
     `[WEBHOOK EVOLUTION] instance="${instanceName}" isGroup=${isGroup} fromMe=${fromMe} texto="${textRaw}" replyTo="${replyTo}"`
@@ -87,7 +60,7 @@ export async function POST(req: NextRequest) {
 
   if (textRaw.trim().toLowerCase() === "@hello") {
     if (!replyTo || !instanceName) {
-      console.error("[WEBHOOK EVOLUTION] @hello sem destinatário válido — ignorando.");
+      console.error("[WEBHOOK EVOLUTION] @hello sem destinatário — ignorando.");
       return NextResponse.json({ received: true }, { status: 200 });
     }
 
