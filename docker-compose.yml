@@ -53,7 +53,7 @@ services:
       STORE_MESSAGE_UP: "true"
       STORE_CONTACTS: "true"
       STORE_CHATS: "true"
-      # LINHA OBRIGATÓRIA ABAIXO:
+      # ADICIONE ESTA LINHA ABAIXO:
       TYPEBOT_ENABLED: "true"
     volumes:
       - evolution_instances:/evolution/instances
