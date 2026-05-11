@@ -7,7 +7,7 @@ const EVO_KEY = process.env.EVOLUTION_API_KEY ?? "";
 const TYPEBOT_VIEWER_URL = process.env.TYPEBOT_VIEWER_URL ?? "http://typebot-viewer:3000";
 const TYPEBOT_PUBLIC_ID = process.env.TYPEBOT_PUBLIC_ID ?? "";
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://entrenet.tech";
-const SESSION_TTL = 60 * 60 * 24; // 24 horas
+const SESSION_TTL = 60 * 60 * 24;
 
 function normalizeBrNumber(jid: string): string {
   const match = jid.match(/^(\d+)(@.+)$/);
@@ -78,7 +78,7 @@ async function resolveReplyTo(
     console.warn(`[WEBHOOK] findContacts timeout para ${remoteJid}`);
   }
 
-  console.warn(`[WEBHOOK] Não foi possível resolver @lid ${remoteJid} — mensagem ignorada`);
+  console.warn(`[WEBHOOK] Nao foi possivel resolver @lid ${remoteJid} — mensagem ignorada`);
   return undefined;
 }
 
@@ -87,12 +87,12 @@ async function getFallbackMessage(instanceName: string): Promise<string> {
     const store = await getStoreByInstanceName(instanceName);
     if (store) {
       const storeUrl = `${BASE_URL}/store/${store.id}`;
-      return `Olá! Seja bem-vindo à ${store.name}. 🛍️\nAcesse nossa loja: ${storeUrl}`;
+      return `Ola! Seja bem-vindo a ${store.name}.\nAcesse nossa loja: ${storeUrl}`;
     }
   } catch {
-    // se DB falhar, usa mensagem genérica
+    // se DB falhar, usa mensagem generica
   }
-  return `Olá! Obrigado por entrar em contato. Em breve retornaremos. 😊`;
+  return `Ola! Obrigado por entrar em contato. Em breve retornaremos.`;
 }
 
 async function processWithTypebot(
@@ -102,24 +102,37 @@ async function processWithTypebot(
   textRaw: string
 ): Promise<boolean> {
   if (!TYPEBOT_PUBLIC_ID) {
-    console.warn("[TYPEBOT] TYPEBOT_PUBLIC_ID não configurado — usando fallback");
+    console.log("[TYPEBOT] TYPEBOT_PUBLIC_ID nao configurado — usando fallback");
     return false;
   }
 
   const sessionKey = `typebot:session:${phone}:${instanceName}`;
-  let sessionId = await redis.get(sessionKey);
+  let sessionId: string | null = null;
+
+  try {
+    sessionId = await redis.get(sessionKey);
+  } catch (err) {
+    console.error("[TYPEBOT] Redis erro:", err);
+    return false;
+  }
 
   if (!sessionId) {
-    console.log(`[TYPEBOT] Sessão nova para ${phone}`);
-    const startRes = await fetch(
-      `${TYPEBOT_VIEWER_URL}/api/v1/typebots/${TYPEBOT_PUBLIC_ID}/startChat`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isOnlyRegistering: false, sessionId: phone }),
-        signal: AbortSignal.timeout(8000),
-      }
-    );
+    console.log(`[TYPEBOT] Sessao nova para ${phone}`);
+    let startRes: Response;
+    try {
+      startRes = await fetch(
+        `${TYPEBOT_VIEWER_URL}/api/v1/typebots/${TYPEBOT_PUBLIC_ID}/startChat`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ isOnlyRegistering: false, sessionId: phone }),
+          signal: AbortSignal.timeout(8000),
+        }
+      );
+    } catch (err) {
+      console.warn("[TYPEBOT] startChat falhou:", String(err));
+      return false;
+    }
 
     if (!startRes.ok) {
       console.warn(`[TYPEBOT] startChat retornou ${startRes.status} — usando fallback`);
@@ -139,18 +152,28 @@ async function processWithTypebot(
       }
     }
 
-    await redis.setex(sessionKey, SESSION_TTL, sessionId);
+    try {
+      await redis.setex(sessionKey, SESSION_TTL, sessionId);
+    } catch {
+      // redis falhou mas continua
+    }
   }
 
-  const contRes = await fetch(
-    `${TYPEBOT_VIEWER_URL}/api/v1/typebots/${TYPEBOT_PUBLIC_ID}/continueChat`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sessionId, message: textRaw }),
-      signal: AbortSignal.timeout(8000),
-    }
-  );
+  let contRes: Response;
+  try {
+    contRes = await fetch(
+      `${TYPEBOT_VIEWER_URL}/api/v1/typebots/${TYPEBOT_PUBLIC_ID}/continueChat`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId, message: textRaw }),
+        signal: AbortSignal.timeout(8000),
+      }
+    );
+  } catch (err) {
+    console.warn("[TYPEBOT] continueChat falhou:", String(err));
+    return false;
+  }
 
   if (!contRes.ok) {
     console.warn(`[TYPEBOT] continueChat retornou ${contRes.status} — usando fallback`);
@@ -177,25 +200,18 @@ async function processWithTypebot(
   }
 
   if (sentAny) {
-    await redis.expire(sessionKey, SESSION_TTL);
+    try {
+      await redis.expire(sessionKey, SESSION_TTL);
+    } catch {
+      // redis falhou mas nao importa
+    }
     console.log(`[TYPEBOT] ${contData.messages.length} mensagens enviadas`);
   }
 
   return sentAny;
 }
 
-export async function POST(req: NextRequest) {
-  let body: Record<string, unknown>;
-  try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ received: true }, { status: 200 });
-  }
-
-  if (body?.event !== "messages.upsert") {
-    return NextResponse.json({ received: true }, { status: 200 });
-  }
-
+async function handleMessage(body: Record<string, unknown>) {
   const data = body?.data as Record<string, unknown> | undefined;
   const messagePayload = (() => {
     const messages = data?.messages as unknown[] | undefined;
@@ -208,7 +224,7 @@ export async function POST(req: NextRequest) {
   const remoteJid = key?.remoteJid as string | undefined;
   const senderPn = key?.senderPn as string | undefined;
 
-  if (fromMe) return NextResponse.json({ received: true }, { status: 200 });
+  if (fromMe) { console.log("[WEBHOOK] fromMe=true, ignorando"); return; }
 
   const message = messagePayload?.message as Record<string, unknown> | undefined;
   const textRaw =
@@ -216,40 +232,55 @@ export async function POST(req: NextRequest) {
     ((message?.extendedTextMessage as Record<string, unknown> | undefined)?.text as string | undefined) ??
     "";
 
-  if (!textRaw.trim()) return NextResponse.json({ received: true }, { status: 200 });
+  if (!textRaw.trim()) { console.log("[WEBHOOK] Mensagem vazia, ignorando"); return; }
 
   const instanceName = (body?.instance as string | undefined) ?? "";
   const isGroup = remoteJid?.endsWith("@g.us") ?? false;
 
-  if (isGroup) return NextResponse.json({ received: true }, { status: 200 });
-  if (!remoteJid) return NextResponse.json({ received: true }, { status: 200 });
+  if (isGroup) { console.log("[WEBHOOK] Grupo, ignorando"); return; }
+  if (!remoteJid) { console.log("[WEBHOOK] remoteJid vazio, ignorando"); return; }
 
   const replyTo = await resolveReplyTo(remoteJid, senderPn, instanceName);
-  if (!replyTo) return NextResponse.json({ received: true }, { status: 200 });
+  if (!replyTo) return;
 
   const phone = replyTo.split("@")[0];
-  console.log(`[WEBHOOK] Mensagem de ${replyTo} (instância: ${instanceName}): "${textRaw}"`);
+  console.log(`[WEBHOOK] Mensagem de ${replyTo} (instancia: ${instanceName}): "${textRaw}"`);
 
   try {
     const typebotOk = await processWithTypebot(phone, instanceName, replyTo, textRaw);
 
     if (!typebotOk) {
-      // Typebot falhou ou não está configurado → resposta padrão da loja
       const fallback = await getFallbackMessage(instanceName);
-      console.log(`[WEBHOOK] Enviando fallback: "${fallback.slice(0, 60)}..."`);
+      console.log(`[WEBHOOK] Enviando fallback para ${replyTo}`);
       await sendEvolution(instanceName, replyTo, fallback);
     }
   } catch (err) {
-    console.error("[WEBHOOK] Erro inesperado:", err);
-    // Tentar fallback mesmo em caso de erro grave
+    console.error("[WEBHOOK] Erro no processamento:", err);
     try {
       const fallback = await getFallbackMessage(instanceName);
       await sendEvolution(instanceName, replyTo, fallback);
-    } catch {
-      // Se até o fallback falhar, apenas loga
-      console.error("[WEBHOOK] Fallback também falhou");
+    } catch (e2) {
+      console.error("[WEBHOOK] Fallback tambem falhou:", e2);
     }
   }
+}
+
+export async function POST(req: NextRequest) {
+  let body: Record<string, unknown>;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ received: true }, { status: 200 });
+  }
+
+  console.log(`[WEBHOOK] Recebido evento: ${body?.event}`);
+
+  if (body?.event !== "messages.upsert") {
+    return NextResponse.json({ received: true }, { status: 200 });
+  }
+
+  // Responde imediatamente e processa em background
+  handleMessage(body).catch((err) => console.error("[WEBHOOK] handleMessage error:", err));
 
   return NextResponse.json({ received: true }, { status: 200 });
 }
