@@ -55,6 +55,7 @@ services:
       STORE_CHATS: "true"
       TYPEBOT_ENABLED: "true"
       CONFIG_SESSION_PHONE_CLIENT: "Chrome"
+      CONFIG_SESSION_PHONE_VERSION: "2.3000.1035194821"
     volumes:
       - evolution_instances:/evolution/instances
     depends_on:
