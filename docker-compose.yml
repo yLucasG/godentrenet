@@ -53,8 +53,9 @@ services:
       STORE_MESSAGE_UP: "true"
       STORE_CONTACTS: "true"
       STORE_CHATS: "true"
-      # ADICIONE ESTA LINHA ABAIXO:
       TYPEBOT_ENABLED: "true"
+      CONFIG_SESSION_PHONE_CLIENT: "Chrome"
+      CONFIG_SESSION_PHONE_VERSION: "2.3000.1039212651-alpha"
     volumes:
       - evolution_instances:/evolution/instances
     depends_on:
@@ -92,6 +93,8 @@ services:
       EVOLUTION_API_KEY: "sua_chave_global"
       NEXT_PUBLIC_BASE_URL: "https://entrenet.tech"
       REDIS_URL: "redis://redis:6379"
+      TYPEBOT_VIEWER_URL: "http://typebot-viewer:3000"
+      TYPEBOT_PUBLIC_ID: "fluxo-padaria"
     depends_on:
       - db
       - evolution
