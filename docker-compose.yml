@@ -80,13 +80,13 @@ services:
       - godentrenet_network
 
   waha:
-    image: devlikeapro/waha-plus
+    image: devlikeapro/waha
     container_name: godentrenet_waha
     restart: unless-stopped
     ports:
       - "3001:3000"
     environment:
-      WHATSAPP_DEFAULT_ENGINE: "WEBJS"
+      WHATSAPP_DEFAULT_ENGINE: "NOWEB"
       WAHA_DASHBOARD_ENABLED: "true"
       WAHA_DASHBOARD_USERNAME: "admin"
       WAHA_DASHBOARD_PASSWORD: "entrenet123"
