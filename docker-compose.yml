@@ -79,6 +79,22 @@ services:
     networks:
       - godentrenet_network
 
+  waha:
+    image: devlikeapro/waha-plus
+    container_name: godentrenet_waha
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      WHATSAPP_DEFAULT_ENGINE: "WEBJS"
+      WAHA_DASHBOARD_ENABLED: "true"
+      WAHA_DASHBOARD_USERNAME: "admin"
+      WAHA_DASHBOARD_PASSWORD: "entrenet123"
+    volumes:
+      - waha_data:/tmp/.waha
+    networks:
+      - godentrenet_network
+
   web:
     build:
       context: .
@@ -95,9 +111,13 @@ services:
       REDIS_URL: "redis://redis:6379"
       TYPEBOT_VIEWER_URL: "http://typebot-viewer:3000"
       TYPEBOT_PUBLIC_ID: "fluxo-padaria"
+      WAHA_API_URL: "http://waha:3000"
+      WAHA_API_KEY: ""
+      REQUIRE_KEYWORD_INSTANCES: "mapom"
     depends_on:
       - db
       - evolution
+      - waha
     networks:
       - godentrenet_network
 
@@ -157,6 +177,7 @@ volumes:
   postgres_data:
   evolution_instances:
   typebot_data:
+  waha_data:
 
 networks:
   godentrenet_network:
