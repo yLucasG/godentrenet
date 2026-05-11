@@ -90,6 +90,7 @@ services:
       WAHA_DASHBOARD_ENABLED: "true"
       WAHA_DASHBOARD_USERNAME: "admin"
       WAHA_DASHBOARD_PASSWORD: "entrenet123"
+      WHATSAPP_API_KEY: "waha_entrenet_2024"
     volumes:
       - waha_data:/tmp/.waha
     networks:
@@ -112,7 +113,7 @@ services:
       TYPEBOT_VIEWER_URL: "http://typebot-viewer:3000"
       TYPEBOT_PUBLIC_ID: "fluxo-padaria"
       WAHA_API_URL: "http://waha:3000"
-      WAHA_API_KEY: ""
+      WAHA_API_KEY: "waha_entrenet_2024"
       REQUIRE_KEYWORD_INSTANCES: "mapom"
     depends_on:
       - db

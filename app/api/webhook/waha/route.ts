@@ -9,6 +9,8 @@ const TYPEBOT_PUBLIC_ID = process.env.TYPEBOT_PUBLIC_ID ?? "";
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://entrenet.tech";
 const SESSION_TTL = 60 * 60 * 24;
 const REQUIRE_KEYWORD_INSTANCES = (process.env.REQUIRE_KEYWORD_INSTANCES ?? "").split(",").map(s => s.trim()).filter(Boolean);
+// WAHA Core only has "default" session — map it to the Evolution instance name for DB lookups
+const WAHA_SESSION_MAP: Record<string, string> = { default: "mapom" };
 
 function extractTextFromRichText(richText: unknown[]): string {
   return richText
@@ -170,7 +172,9 @@ async function processWithTypebot(
 async function handleMessage(body: Record<string, unknown>) {
   // WAHA webhook payload format:
   // { event: "message", session: "mapom", me: {...}, payload: { id, from, to, body, ... } }
-  const session = (body?.session as string | undefined) ?? "";
+  const rawSession = (body?.session as string | undefined) ?? "";
+  // Map WAHA session name to Evolution instance name for store lookup
+  const session = WAHA_SESSION_MAP[rawSession] ?? rawSession;
   const payload = body?.payload as Record<string, unknown> | undefined;
 
   if (!payload) { console.log("[WAHA WEBHOOK] Sem payload, ignorando"); return; }
