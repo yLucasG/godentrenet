@@ -61,18 +61,30 @@ export async function configureWebhook(instanceName: string): Promise<void> {
 export async function getQrCode(
   instanceName: string
 ): Promise<{ qrcode: string }> {
-  const endpoint = `${EVO_URL}/instance/connect/${encodeURIComponent(instanceName)}`;
-  const MAX_ATTEMPTS = 6;
-  const DELAY_MS = 2000;
+  const connectEndpoint = `${EVO_URL}/instance/connect/${encodeURIComponent(instanceName)}`;
+  const MAX_ATTEMPTS = 8;
+  const DELAY_MS = 2500;
+
+  // Forçar reinício da instância para gerar novo QR
+  await fetch(`${EVO_URL}/instance/restart/${encodeURIComponent(instanceName)}`, {
+    method: "PUT",
+    headers: { apikey: EVO_KEY },
+  }).catch(() => {});
+
+  await new Promise((r) => setTimeout(r, 3000));
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    const res = await fetch(endpoint, {
+    console.log(`[EVO QR] tentativa ${attempt}/${MAX_ATTEMPTS} para ${instanceName}`);
+
+    const res = await fetch(connectEndpoint, {
       method: "GET",
       headers: { apikey: EVO_KEY },
       cache: "no-store",
     });
 
     const raw = await res.text();
+    console.log(`[EVO QR] resposta (${res.status}): ${raw.slice(0, 200)}`);
+
     if (!res.ok) throw new Error(`Erro: ${raw}`);
 
     let parsed: Record<string, unknown>;
@@ -83,10 +95,12 @@ export async function getQrCode(
       (parsed?.qrcode as Record<string, unknown>)?.base64,
       parsed?.base64,
       parsed?.code,
+      (parsed?.data as Record<string, unknown>)?.qrcode,
+      (parsed?.data as Record<string, unknown>)?.base64,
     ];
 
     const raw64 = base64Candidates.find(
-      (v) => typeof v === "string" && v.length > 0
+      (v) => typeof v === "string" && (v as string).length > 100
     ) as string | undefined;
 
     if (raw64) {
