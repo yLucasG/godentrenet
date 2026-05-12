@@ -48,7 +48,7 @@ export async function updateStore(storeId: string, data: { name: string; phoneNu
   await prisma.store.update({ where: { id: storeId }, data });
 }
 
-export async function getStoreQrCode(storeId: string): Promise<{ qr?: string }> {
+export async function getStoreQrCode(storeId: string): Promise<{ qr?: string; connected?: boolean }> {
   console.log(`[STORE ACTION] buscando instância para storeId=${storeId}`);
 
   const store = await prisma.store.findUnique({ where: { id: storeId } });
@@ -64,6 +64,18 @@ export async function getStoreQrCode(storeId: string): Promise<{ qr?: string }> 
   console.log(`[STORE ACTION] instanceName resolvido: "${store.evolutionInstanceName}"`);
 
   const { getQrCode } = await import("@/actions/evolution");
-  const result = await getQrCode(store.evolutionInstanceName);
-  return { qr: result.qrcode };
+  try {
+    const result = await getQrCode(store.evolutionInstanceName);
+    return { qr: result.qrcode };
+  } catch (err) {
+    if ((err as Error).message === "ALREADY_CONNECTED") {
+      // Instance is connected — update DB state and signal the UI
+      await prisma.store.update({
+        where: { id: storeId },
+        data: { evolutionConnectionState: "open" },
+      });
+      return { connected: true };
+    }
+    throw err;
+  }
 }

@@ -4,7 +4,7 @@ const EVO_URL = process.env.EVOLUTION_API_URL ?? "http://localhost:8080";
 const EVO_KEY = process.env.EVOLUTION_API_KEY ?? "";
 
 export async function createInstance(
-  storeId: string,
+  _storeId: string,
   instanceName: string
 ): Promise<{ success: true; instanceName: string }> {
   const endpoint = `${EVO_URL}/instance/create`;
@@ -52,7 +52,7 @@ export async function configureWebhook(instanceName: string): Promise<void> {
         url: webhookUrl,
         webhookByEvents: false,
         webhookBase64: false,
-        events: ["MESSAGES_UPSERT"],
+        events: ["MESSAGES_UPSERT", "CONNECTION_UPDATE"],
       },
     }),
   });
@@ -65,7 +65,26 @@ export async function getQrCode(
   const MAX_ATTEMPTS = 8;
   const DELAY_MS = 2500;
 
-  // Forçar reinício da instância para gerar novo QR
+  // Check if already connected before restarting
+  const stateRes = await fetch(connectEndpoint, {
+    method: "GET",
+    headers: { apikey: EVO_KEY },
+    cache: "no-store",
+  }).catch(() => null);
+  if (stateRes?.ok) {
+    const stateRaw = await stateRes.text().catch(() => "");
+    try {
+      const stateJson = JSON.parse(stateRaw) as Record<string, unknown>;
+      const instanceState = (stateJson?.instance as Record<string, unknown>)?.state ?? stateJson?.state;
+      if (instanceState === "open") {
+        throw new Error("ALREADY_CONNECTED");
+      }
+    } catch (e) {
+      if ((e as Error).message === "ALREADY_CONNECTED") throw e;
+    }
+  }
+
+  // Restart to force new QR generation only when disconnected
   await fetch(`${EVO_URL}/instance/restart/${encodeURIComponent(instanceName)}`, {
     method: "PUT",
     headers: { apikey: EVO_KEY },

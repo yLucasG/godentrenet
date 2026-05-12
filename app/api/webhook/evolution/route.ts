@@ -300,6 +300,25 @@ async function handleMessage(body: Record<string, unknown>) {
   }
 }
 
+async function handleConnectionUpdate(body: Record<string, unknown>) {
+  const instanceName = (body?.instance as string | undefined) ?? "";
+  const data = body?.data as Record<string, unknown> | undefined;
+  const state = (data?.state as string | undefined) ?? "";
+
+  if (!instanceName || !state) return;
+
+  console.log(`[WEBHOOK] CONNECTION_UPDATE: ${instanceName} → ${state}`);
+
+  try {
+    await prisma.store.updateMany({
+      where: { evolutionInstanceName: instanceName },
+      data: { evolutionConnectionState: state },
+    });
+  } catch (err) {
+    console.error("[WEBHOOK] Erro ao atualizar connectionState:", err);
+  }
+}
+
 export async function POST(req: NextRequest) {
   let body: Record<string, unknown>;
   try {
@@ -308,9 +327,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ received: true }, { status: 200 });
   }
 
-  console.log(`[WEBHOOK] Recebido evento: ${body?.event}`);
+  const event = body?.event as string | undefined;
+  console.log(`[WEBHOOK] Recebido evento: ${event}`);
 
-  if (body?.event !== "messages.upsert") {
+  if (event === "connection.update") {
+    handleConnectionUpdate(body).catch((err) => console.error("[WEBHOOK] connectionUpdate error:", err));
+    return NextResponse.json({ received: true }, { status: 200 });
+  }
+
+  if (event !== "messages.upsert") {
     return NextResponse.json({ received: true }, { status: 200 });
   }
 
