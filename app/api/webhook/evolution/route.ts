@@ -22,6 +22,7 @@ type StoreWithConfig = {
   } | null;
 };
 
+
 function normalizeBrNumber(jid: string): string {
   const match = jid.match(/^(\d+)(@.+)$/);
   if (!match) return jid;
@@ -43,7 +44,7 @@ function extractTextFromRichText(richText: unknown[]): string {
 }
 
 async function getStoreWithConfig(instanceName: string): Promise<StoreWithConfig | null> {
-  return prisma.store.findFirst({
+  const row = await prisma.store.findFirst({
     where: { evolutionInstanceName: instanceName },
     select: {
       id: true,
@@ -54,6 +55,7 @@ async function getStoreWithConfig(instanceName: string): Promise<StoreWithConfig
       },
     },
   });
+  return row as StoreWithConfig | null;
 }
 
 async function saveMessage(storeId: string, fromPhone: string, text: string, direction: "in" | "out") {
