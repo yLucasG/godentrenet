@@ -6,7 +6,7 @@ import { getStoreQrCode } from "@/actions/store";
 type QrState =
   | { status: "idle" }
   | { status: "loading" }
-  | { status: "ready"; qrcode: string }
+  | { status: "ready"; qr: string }
   | { status: "error"; message: string };
 
 export default function StorePage({
@@ -26,12 +26,9 @@ export default function StorePage({
     try {
       const result = await getStoreQrCode(id);
 
-      console.log(
-        "[STORE PAGE] QR Code recebido, tamanho (chars):",
-        result.qrcode.length
-      );
+      if (!result.qr) throw new Error("QR Code não disponível.");
 
-      setQrState({ status: "ready", qrcode: result.qrcode });
+      setQrState({ status: "ready", qr: result.qr });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Erro ao gerar QR Code.";
       console.error("[STORE PAGE] erro ao obter QR Code:", message);
@@ -69,7 +66,7 @@ export default function StorePage({
           {qrState.status === "ready" && (
             <div className="flex flex-col items-center gap-3">
               <img
-                src={qrState.qrcode}
+                src={qrState.qr}
                 alt="QR Code WhatsApp"
                 width={256}
                 height={256}
