@@ -28,11 +28,57 @@ function fmt(value: number) {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
+function PhoneIcon() {
+  return (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+        d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+    </svg>
+  );
+}
+
+function MapPinIcon() {
+  return (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+  );
+}
+
+function BagIcon({ count }: { count: number }) {
+  return (
+    <div className="relative">
+      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+          d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+      </svg>
+      {count > 0 && (
+        <span className="absolute -top-1.5 -right-1.5 bg-orange-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+          {count}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function ArrowLeft({ onClick, label }: { onClick: () => void; label: string }) {
+  return (
+    <button onClick={onClick} className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800 transition-colors mb-5">
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+      </svg>
+      {label}
+    </button>
+  );
+}
+
 export function StoreClient({ storeId, instanceName, storeName, products }: Props) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [view, setView] = useState<View>("products");
 
-  // Checkout form state
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [address, setAddress] = useState("");
@@ -47,17 +93,17 @@ export function StoreClient({ storeId, instanceName, storeName, products }: Prop
 
   function addToCart(product: Product) {
     setCart((prev) => {
-      const existing = prev.find((i) => i.product.id === product.id);
-      if (existing) return prev.map((i) => i.product.id === product.id ? { ...i, qty: i.qty + 1 } : i);
+      const ex = prev.find((i) => i.product.id === product.id);
+      if (ex) return prev.map((i) => i.product.id === product.id ? { ...i, qty: i.qty + 1 } : i);
       return [...prev, { product, qty: 1 }];
     });
   }
 
   function removeFromCart(productId: string) {
     setCart((prev) => {
-      const existing = prev.find((i) => i.product.id === productId);
-      if (!existing) return prev;
-      if (existing.qty === 1) return prev.filter((i) => i.product.id !== productId);
+      const ex = prev.find((i) => i.product.id === productId);
+      if (!ex) return prev;
+      if (ex.qty === 1) return prev.filter((i) => i.product.id !== productId);
       return prev.map((i) => i.product.id === productId ? { ...i, qty: i.qty - 1 } : i);
     });
   }
@@ -71,21 +117,9 @@ export function StoreClient({ storeId, instanceName, storeName, products }: Prop
     setSubmitting(true);
     try {
       const result = await createOrder({
-        storeId,
-        instanceName,
-        storeName,
-        customerPhone,
-        customerName,
-        address,
-        items: cart.map((i) => ({
-          name: i.product.name,
-          emoji: i.product.emoji,
-          price: i.product.price,
-          qty: i.qty,
-        })),
-        total: totalPrice,
-        paymentMethod: payment,
-        needChange,
+        storeId, instanceName, storeName, customerPhone, customerName, address,
+        items: cart.map((i) => ({ name: i.product.name, emoji: i.product.emoji, price: i.product.price, qty: i.qty })),
+        total: totalPrice, paymentMethod: payment, needChange,
         changeFor: needChange && changeFor ? parseFloat(changeFor.replace(",", ".")) : undefined,
       });
       setOrderId(result.orderId);
@@ -98,58 +132,97 @@ export function StoreClient({ storeId, instanceName, storeName, products }: Prop
     }
   }
 
+  const Header = ({ showBag = false }: { showBag?: boolean }) => (
+    <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 px-5 pt-10 pb-6">
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-orange-400 text-xs font-semibold tracking-widest uppercase mb-1">Cardápio</p>
+          <h1 className="text-white text-2xl font-bold leading-tight">{storeName}</h1>
+          {view === "products" && (
+            <p className="text-gray-400 text-xs mt-1">{products.length} {products.length === 1 ? "item disponível" : "itens disponíveis"}</p>
+          )}
+        </div>
+        {showBag && totalItems > 0 && (
+          <button onClick={() => setView("cart")} className="mt-1">
+            <BagIcon count={totalItems} />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+
   // ─── PRODUCTS VIEW ───────────────────────────────────────────────────────────
   if (view === "products") {
     return (
-      <div className="pb-32">
-        {products.length === 0 ? (
-          <div className="text-center py-20">
-            <p className="text-5xl mb-3">🛍️</p>
-            <p className="text-amber-800 font-semibold text-lg">Em breve!</p>
-            <p className="text-amber-600 text-sm mt-1">Produtos serão divulgados em breve.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-3 p-4">
-            {products.map((product) => {
-              const qty = getQty(product.id);
-              return (
-                <div key={product.id} className="bg-white rounded-2xl shadow border border-amber-100 overflow-hidden flex flex-col">
-                  <div className="bg-amber-50 flex items-center justify-center text-5xl py-5">
-                    {product.emoji}
-                  </div>
-                  <div className="p-3 flex flex-col gap-1 flex-1">
-                    <p className="font-semibold text-gray-800 text-sm leading-tight">{product.name}</p>
-                    <p className="text-amber-700 font-bold text-sm">{fmt(product.price)}</p>
-                    {qty === 0 ? (
-                      <button
-                        onClick={() => addToCart(product)}
-                        className="mt-auto w-full bg-amber-600 hover:bg-amber-500 text-white rounded-xl py-1.5 text-sm font-medium transition-colors"
-                      >
-                        Adicionar
-                      </button>
-                    ) : (
-                      <div className="mt-auto flex items-center justify-between bg-amber-50 rounded-xl px-2 py-1">
-                        <button onClick={() => removeFromCart(product.id)} className="w-7 h-7 rounded-full bg-amber-600 text-white font-bold text-base flex items-center justify-center">−</button>
-                        <span className="font-bold text-amber-800">{qty}</span>
-                        <button onClick={() => addToCart(product)} className="w-7 h-7 rounded-full bg-amber-600 text-white font-bold text-base flex items-center justify-center">+</button>
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        <Header showBag />
+
+        <div className="flex-1 px-4 py-5 pb-32">
+          {products.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center text-4xl mb-4">🛍️</div>
+              <p className="font-semibold text-gray-700 text-lg">Em breve!</p>
+              <p className="text-gray-400 text-sm mt-1 max-w-xs">Os produtos deste estabelecimento serão divulgados em breve.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {products.map((product) => {
+                const qty = getQty(product.id);
+                return (
+                  <div key={product.id} className="bg-white rounded-2xl shadow-sm overflow-hidden flex items-stretch">
+                    <div className="w-24 bg-orange-50 flex items-center justify-center text-4xl flex-shrink-0">
+                      {product.emoji}
+                    </div>
+                    <div className="flex-1 p-4 flex flex-col justify-between min-h-[80px]">
+                      <div>
+                        <p className="font-semibold text-gray-800 text-sm leading-snug">{product.name}</p>
+                        <p className="text-orange-500 font-bold text-base mt-0.5">{fmt(product.price)}</p>
                       </div>
-                    )}
+                      <div className="flex justify-end mt-2">
+                        {qty === 0 ? (
+                          <button
+                            onClick={() => addToCart(product)}
+                            className="bg-orange-500 hover:bg-orange-600 active:scale-95 text-white text-sm font-semibold px-5 py-1.5 rounded-xl transition-all"
+                          >
+                            Adicionar
+                          </button>
+                        ) : (
+                          <div className="flex items-center gap-3 bg-orange-50 rounded-xl px-3 py-1.5">
+                            <button
+                              onClick={() => removeFromCart(product.id)}
+                              className="w-6 h-6 rounded-lg bg-orange-500 text-white font-bold text-sm flex items-center justify-center active:scale-95"
+                            >
+                              −
+                            </button>
+                            <span className="font-bold text-gray-800 text-sm w-4 text-center">{qty}</span>
+                            <button
+                              onClick={() => addToCart(product)}
+                              className="w-6 h-6 rounded-lg bg-orange-500 text-white font-bold text-sm flex items-center justify-center active:scale-95"
+                            >
+                              +
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                );
+              })}
+            </div>
+          )}
+        </div>
 
         {totalItems > 0 && (
-          <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-amber-100 shadow-lg">
+          <div className="fixed bottom-0 left-0 right-0 px-4 pb-5 pt-2 bg-gradient-to-t from-gray-50 via-gray-50">
             <button
               onClick={() => setView("cart")}
-              className="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-3.5 rounded-2xl flex items-center justify-between px-5 text-sm transition-colors"
+              className="w-full bg-gray-900 hover:bg-gray-800 active:scale-[0.98] text-white font-bold py-4 rounded-2xl flex items-center justify-between px-5 transition-all shadow-xl"
             >
-              <span className="bg-amber-800 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">{totalItems}</span>
-              <span>Ver sacola</span>
-              <span>{fmt(totalPrice)}</span>
+              <span className="bg-orange-500 text-white text-xs font-bold rounded-lg w-7 h-7 flex items-center justify-center">
+                {totalItems}
+              </span>
+              <span className="text-sm">Ver sacola</span>
+              <span className="text-orange-400 font-bold">{fmt(totalPrice)}</span>
             </button>
           </div>
         )}
@@ -160,47 +233,61 @@ export function StoreClient({ storeId, instanceName, storeName, products }: Prop
   // ─── CART VIEW ────────────────────────────────────────────────────────────────
   if (view === "cart") {
     return (
-      <div className="pb-32">
-        <div className="p-4 space-y-3">
-          <button onClick={() => setView("products")} className="text-amber-700 text-sm flex items-center gap-1">
-            ← Continuar comprando
-          </button>
-          <h2 className="text-lg font-bold text-gray-800">Sua sacola</h2>
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        <Header />
+        <div className="flex-1 px-4 py-5 pb-36">
+          <ArrowLeft onClick={() => setView("products")} label="Continuar comprando" />
+          <h2 className="text-lg font-bold text-gray-800 mb-4">Sua sacola</h2>
 
-          {cart.map((item) => (
-            <div key={item.product.id} className="bg-white rounded-2xl p-4 shadow border border-amber-100 flex items-center gap-3">
-              <span className="text-3xl">{item.product.emoji}</span>
-              <div className="flex-1">
-                <p className="font-semibold text-gray-800 text-sm">{item.product.name}</p>
-                <p className="text-amber-700 text-sm font-bold">{fmt(item.product.price * item.qty)}</p>
+          <div className="space-y-3">
+            {cart.map((item) => (
+              <div key={item.product.id} className="bg-white rounded-2xl shadow-sm flex items-center overflow-hidden">
+                <div className="w-16 h-16 bg-orange-50 flex items-center justify-center text-3xl flex-shrink-0">
+                  {item.product.emoji}
+                </div>
+                <div className="flex-1 px-3 py-3">
+                  <p className="font-semibold text-gray-800 text-sm">{item.product.name}</p>
+                  <p className="text-orange-500 font-bold text-sm mt-0.5">{fmt(item.product.price * item.qty)}</p>
+                </div>
+                <div className="flex items-center gap-2 pr-3">
+                  <button
+                    onClick={() => removeFromCart(item.product.id)}
+                    className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold text-sm flex items-center justify-center"
+                  >−</button>
+                  <span className="w-5 text-center font-bold text-gray-800 text-sm">{item.qty}</span>
+                  <button
+                    onClick={() => addToCart(item.product)}
+                    className="w-7 h-7 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm flex items-center justify-center"
+                  >+</button>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <button onClick={() => removeFromCart(item.product.id)} className="w-7 h-7 rounded-full bg-amber-100 text-amber-800 font-bold text-base flex items-center justify-center">−</button>
-                <span className="w-5 text-center font-bold text-gray-800">{item.qty}</span>
-                <button onClick={() => addToCart(item.product)} className="w-7 h-7 rounded-full bg-amber-600 text-white font-bold text-base flex items-center justify-center">+</button>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
 
-          <div className="bg-white rounded-2xl p-4 shadow border border-amber-100">
-            <div className="flex justify-between text-sm text-gray-600 mb-1">
-              <span>Subtotal</span><span>{fmt(totalPrice)}</span>
-            </div>
-            <div className="flex justify-between text-sm text-gray-500 mb-3">
-              <span>Taxa de entrega</span><span className="text-amber-600">A definir</span>
-            </div>
-            <div className="flex justify-between font-bold text-gray-800 border-t border-amber-100 pt-3">
-              <span>Total</span><span>{fmt(totalPrice)}</span>
+          <div className="bg-white rounded-2xl shadow-sm p-4 mt-4">
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm text-gray-500">
+                <span>Subtotal ({totalItems} {totalItems === 1 ? "item" : "itens"})</span>
+                <span>{fmt(totalPrice)}</span>
+              </div>
+              <div className="flex justify-between text-sm text-gray-400">
+                <span>Taxa de entrega</span>
+                <span className="text-green-600 font-medium">A combinar</span>
+              </div>
+              <div className="border-t border-gray-100 pt-3 mt-1 flex justify-between font-bold text-gray-800">
+                <span>Total</span>
+                <span className="text-orange-500">{fmt(totalPrice)}</span>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-amber-100 shadow-lg">
+        <div className="fixed bottom-0 left-0 right-0 px-4 pb-5 pt-2 bg-gradient-to-t from-gray-50 via-gray-50">
           <button
             onClick={() => setView("checkout")}
-            className="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-3.5 rounded-2xl text-sm transition-colors"
+            className="w-full bg-orange-500 hover:bg-orange-600 active:scale-[0.98] text-white font-bold py-4 rounded-2xl text-sm transition-all shadow-xl"
           >
-            Fechar pedido — {fmt(totalPrice)}
+            Ir para o checkout — {fmt(totalPrice)}
           </button>
         </div>
       </div>
@@ -212,87 +299,112 @@ export function StoreClient({ storeId, instanceName, storeName, products }: Prop
     const canSubmit = customerPhone.replace(/\D/g, "").length >= 10 && address.trim().length > 5;
 
     return (
-      <div className="pb-36">
-        <div className="p-4 space-y-4">
-          <button onClick={() => setView("cart")} className="text-amber-700 text-sm flex items-center gap-1">
-            ← Voltar para sacola
-          </button>
-          <h2 className="text-lg font-bold text-gray-800">Finalizar pedido</h2>
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        <Header />
+        <div className="flex-1 px-4 py-5 pb-40">
+          <ArrowLeft onClick={() => setView("cart")} label="Voltar para a sacola" />
+          <h2 className="text-lg font-bold text-gray-800 mb-5">Finalizar pedido</h2>
 
-          {/* Dados do cliente */}
-          <div className="bg-white rounded-2xl p-4 shadow border border-amber-100 space-y-3">
-            <p className="font-semibold text-gray-700 text-sm">Seus dados</p>
-            <div>
-              <label className="text-xs text-gray-500 mb-1 block">Nome (opcional)</label>
-              <input
-                value={customerName}
-                onChange={e => setCustomerName(e.target.value)}
-                placeholder="Seu nome"
-                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400"
-              />
+          {/* Dados pessoais */}
+          <div className="bg-white rounded-2xl shadow-sm p-4 mb-3">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-7 h-7 rounded-xl bg-orange-100 flex items-center justify-center text-orange-500">
+                <PhoneIcon />
+              </div>
+              <p className="font-semibold text-gray-800 text-sm">Seus dados</p>
             </div>
-            <div>
-              <label className="text-xs text-gray-500 mb-1 block">WhatsApp <span className="text-red-400">*</span></label>
-              <input
-                value={customerPhone}
-                onChange={e => setCustomerPhone(e.target.value)}
-                placeholder="(87) 99999-9999"
-                type="tel"
-                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400"
-              />
-              <p className="text-xs text-gray-400 mt-1">Você receberá a confirmação aqui</p>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-medium text-gray-500 mb-1.5 block">Nome <span className="text-gray-300">(opcional)</span></label>
+                <input
+                  value={customerName}
+                  onChange={e => setCustomerName(e.target.value)}
+                  placeholder="Seu nome completo"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-orange-400 focus:bg-white transition-colors"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-500 mb-1.5 block">
+                  WhatsApp <span className="text-red-400">*</span>
+                </label>
+                <input
+                  value={customerPhone}
+                  onChange={e => setCustomerPhone(e.target.value)}
+                  placeholder="(87) 9 9999-9999"
+                  type="tel"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-orange-400 focus:bg-white transition-colors"
+                />
+                <p className="text-xs text-gray-400 mt-1.5 flex items-center gap-1">
+                  <span>📩</span> Confirmaremos seu pedido aqui
+                </p>
+              </div>
             </div>
           </div>
 
           {/* Endereço */}
-          <div className="bg-white rounded-2xl p-4 shadow border border-amber-100 space-y-3">
-            <p className="font-semibold text-gray-700 text-sm">📍 Endereço de entrega</p>
+          <div className="bg-white rounded-2xl shadow-sm p-4 mb-3">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-7 h-7 rounded-xl bg-orange-100 flex items-center justify-center text-orange-500">
+                <MapPinIcon />
+              </div>
+              <p className="font-semibold text-gray-800 text-sm">Endereço de entrega <span className="text-red-400">*</span></p>
+            </div>
             <textarea
               value={address}
               onChange={e => setAddress(e.target.value)}
-              placeholder="Rua, número, bairro, referência..."
+              placeholder="Rua e número, bairro, ponto de referência..."
               rows={3}
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400 resize-none"
+              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-orange-400 focus:bg-white transition-colors resize-none"
             />
           </div>
 
           {/* Pagamento */}
-          <div className="bg-white rounded-2xl p-4 shadow border border-amber-100 space-y-3">
-            <p className="font-semibold text-gray-700 text-sm">💳 Forma de pagamento</p>
-            <p className="text-xs text-gray-400">O pagamento é feito na entrega</p>
+          <div className="bg-white rounded-2xl shadow-sm p-4 mb-3">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-7 h-7 rounded-xl bg-orange-100 flex items-center justify-center">
+                <span className="text-sm">💳</span>
+              </div>
+              <div>
+                <p className="font-semibold text-gray-800 text-sm">Pagamento na entrega</p>
+                <p className="text-xs text-gray-400">Pague quando receber</p>
+              </div>
+            </div>
 
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2 mb-3">
               {(["pix", "dinheiro"] as const).map((m) => (
                 <button
                   key={m}
                   onClick={() => { setPayment(m); if (m === "pix") setNeedChange(false); }}
-                  className={`py-3 rounded-xl border-2 text-sm font-medium transition-colors ${payment === m ? "border-amber-500 bg-amber-50 text-amber-800" : "border-gray-200 text-gray-600"}`}
+                  className={`py-3.5 rounded-xl border-2 text-sm font-semibold transition-all flex flex-col items-center gap-1 ${
+                    payment === m
+                      ? "border-orange-400 bg-orange-50 text-orange-700"
+                      : "border-gray-200 text-gray-500 hover:border-gray-300"
+                  }`}
                 >
-                  {m === "pix" ? "📱 PIX" : "💵 Dinheiro"}
+                  <span className="text-xl">{m === "pix" ? "📱" : "💵"}</span>
+                  <span>{m === "pix" ? "PIX" : "Dinheiro"}</span>
                 </button>
               ))}
             </div>
 
             {payment === "dinheiro" && (
-              <div>
-                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={needChange}
-                    onChange={e => setNeedChange(e.target.checked)}
-                    className="w-4 h-4 accent-amber-500"
-                  />
-                  Precisa de troco
+              <div className="bg-gray-50 rounded-xl p-3 space-y-3">
+                <label className="flex items-center gap-2.5 text-sm text-gray-700 cursor-pointer select-none">
+                  <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors ${needChange ? "bg-orange-500 border-orange-500" : "border-gray-300"}`}
+                    onClick={() => setNeedChange(!needChange)}>
+                    {needChange && <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                  </div>
+                  Preciso de troco
                 </label>
                 {needChange && (
-                  <div className="mt-2">
-                    <label className="text-xs text-gray-500 mb-1 block">Troco para quanto?</label>
+                  <div>
+                    <label className="text-xs text-gray-500 mb-1.5 block">Troco para quanto?</label>
                     <input
                       value={changeFor}
                       onChange={e => setChangeFor(e.target.value)}
                       placeholder="Ex: 50,00"
                       type="number"
-                      className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400"
+                      className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-orange-400 transition-colors"
                     />
                   </div>
                 )}
@@ -301,31 +413,40 @@ export function StoreClient({ storeId, instanceName, storeName, products }: Prop
           </div>
 
           {/* Resumo */}
-          <div className="bg-amber-50 rounded-2xl p-4 border border-amber-200">
-            <p className="font-semibold text-amber-800 text-sm mb-2">Resumo do pedido</p>
+          <div className="bg-gray-900 rounded-2xl p-4">
+            <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-3">Resumo do pedido</p>
             {cart.map((item) => (
-              <div key={item.product.id} className="flex justify-between text-xs text-gray-600 mb-1">
-                <span>{item.product.emoji} {item.product.name} x{item.qty}</span>
+              <div key={item.product.id} className="flex justify-between text-sm text-gray-300 mb-2">
+                <span className="flex items-center gap-1.5">{item.product.emoji} {item.product.name} <span className="text-gray-500">×{item.qty}</span></span>
                 <span>{fmt(item.product.price * item.qty)}</span>
               </div>
             ))}
-            <div className="flex justify-between font-bold text-amber-800 border-t border-amber-200 pt-2 mt-2">
-              <span>Total</span><span>{fmt(totalPrice)}</span>
+            <div className="flex justify-between font-bold text-white border-t border-gray-700 pt-3 mt-2">
+              <span>Total</span>
+              <span className="text-orange-400">{fmt(totalPrice)}</span>
             </div>
           </div>
         </div>
 
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-amber-100 shadow-lg">
+        <div className="fixed bottom-0 left-0 right-0 px-4 pb-5 pt-2 bg-gradient-to-t from-gray-50 via-gray-50">
+          {!canSubmit && (
+            <p className="text-center text-xs text-gray-400 mb-2">Preencha o WhatsApp e o endereço para continuar</p>
+          )}
           <button
             onClick={handleSubmitOrder}
             disabled={!canSubmit || submitting}
-            className="w-full bg-amber-600 hover:bg-amber-500 disabled:bg-gray-300 disabled:text-gray-400 text-white font-bold py-3.5 rounded-2xl text-sm transition-colors"
+            className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-gray-200 disabled:text-gray-400 active:scale-[0.98] text-white font-bold py-4 rounded-2xl text-sm transition-all shadow-xl"
           >
-            {submitting ? "Enviando pedido..." : `Finalizar pedido — ${fmt(totalPrice)}`}
+            {submitting ? (
+              <span className="flex items-center justify-center gap-2">
+                <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                Enviando pedido...
+              </span>
+            ) : `Confirmar pedido — ${fmt(totalPrice)}`}
           </button>
-          {!canSubmit && (
-            <p className="text-center text-xs text-gray-400 mt-2">Preencha WhatsApp e endereço</p>
-          )}
         </div>
       </div>
     );
@@ -333,36 +454,73 @@ export function StoreClient({ storeId, instanceName, storeName, products }: Prop
 
   // ─── SUCCESS VIEW ─────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center">
-      <div className="text-7xl mb-6">🎉</div>
-      <h2 className="text-2xl font-bold text-amber-800 mb-2">Pedido enviado!</h2>
-      <p className="text-gray-600 mb-2">
-        Você receberá a confirmação no WhatsApp <strong>{customerPhone}</strong>.
-      </p>
-      <p className="text-gray-500 text-sm mb-8">Em breve nosso entregador estará aí! 🛵</p>
-
-      <div className="bg-white rounded-2xl p-5 shadow border border-amber-100 w-full max-w-xs text-left mb-6">
-        <p className="font-semibold text-gray-700 text-sm mb-3">Resumo</p>
-        {cart.map((item) => (
-          <div key={item.product.id} className="flex justify-between text-sm text-gray-600 mb-1">
-            <span>{item.product.emoji} {item.product.name} x{item.qty}</span>
-            <span>{fmt(item.product.price * item.qty)}</span>
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 px-5 pt-10 pb-8">
+        <div className="flex flex-col items-center text-center">
+          <div className="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center text-3xl mb-4 shadow-lg">
+            ✓
           </div>
-        ))}
-        <div className="flex justify-between font-bold text-amber-800 border-t border-amber-100 pt-2 mt-2">
-          <span>Total</span><span>{fmt(totalPrice)}</span>
+          <h1 className="text-white text-2xl font-bold">Pedido confirmado!</h1>
+          <p className="text-gray-400 text-sm mt-1">#{orderId.slice(-8).toUpperCase()}</p>
         </div>
-        <p className="text-xs text-gray-400 mt-3">📍 {address}</p>
-        <p className="text-xs text-gray-400">💳 {payment === "pix" ? "PIX" : needChange ? `Dinheiro — troco para ${changeFor}` : "Dinheiro"}</p>
       </div>
 
-      <button
-        onClick={() => { setCart([]); setView("products"); setOrderId(""); setCustomerPhone(""); setAddress(""); }}
-        className="text-amber-700 text-sm hover:underline"
-      >
-        Fazer novo pedido
-      </button>
-      <p className="text-xs text-gray-400 mt-1">Pedido #{orderId.slice(-6).toUpperCase()}</p>
+      <div className="flex-1 px-4 py-5 space-y-4">
+        <div className="bg-green-50 border border-green-200 rounded-2xl p-4 flex items-start gap-3">
+          <span className="text-2xl">📩</span>
+          <div>
+            <p className="font-semibold text-green-800 text-sm">Confirmação enviada!</p>
+            <p className="text-green-700 text-xs mt-0.5">
+              Uma mensagem foi enviada para <strong>{customerPhone}</strong> com os detalhes do seu pedido.
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-sm p-4">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Itens do pedido</p>
+          <div className="space-y-2.5">
+            {cart.map((item) => (
+              <div key={item.product.id} className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <span className="text-xl">{item.product.emoji}</span>
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">{item.product.name}</p>
+                    <p className="text-xs text-gray-400">quantidade: {item.qty}</p>
+                  </div>
+                </div>
+                <span className="font-bold text-gray-800 text-sm">{fmt(item.product.price * item.qty)}</span>
+              </div>
+            ))}
+          </div>
+          <div className="border-t border-gray-100 mt-4 pt-3 flex justify-between">
+            <span className="font-bold text-gray-700 text-sm">Total</span>
+            <span className="font-bold text-orange-500">{fmt(totalPrice)}</span>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-sm p-4 space-y-2.5">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Detalhes</p>
+          <div className="flex items-start gap-2 text-sm text-gray-600">
+            <MapPinIcon />
+            <span>{address}</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <span>💳</span>
+            <span>{payment === "pix" ? "PIX" : needChange && changeFor ? `Dinheiro — troco para R$ ${changeFor}` : "Dinheiro"}</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <span>🛵</span>
+            <span>Em breve nosso entregador estará aí!</span>
+          </div>
+        </div>
+
+        <button
+          onClick={() => { setCart([]); setView("products"); setOrderId(""); setCustomerPhone(""); setAddress(""); setCustomerName(""); }}
+          className="w-full py-3.5 rounded-2xl border-2 border-gray-200 text-sm font-semibold text-gray-600 hover:border-gray-300 hover:bg-gray-50 transition-all"
+        >
+          Fazer novo pedido
+        </button>
+      </div>
     </div>
   );
 }
