@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS "Product" (
     "storeId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "price" DOUBLE PRECISION NOT NULL,
-    "emoji" TEXT NOT NULL DEFAULT '🛍️',
+    "emoji" TEXT NOT NULL DEFAULT '🛍',
     "active" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT NOW(),
@@ -56,8 +56,8 @@ CREATE TABLE IF NOT EXISTS "BotConfig" (
 
 CREATE UNIQUE INDEX IF NOT EXISTS "BotConfig_storeId_key" ON "BotConfig"("storeId");
 
--- CreateTable Message
-CREATE TABLE IF NOT EXISTS "Message" (
+-- CreateTable BotMessage (renamed from Message to avoid conflict with Evolution API table)
+CREATE TABLE IF NOT EXISTS "BotMessage" (
     "id" TEXT NOT NULL,
     "storeId" TEXT NOT NULL,
     "fromPhone" TEXT NOT NULL,
@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS "Message" (
     "direction" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "Message_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "BotMessage_pkey" PRIMARY KEY ("id")
 );
 
 -- AddForeignKey Store -> User
@@ -96,10 +96,10 @@ DO $$ BEGIN
   END IF;
 END $$;
 
--- AddForeignKey Message -> Store
+-- AddForeignKey BotMessage -> Store
 DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='Message_storeId_fkey') THEN
-    ALTER TABLE "Message" ADD CONSTRAINT "Message_storeId_fkey"
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='BotMessage_storeId_fkey') THEN
+    ALTER TABLE "BotMessage" ADD CONSTRAINT "BotMessage_storeId_fkey"
         FOREIGN KEY ("storeId") REFERENCES "Store"("id")
         ON DELETE CASCADE ON UPDATE CASCADE;
   END IF;

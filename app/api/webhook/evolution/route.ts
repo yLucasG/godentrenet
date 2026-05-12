@@ -58,7 +58,7 @@ async function getStoreWithConfig(instanceName: string): Promise<StoreWithConfig
 
 async function saveMessage(storeId: string, fromPhone: string, text: string, direction: "in" | "out") {
   try {
-    await prisma.message.create({ data: { storeId, fromPhone, text, direction } });
+    await prisma.botMessage.create({ data: { storeId, fromPhone, text, direction } });
   } catch {
     // non-critical — don't break the flow
   }

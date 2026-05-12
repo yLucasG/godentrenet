@@ -9,8 +9,8 @@ export default async function DashboardPage() {
   const storeId = session.user.storeId;
 
   const [totalMessages, uniqueContacts, store] = await Promise.all([
-    prisma.message.count({ where: { storeId, direction: "in" } }),
-    prisma.message.groupBy({ by: ["fromPhone"], where: { storeId } }).then(r => r.length),
+    prisma.botMessage.count({ where: { storeId, direction: "in" } }),
+    prisma.botMessage.groupBy({ by: ["fromPhone"], where: { storeId } }).then(r => r.length),
     prisma.store.findUnique({ where: { id: storeId } }),
   ]);
 

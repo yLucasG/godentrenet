@@ -18,7 +18,7 @@ export async function getAdminStats() {
   const [totalStores, connectedStores, totalMessages, stores] = await Promise.all([
     prisma.store.count(),
     prisma.store.count({ where: { evolutionConnectionState: "open" } }),
-    prisma.message.count(),
+    prisma.botMessage.count(),
     prisma.store.findMany({
       orderBy: { createdAt: "desc" },
       include: {
