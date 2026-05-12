@@ -102,6 +102,8 @@ services:
       WAHA_API_KEY: "waha_entrenet_2024"
       REQUIRE_KEYWORD_INSTANCES: "mapom"
       AUTH_SECRET: "godentrenet_auth_secret_2024_xK9mP3nQ"
+      AUTH_URL: "https://entrenet.tech"
+      AUTH_TRUST_HOST: "true"
     depends_on:
       - db
       - evolution
