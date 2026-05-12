@@ -25,7 +25,10 @@ services:
       - godentrenet_network
 
   evolution:
-    image: atendai/evolution-api:latest
+    build:
+      context: ./evolution-patch
+      dockerfile: Dockerfile
+    image: godentrenet_evolution_patched
     container_name: godentrenet_evolution
     restart: unless-stopped
     ports:
