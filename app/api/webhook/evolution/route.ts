@@ -155,12 +155,16 @@ async function processWithTypebot(
     const startData = await startRes.json() as { sessionId?: string; messages?: unknown[] };
     sessionId = startData.sessionId ?? phone;
 
+    let sentFromStart = false;
     if (Array.isArray(startData.messages) && startData.messages.length > 0) {
       for (const msg of startData.messages) {
         const m = msg as { type?: string; content?: { richText?: unknown[] } };
         if (m.type === "text" && Array.isArray(m.content?.richText)) {
           const text = extractTextFromRichText(m.content!.richText!);
-          if (text) await sendEvolution(instanceName, replyTo, text);
+          if (text) {
+            await sendEvolution(instanceName, replyTo, text);
+            sentFromStart = true;
+          }
         }
       }
     }
@@ -169,6 +173,13 @@ async function processWithTypebot(
       await redis.setex(sessionKey, SESSION_TTL, sessionId);
     } catch {
       // redis falhou mas continua
+    }
+
+    // Se o startChat já enviou mensagens de boas-vindas, não chamar continueChat
+    // com o @hello — ele é só o gatilho para iniciar a sessão, não uma entrada do fluxo.
+    if (sentFromStart) {
+      console.log(`[TYPEBOT] Sessao iniciada com boas-vindas para ${phone} — continueChat ignorado`);
+      return true;
     }
   }
 
