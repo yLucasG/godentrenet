@@ -100,8 +100,7 @@ async function resolveReplyTo(
 
 function buildFallbackText(store: StoreWithConfig): string {
   if (store.botConfig?.welcomeMessage) {
-    const storeUrl = `${BASE_URL}/${store.evolutionInstanceName}`;
-    return `${store.botConfig.welcomeMessage}\nAcesse nossa loja: ${storeUrl}`;
+    return store.botConfig.welcomeMessage;
   }
   const storeUrl = `${BASE_URL}/${store.evolutionInstanceName}`;
   return `Ola! Seja bem-vindo a ${store.name}.\nAcesse nossa loja: ${storeUrl}`;
