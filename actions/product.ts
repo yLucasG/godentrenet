@@ -15,13 +15,21 @@ export async function listProducts() {
   return prisma.product.findMany({ where: { storeId }, orderBy: { createdAt: "asc" } });
 }
 
-export async function createProduct(data: { name: string; price: number; emoji: string }) {
+export async function createProduct(data: {
+  name: string;
+  price: number;
+  emoji: string;
+  imageUrl?: string | null;
+}) {
   const storeId = await getStoreId();
   await prisma.product.create({ data: { ...data, storeId } });
   revalidatePath("/dashboard/produtos");
 }
 
-export async function updateProduct(id: string, data: { name: string; price: number; emoji: string; active: boolean }) {
+export async function updateProduct(
+  id: string,
+  data: { name: string; price: number; emoji: string; active: boolean; imageUrl?: string | null }
+) {
   const storeId = await getStoreId();
   await prisma.product.updateMany({ where: { id, storeId }, data });
   revalidatePath("/dashboard/produtos");

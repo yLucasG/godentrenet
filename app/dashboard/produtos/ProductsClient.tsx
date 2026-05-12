@@ -3,122 +3,45 @@
 import { useState } from "react";
 import { createProduct, updateProduct, deleteProduct } from "@/actions/product";
 import type { Product } from "@prisma/client";
+import { ProductModal } from "./ProductModal";
+import { ImportModal } from "./ImportModal";
 
-const EMOJIS = ["🍞", "🥐", "🎂", "🧁", "🍕", "🍔", "🌮", "☕", "🧃", "🛍️", "🥩", "🥗"];
+type ProductWithImage = Product & { imageUrl?: string | null };
 
-function ProductModal({
-  onClose,
-  onSave,
-  initial,
-}: {
-  onClose: () => void;
-  onSave: (data: { name: string; price: number; emoji: string }) => Promise<void>;
-  initial?: Product;
-}) {
-  const [name, setName] = useState(initial?.name ?? "");
-  const [price, setPrice] = useState(initial?.price?.toString() ?? "");
-  const [emoji, setEmoji] = useState(initial?.emoji ?? "🛍️");
-  const [saving, setSaving] = useState(false);
-
-  async function handleSave() {
-    if (!name || !price) return;
-    setSaving(true);
-    await onSave({ name, price: parseFloat(price), emoji });
-    setSaving(false);
-    onClose();
-  }
-
-  return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4">
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 w-full max-w-sm space-y-4">
-        <h3 className="text-white font-semibold">{initial ? "Editar produto" : "Novo produto"}</h3>
-
-        <div>
-          <label className="text-gray-400 text-sm block mb-1">Emoji</label>
-          <div className="flex flex-wrap gap-2">
-            {EMOJIS.map(e => (
-              <button
-                key={e}
-                onClick={() => setEmoji(e)}
-                className={`text-xl w-9 h-9 rounded-lg transition-colors ${emoji === e ? "bg-green-700" : "bg-gray-800 hover:bg-gray-700"}`}
-              >
-                {e}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <label className="text-gray-400 text-sm block mb-1">Nome</label>
-          <input
-            value={name}
-            onChange={e => setName(e.target.value)}
-            placeholder="Ex: Pão Francês"
-            className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
-          />
-        </div>
-
-        <div>
-          <label className="text-gray-400 text-sm block mb-1">Preço (R$)</label>
-          <input
-            type="number"
-            value={price}
-            onChange={e => setPrice(e.target.value)}
-            placeholder="0,00"
-            step="0.01"
-            min="0"
-            className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
-          />
-        </div>
-
-        <div className="flex gap-2 pt-2">
-          <button onClick={onClose} className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg py-2 text-sm transition-colors">
-            Cancelar
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={saving || !name || !price}
-            className="flex-1 bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white rounded-lg py-2 text-sm font-medium transition-colors"
-          >
-            {saving ? "Salvando..." : "Salvar"}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export function ProductsClient({ initialProducts }: { initialProducts: Product[] }) {
+export function ProductsClient({ initialProducts }: { initialProducts: ProductWithImage[] }) {
   const [products, setProducts] = useState(initialProducts);
-  const [modal, setModal] = useState<{ open: boolean; editing?: Product }>({ open: false });
+  const [modal, setModal] = useState<{ open: boolean; editing?: ProductWithImage }>({ open: false });
+  const [showImport, setShowImport] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
 
-  async function handleCreate(data: { name: string; price: number; emoji: string }) {
-    await createProduct(data);
+  async function handleCreate(data: { name: string; price: number; emoji: string; imageUrl: string | null }) {
+    await createProduct({ ...data, imageUrl: data.imageUrl ?? undefined });
     window.location.reload();
   }
 
-  async function handleUpdate(data: { name: string; price: number; emoji: string }) {
+  async function handleUpdate(data: { name: string; price: number; emoji: string; imageUrl: string | null }) {
     if (!modal.editing) return;
-    await updateProduct(modal.editing.id, { ...data, active: modal.editing.active });
+    await updateProduct(modal.editing.id, { ...data, active: modal.editing.active, imageUrl: data.imageUrl });
     window.location.reload();
   }
 
   async function handleDelete(id: string) {
+    if (!confirm("Excluir este produto?")) return;
     setDeleting(id);
     await deleteProduct(id);
-    setProducts(p => p.filter(x => x.id !== id));
+    setProducts((p) => p.filter((x) => x.id !== id));
     setDeleting(null);
   }
 
-  async function handleToggle(product: Product) {
+  async function handleToggle(product: ProductWithImage) {
     await updateProduct(product.id, {
       name: product.name,
       price: product.price,
       emoji: product.emoji,
       active: !product.active,
+      imageUrl: product.imageUrl,
     });
-    setProducts(p => p.map(x => x.id === product.id ? { ...x, active: !x.active } : x));
+    setProducts((p) => p.map((x) => x.id === product.id ? { ...x, active: !x.active } : x));
   }
 
   return (
@@ -131,35 +54,73 @@ export function ProductsClient({ initialProducts }: { initialProducts: Product[]
         />
       )}
 
-      <button
-        onClick={() => setModal({ open: true })}
-        className="mb-6 bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-      >
-        + Adicionar produto
-      </button>
+      {showImport && (
+        <ImportModal
+          onClose={() => setShowImport(false)}
+          onDone={() => { setShowImport(false); window.location.reload(); }}
+        />
+      )}
+
+      {/* Action buttons */}
+      <div className="flex items-center gap-3 mb-6">
+        <button
+          onClick={() => setModal({ open: true })}
+          className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+        >
+          + Novo produto
+        </button>
+        <button
+          onClick={() => setShowImport(true)}
+          className="bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
+        >
+          📥 Importar produtos
+        </button>
+      </div>
 
       {products.length === 0 ? (
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 text-center">
-          <p className="text-gray-400">Nenhum produto cadastrado ainda.</p>
-          <p className="text-gray-500 text-sm mt-1">Adicione produtos para exibi-los na sua loja.</p>
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-10 text-center">
+          <p className="text-4xl mb-3">📦</p>
+          <p className="text-gray-300 font-medium">Nenhum produto ainda</p>
+          <p className="text-gray-500 text-sm mt-1">
+            Adicione manualmente ou importe uma lista de uma vez.
+          </p>
+          <div className="flex items-center justify-center gap-2 mt-4">
+            <button onClick={() => setModal({ open: true })} className="text-emerald-400 hover:text-emerald-300 text-sm transition-colors">+ Adicionar produto</button>
+            <span className="text-gray-700">·</span>
+            <button onClick={() => setShowImport(true)} className="text-gray-400 hover:text-gray-300 text-sm transition-colors">📥 Importar lista</button>
+          </div>
         </div>
       ) : (
         <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-800">
-                <th className="text-left text-gray-400 text-sm px-4 py-3 font-medium">Produto</th>
-                <th className="text-left text-gray-400 text-sm px-4 py-3 font-medium">Preço</th>
-                <th className="text-left text-gray-400 text-sm px-4 py-3 font-medium">Status</th>
+                <th className="text-left text-gray-400 text-xs px-4 py-3 font-medium uppercase tracking-wider">Produto</th>
+                <th className="text-left text-gray-400 text-xs px-4 py-3 font-medium uppercase tracking-wider">Preço</th>
+                <th className="text-left text-gray-400 text-xs px-4 py-3 font-medium uppercase tracking-wider">Status</th>
                 <th className="px-4 py-3"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-800">
-              {products.map(p => (
-                <tr key={p.id} className="hover:bg-gray-800/50 transition-colors">
+              {products.map((p) => (
+                <tr key={p.id} className="hover:bg-gray-800/40 transition-colors">
                   <td className="px-4 py-3">
-                    <span className="mr-2 text-lg">{p.emoji}</span>
-                    <span className="text-white text-sm">{p.name}</span>
+                    <div className="flex items-center gap-3">
+                      {/* Thumbnail */}
+                      {p.imageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={p.imageUrl}
+                          alt={p.name}
+                          className="w-10 h-10 rounded-xl object-cover flex-shrink-0"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-xl bg-gray-800 flex items-center justify-center text-xl flex-shrink-0">
+                          {p.emoji}
+                        </div>
+                      )}
+                      <span className="text-white text-sm">{p.name}</span>
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-gray-300 text-sm">
                     R$ {p.price.toFixed(2).replace(".", ",")}
@@ -167,9 +128,9 @@ export function ProductsClient({ initialProducts }: { initialProducts: Product[]
                   <td className="px-4 py-3">
                     <button
                       onClick={() => handleToggle(p)}
-                      className={`text-xs px-2 py-1 rounded-full font-medium transition-colors ${
+                      className={`text-xs px-2.5 py-1 rounded-full font-medium transition-colors ${
                         p.active
-                          ? "bg-green-900/50 text-green-400 hover:bg-green-900"
+                          ? "bg-emerald-900/50 text-emerald-400 hover:bg-emerald-900"
                           : "bg-gray-800 text-gray-500 hover:bg-gray-700"
                       }`}
                     >
@@ -177,7 +138,7 @@ export function ProductsClient({ initialProducts }: { initialProducts: Product[]
                     </button>
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center gap-2 justify-end">
+                    <div className="flex items-center gap-3 justify-end">
                       <button
                         onClick={() => setModal({ open: true, editing: p })}
                         className="text-gray-400 hover:text-white text-sm transition-colors"

@@ -9,7 +9,7 @@ import {
 import { createOrder } from "@/actions/order";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-interface Product { id: string; name: string; price: number; emoji: string; }
+interface Product { id: string; name: string; price: number; emoji: string; imageUrl?: string | null; }
 interface CartItem { product: Product; qty: number; }
 interface Props { storeId: string; instanceName: string; storeName: string; products: Product[]; }
 type View = "products" | "checkout" | "success";
@@ -73,9 +73,14 @@ function ProductCard({
         </div>
       )}
 
-      {/* Emoji area */}
-      <div className={`relative h-28 bg-gradient-to-br ${grad} flex items-center justify-center overflow-hidden`}>
-        <span className="text-5xl select-none drop-shadow-sm">{product.emoji}</span>
+      {/* Image or emoji area */}
+      <div className={`relative h-28 ${product.imageUrl ? "bg-slate-100" : `bg-gradient-to-br ${grad}`} flex items-center justify-center overflow-hidden`}>
+        {product.imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+        ) : (
+          <span className="text-5xl select-none drop-shadow-sm">{product.emoji}</span>
+        )}
         <AnimatePresence>
           {qty > 0 && (
             <motion.div
@@ -225,8 +230,11 @@ function CartContent({
               initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
               className="flex items-center gap-3 py-3 border-b border-slate-50 last:border-0"
             >
-              <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-2xl flex-shrink-0">
-                {item.product.emoji}
+              <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden">
+                {item.product.imageUrl
+                  // eslint-disable-next-line @next/next/no-img-element
+                  ? <img src={item.product.imageUrl} alt={item.product.name} className="w-full h-full object-cover" />
+                  : item.product.emoji}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-slate-700 text-sm truncate">{item.product.name}</p>

@@ -31,6 +31,7 @@ export default async function StorefrontPage({
         name: p.name,
         price: p.price,
         emoji: p.emoji,
+        imageUrl: p.imageUrl,
       }))}
     />
   );
