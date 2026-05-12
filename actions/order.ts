@@ -27,7 +27,10 @@ interface CreateOrderInput {
 }
 
 function formatPhone(phone: string): string {
-  return phone.replace(/\D/g, "");
+  const digits = phone.replace(/\D/g, "");
+  // Prepend 55 (Brazil) if not already present
+  if (digits.startsWith("55") && digits.length >= 12) return digits;
+  return "55" + digits;
 }
 
 function buildConfirmationMessage(input: CreateOrderInput): string {

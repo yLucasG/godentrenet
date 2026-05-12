@@ -296,7 +296,10 @@ export function StoreClient({ storeId, instanceName, storeName, products }: Prop
 
   // ─── CHECKOUT VIEW ────────────────────────────────────────────────────────────
   if (view === "checkout") {
-    const canSubmit = customerPhone.replace(/\D/g, "").length >= 10 && address.trim().length > 5;
+    const phoneDigits = customerPhone.replace(/\D/g, "");
+    const phoneOk = phoneDigits.length >= 8;
+    const addressOk = address.trim().length >= 3;
+    const canSubmit = phoneOk && addressOk;
 
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -430,7 +433,9 @@ export function StoreClient({ storeId, instanceName, storeName, products }: Prop
 
         <div className="fixed bottom-0 left-0 right-0 px-4 pb-5 pt-2 bg-gradient-to-t from-gray-50 via-gray-50">
           {!canSubmit && (
-            <p className="text-center text-xs text-gray-400 mb-2">Preencha o WhatsApp e o endereço para continuar</p>
+            <p className="text-center text-xs text-gray-400 mb-2">
+              {!phoneOk && !addressOk ? "Preencha o WhatsApp e o endereço" : !phoneOk ? "Informe seu WhatsApp" : "Informe o endereço de entrega"}
+            </p>
           )}
           <button
             onClick={handleSubmitOrder}

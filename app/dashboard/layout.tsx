@@ -2,17 +2,23 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { SignOutButton } from "./SignOutButton";
+import { prisma } from "@/lib/prisma";
 
 const navItems = [
-  { href: "/dashboard", label: "Início", icon: "🏠" },
-  { href: "/dashboard/produtos", label: "Produtos", icon: "📦" },
-  { href: "/dashboard/bot", label: "Bot", icon: "🤖" },
-  { href: "/dashboard/config", label: "Configurações", icon: "⚙️" },
+  { href: "/dashboard",          label: "Início",         icon: "🏠" },
+  { href: "/dashboard/pedidos",  label: "Pedidos",        icon: "🧾" },
+  { href: "/dashboard/produtos", label: "Produtos",       icon: "📦" },
+  { href: "/dashboard/bot",      label: "Bot",            icon: "🤖" },
+  { href: "/dashboard/config",   label: "Configurações",  icon: "⚙️" },
 ];
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
   if (!session) redirect("/login");
+
+  const pendingOrders = session.user.storeId
+    ? await prisma.order.count({ where: { storeId: session.user.storeId, status: "pending" } })
+    : 0;
 
   return (
     <div className="min-h-screen bg-gray-950 flex">
@@ -31,7 +37,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
               className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white text-sm transition-colors"
             >
               <span>{item.icon}</span>
-              {item.label}
+              <span className="flex-1">{item.label}</span>
+              {item.href === "/dashboard/pedidos" && pendingOrders > 0 && (
+                <span className="bg-orange-500 text-white text-xs font-bold rounded-full px-1.5 py-0.5 min-w-[20px] text-center">
+                  {pendingOrders}
+                </span>
+              )}
             </Link>
           ))}
         </nav>
