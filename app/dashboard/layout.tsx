@@ -5,11 +5,12 @@ import { SignOutButton } from "./SignOutButton";
 import { prisma } from "@/lib/prisma";
 
 const navItems = [
-  { href: "/dashboard",          label: "Início",         icon: "🏠" },
-  { href: "/dashboard/pedidos",  label: "Pedidos",        icon: "🧾" },
-  { href: "/dashboard/produtos", label: "Produtos",       icon: "📦" },
-  { href: "/dashboard/bot",      label: "Bot",            icon: "🤖" },
-  { href: "/dashboard/config",   label: "Configurações",  icon: "⚙️" },
+  { href: "/dashboard",               label: "Início",        icon: "🏠" },
+  { href: "/dashboard/pedidos",       label: "Pedidos",       icon: "🧾" },
+  { href: "/dashboard/produtos",      label: "Produtos",      icon: "📦" },
+  { href: "/dashboard/categorias",    label: "Categorias",    icon: "🏷️" },
+  { href: "/dashboard/bot",           label: "Bot",           icon: "🤖" },
+  { href: "/dashboard/config",        label: "Configurações", icon: "⚙️" },
 ];
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {

@@ -12,7 +12,11 @@ async function getStoreId() {
 
 export async function listProducts() {
   const storeId = await getStoreId();
-  return prisma.product.findMany({ where: { storeId }, orderBy: { createdAt: "asc" } });
+  return prisma.product.findMany({
+    where: { storeId },
+    orderBy: { createdAt: "asc" },
+    include: { category: { select: { id: true, name: true, emoji: true } } },
+  });
 }
 
 export async function createProduct(data: {
@@ -20,18 +24,33 @@ export async function createProduct(data: {
   price: number;
   emoji: string;
   imageUrl?: string | null;
+  categoryId?: string | null;
 }) {
   const storeId = await getStoreId();
-  await prisma.product.create({ data: { ...data, storeId } });
+  const { categoryId, ...rest } = data;
+  await prisma.product.create({
+    data: { ...rest, storeId, ...(categoryId ? { categoryId } : {}) },
+  });
   revalidatePath("/dashboard/produtos");
 }
 
 export async function updateProduct(
   id: string,
-  data: { name: string; price: number; emoji: string; active: boolean; imageUrl?: string | null }
+  data: {
+    name: string;
+    price: number;
+    emoji: string;
+    active: boolean;
+    imageUrl?: string | null;
+    categoryId?: string | null;
+  }
 ) {
   const storeId = await getStoreId();
-  await prisma.product.updateMany({ where: { id, storeId }, data });
+  const { categoryId, ...rest } = data;
+  await prisma.product.updateMany({
+    where: { id, storeId },
+    data: { ...rest, categoryId: categoryId ?? null },
+  });
   revalidatePath("/dashboard/produtos");
 }
 

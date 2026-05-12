@@ -6,23 +6,28 @@ import type { Product } from "@prisma/client";
 
 const EMOJIS = ["🍞", "🥐", "🎂", "🧁", "🍕", "🍔", "🌮", "☕", "🧃", "🛍️", "🥩", "🥗", "🥟", "🍫", "🍦", "🍪", "🧀", "🥚", "🥤", "💧", "🌭", "🫕", "🥘", "🍜"];
 
+type CategoryOption = { id: string; name: string; emoji: string };
+
 interface SaveData {
   name: string;
   price: number;
   emoji: string;
   imageUrl: string | null;
+  categoryId: string | null;
 }
 
 interface Props {
   onClose: () => void;
   onSave: (data: SaveData) => Promise<void>;
-  initial?: Product & { imageUrl?: string | null };
+  initial?: Product & { imageUrl?: string | null; categoryId?: string | null };
+  categories: CategoryOption[];
 }
 
-export function ProductModal({ onClose, onSave, initial }: Props) {
+export function ProductModal({ onClose, onSave, initial, categories }: Props) {
   const [name, setName] = useState(initial?.name ?? "");
   const [price, setPrice] = useState(initial?.price?.toString() ?? "");
   const [emoji, setEmoji] = useState(initial?.emoji ?? "🛍️");
+  const [categoryId, setCategoryId] = useState<string | null>(initial?.categoryId ?? null);
   const [imageUrl, setImageUrl] = useState<string | null>(initial?.imageUrl ?? null);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(initial?.imageUrl ?? null);
@@ -75,6 +80,7 @@ export function ProductModal({ onClose, onSave, initial }: Props) {
         price: parseFloat(price),
         emoji,
         imageUrl: finalImageUrl,
+        categoryId,
       });
       onClose();
     } catch (err) {
@@ -89,9 +95,9 @@ export function ProductModal({ onClose, onSave, initial }: Props) {
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4">
-      <div className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-sm overflow-hidden">
+      <div className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-sm overflow-hidden max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 sticky top-0 bg-gray-900 z-10">
           <h3 className="text-white font-semibold text-sm">{initial ? "Editar produto" : "Novo produto"}</h3>
           <button onClick={onClose} className="w-7 h-7 rounded-lg bg-gray-800 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
             <X size={14} />
@@ -143,7 +149,7 @@ export function ProductModal({ onClose, onSave, initial }: Props) {
             )}
           </div>
 
-          {/* Emoji (shown when no image or as override) */}
+          {/* Emoji */}
           {!previewUrl && (
             <div>
               <label className="text-gray-400 text-xs font-medium block mb-2">Emoji (se não tiver imagem)</label>
@@ -185,6 +191,44 @@ export function ProductModal({ onClose, onSave, initial }: Props) {
               className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-500 transition-colors"
             />
           </div>
+
+          {/* Category */}
+          {categories.length > 0 && (
+            <div>
+              <label className="text-gray-400 text-xs font-medium block mb-1.5">Categoria</label>
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  onClick={() => setCategoryId(null)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors ${
+                    !categoryId
+                      ? "bg-emerald-700 text-white ring-1 ring-emerald-500"
+                      : "bg-gray-800 text-gray-400 hover:bg-gray-700"
+                  }`}
+                >
+                  Sem categoria
+                </button>
+                {categories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => setCategoryId(cat.id)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors flex items-center gap-1 ${
+                      categoryId === cat.id
+                        ? "bg-emerald-700 text-white ring-1 ring-emerald-500"
+                        : "bg-gray-800 text-gray-400 hover:bg-gray-700"
+                    }`}
+                  >
+                    <span>{cat.emoji}</span>
+                    <span>{cat.name}</span>
+                  </button>
+                ))}
+              </div>
+              {categories.length === 0 && (
+                <p className="text-gray-600 text-xs mt-1">
+                  Crie categorias em <a href="/dashboard/categorias" className="text-emerald-500 hover:underline">Categorias</a> primeiro.
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Buttons */}
           <div className="flex gap-2 pt-1">

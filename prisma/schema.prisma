@@ -18,32 +18,46 @@ model User {
 }
 
 model Store {
-  id                       String     @id @default(uuid())
+  id                       String      @id @default(uuid())
   name                     String
   evolutionInstanceName    String?
-  evolutionConnectionState String     @default("DISCONNECTED")
+  evolutionConnectionState String      @default("DISCONNECTED")
   phoneNumber              String?
-  userId                   String?    @unique
-  user                     User?      @relation(fields: [userId], references: [id])
+  userId                   String?     @unique
+  user                     User?       @relation(fields: [userId], references: [id])
   products                 Product[]
+  categories               Category[]
   botConfig                BotConfig?
   messages                 BotMessage[]
   orders                   Order[]
-  createdAt                DateTime   @default(now())
-  updatedAt                DateTime   @updatedAt
+  createdAt                DateTime    @default(now())
+  updatedAt                DateTime    @updatedAt
 }
 
 model Product {
-  id        String   @id @default(cuid())
+  id         String     @id @default(cuid())
+  storeId    String
+  store      Store      @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  categoryId String?
+  category   Category?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  name       String
+  price      Float
+  emoji      String     @default("🛍️")
+  imageUrl   String?
+  active     Boolean    @default(true)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+}
+
+model Category {
+  id        String    @id @default(cuid())
   storeId   String
-  store     Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  store     Store     @relation(fields: [storeId], references: [id], onDelete: Cascade)
   name      String
-  price     Float
-  emoji     String   @default("🛍️")
-  imageUrl  String?
-  active    Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  emoji     String    @default("🛍️")
+  order     Int       @default(0)
+  products  Product[]
+  createdAt DateTime  @default(now())
 }
 
 model BotConfig {

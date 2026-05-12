@@ -15,6 +15,11 @@ export default async function StorefrontPage({
       products: {
         where: { active: true },
         orderBy: { createdAt: "asc" },
+        include: { category: { select: { id: true, name: true, emoji: true } } },
+      },
+      categories: {
+        orderBy: { order: "asc" },
+        select: { id: true, name: true, emoji: true },
       },
     },
   });
@@ -32,7 +37,10 @@ export default async function StorefrontPage({
         price: p.price,
         emoji: p.emoji,
         imageUrl: p.imageUrl,
+        categoryId: p.categoryId,
+        categoryName: p.category?.name ?? null,
       }))}
+      categories={store.categories}
     />
   );
 }

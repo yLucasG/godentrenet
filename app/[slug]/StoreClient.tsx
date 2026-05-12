@@ -10,6 +10,13 @@ interface Product {
   price: number;
   emoji: string;
   imageUrl?: string | null;
+  categoryId?: string | null;
+  categoryName?: string | null;
+}
+interface Category {
+  id: string;
+  name: string;
+  emoji: string;
 }
 interface CartItem { product: Product; qty: number }
 interface Props {
@@ -17,36 +24,14 @@ interface Props {
   instanceName: string;
   storeName: string;
   products: Product[];
+  categories: Category[];
 }
 type View = "products" | "checkout" | "success";
 type PayMethod = "pix" | "dinheiro";
 
-// ─── Emoji → category inference ────────────────────────────────────────────
-const EMOJI_CAT: Record<string, string> = {
-  "🍞":"padaria","🥐":"padaria","🍕":"padaria","🍔":"padaria",
-  "🌮":"padaria","🌭":"padaria","🥪":"padaria","🫓":"padaria",
-  "🥩":"pratos","🥗":"pratos","🥟":"pratos","🍜":"pratos",
-  "🫕":"pratos","🥘":"pratos","🍛":"pratos","🍲":"pratos",
-  "☕":"bebidas","🧃":"bebidas","🥤":"bebidas","💧":"bebidas",
-  "🍵":"bebidas","🧋":"bebidas","🥛":"bebidas",
-  "🎂":"doces","🧁":"doces","🍫":"doces","🍦":"doces",
-  "🍪":"doces","🍩":"doces","🍰":"doces","🧇":"doces",
-  "🍎":"frutas","🍌":"frutas","🍓":"frutas","🥝":"frutas",
-  "🍇":"frutas","🍒":"frutas","🥭":"frutas","🍍":"frutas",
-  "🧀":"frios","🥚":"frios",
-};
-const CAT_LABEL: Record<string, { name: string; emoji: string }> = {
-  padaria: { name: "Padaria", emoji: "🍞" },
-  pratos:  { name: "Pratos",  emoji: "🍽️" },
-  bebidas: { name: "Bebidas", emoji: "☕" },
-  doces:   { name: "Doces",   emoji: "🎂" },
-  frutas:  { name: "Frutas",  emoji: "🍎" },
-  frios:   { name: "Frios",   emoji: "🧀" },
-  outros:  { name: "Outros",  emoji: "🛍️" },
-};
-
-function inferCat(emoji: string): string {
-  return EMOJI_CAT[emoji] ?? "outros";
+// ─── Search normalization (strips diacritics) ───────────────────────────────
+function norm(s: string): string {
+  return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 }
 
 // ─── Icons ──────────────────────────────────────────────────────────────────
@@ -184,10 +169,11 @@ function CartBar({
 
 // ─── Products view ───────────────────────────────────────────────────────────
 function ProductsView({
-  storeName, products, cart, onAdd, onCheckout,
+  storeName, products, dbCategories, cart, onAdd, onCheckout,
 }: {
   storeName: string;
   products: Product[];
+  dbCategories: Category[];
   cart: Record<string, number>;
   onAdd: (p: Product) => void;
   onCheckout: () => void;
@@ -195,13 +181,11 @@ function ProductsView({
   const [search, setSearch] = useState("");
   const [activeCat, setActiveCat] = useState("all");
 
-  // Detect available categories from emoji
-  const categories = useMemo(() => {
-    const seen = new Set<string>();
-    products.forEach(p => seen.add(inferCat(p.emoji)));
-    const cats = Array.from(seen).filter(c => CAT_LABEL[c]);
-    return cats.length > 1 ? cats : [];
-  }, [products]);
+  // Only show categories that have at least one product
+  const visibleCategories = useMemo(() => {
+    const usedIds = new Set(products.map(p => p.categoryId).filter(Boolean));
+    return dbCategories.filter(c => usedIds.has(c.id));
+  }, [products, dbCategories]);
 
   // Featured = first 2 products (only in "all" view with no search)
   const featured = activeCat === "all" && !search.trim()
@@ -210,20 +194,15 @@ function ProductsView({
 
   const filtered = useMemo(() => {
     let list = products.filter(p => !featured.includes(p));
-    if (activeCat !== "all") list = list.filter(p => inferCat(p.emoji) === activeCat);
+    if (activeCat !== "all") list = list.filter(p => p.categoryId === activeCat);
     if (search.trim()) {
-      const q = search.toLowerCase();
-      list = list.filter(p => p.name.toLowerCase().includes(q));
+      const q = norm(search);
+      list = list.filter(p => norm(p.name).includes(q));
     }
     return list;
   }, [products, featured, activeCat, search]);
 
-  const fmt = (n: number) => `R$ ${n.toFixed(2).replace(".", ",")}`;
-  const cartTotal = Object.entries(cart).reduce((s, [id, q]) => {
-    const p = products.find(x => x.id === id);
-    return s + (p ? p.price * q : 0);
-  }, 0);
-
+  const activeCatLabel = visibleCategories.find(c => c.id === activeCat)?.name ?? "TODOS OS PRODUTOS";
   const initials = storeName.split(" ").slice(0, 2).map(w => w[0]).join("").toUpperCase();
 
   return (
@@ -254,8 +233,8 @@ function ProductsView({
           />
         </div>
 
-        {/* Categories — only shown if multiple detected */}
-        {categories.length > 0 && (
+        {/* Categories — only shown when store has DB categories with products */}
+        {visibleCategories.length > 0 && (
           <div className="s-cats">
             <div className="s-section-head" style={{ padding: "6px 18px 12px", marginBottom: 0, borderBottom: 0 }}>
               <span className="s-section-label mono">› CATEGORIAS</span>
@@ -268,19 +247,16 @@ function ProductsView({
                 <span className="s-chip-icon">🛍️</span>
                 <span>TUDO</span>
               </button>
-              {categories.map(cat => {
-                const info = CAT_LABEL[cat];
-                return (
-                  <button
-                    key={cat}
-                    className={`s-chip${activeCat === cat ? " active" : ""}`}
-                    onClick={() => setActiveCat(cat)}
-                  >
-                    <span className="s-chip-icon">{info.emoji}</span>
-                    <span>{info.name}</span>
-                  </button>
-                );
-              })}
+              {visibleCategories.map(cat => (
+                <button
+                  key={cat.id}
+                  className={`s-chip${activeCat === cat.id ? " active" : ""}`}
+                  onClick={() => setActiveCat(cat.id)}
+                >
+                  <span className="s-chip-icon">{cat.emoji}</span>
+                  <span>{cat.name}</span>
+                </button>
+              ))}
             </div>
           </div>
         )}
@@ -310,7 +286,7 @@ function ProductsView({
           <section className="s-section">
             <div className="s-section-head">
               <span className="s-section-label mono">
-                › {activeCat === "all" ? "TODOS OS PRODUTOS" : CAT_LABEL[activeCat]?.name.toUpperCase()}
+                › {activeCat === "all" ? "TODOS OS PRODUTOS" : activeCatLabel.toUpperCase()}
               </span>
               <span className="s-section-count mono">{filtered.length} ITENS</span>
             </div>
@@ -531,7 +507,7 @@ function SuccessView({ onBack }: { onBack: () => void }) {
 }
 
 // ─── Root component ──────────────────────────────────────────────────────────
-export function StoreClient({ storeId, instanceName, storeName, products }: Props) {
+export function StoreClient({ storeId, instanceName, storeName, products, categories }: Props) {
   const [view, setView] = useState<View>("products");
   const [cart, setCart] = useState<Record<string, number>>({});
 
@@ -550,6 +526,7 @@ export function StoreClient({ storeId, instanceName, storeName, products }: Prop
         <ProductsView
           storeName={storeName}
           products={products}
+          dbCategories={categories}
           cart={cart}
           onAdd={addToCart}
           onCheckout={() => setView("checkout")}

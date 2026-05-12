@@ -6,22 +6,49 @@ import type { Product } from "@prisma/client";
 import { ProductModal } from "./ProductModal";
 import { ImportModal } from "./ImportModal";
 
-type ProductWithImage = Product & { imageUrl?: string | null };
+type CategoryOption = { id: string; name: string; emoji: string };
+type ProductWithExtras = Product & {
+  imageUrl?: string | null;
+  categoryId?: string | null;
+  category?: { id: string; name: string; emoji: string } | null;
+};
 
-export function ProductsClient({ initialProducts }: { initialProducts: ProductWithImage[] }) {
+export function ProductsClient({
+  initialProducts,
+  categories,
+}: {
+  initialProducts: ProductWithExtras[];
+  categories: CategoryOption[];
+}) {
   const [products, setProducts] = useState(initialProducts);
-  const [modal, setModal] = useState<{ open: boolean; editing?: ProductWithImage }>({ open: false });
+  const [modal, setModal] = useState<{ open: boolean; editing?: ProductWithExtras }>({ open: false });
   const [showImport, setShowImport] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
 
-  async function handleCreate(data: { name: string; price: number; emoji: string; imageUrl: string | null }) {
+  async function handleCreate(data: {
+    name: string;
+    price: number;
+    emoji: string;
+    imageUrl: string | null;
+    categoryId: string | null;
+  }) {
     await createProduct({ ...data, imageUrl: data.imageUrl ?? undefined });
     window.location.reload();
   }
 
-  async function handleUpdate(data: { name: string; price: number; emoji: string; imageUrl: string | null }) {
+  async function handleUpdate(data: {
+    name: string;
+    price: number;
+    emoji: string;
+    imageUrl: string | null;
+    categoryId: string | null;
+  }) {
     if (!modal.editing) return;
-    await updateProduct(modal.editing.id, { ...data, active: modal.editing.active, imageUrl: data.imageUrl });
+    await updateProduct(modal.editing.id, {
+      ...data,
+      active: modal.editing.active,
+      imageUrl: data.imageUrl,
+    });
     window.location.reload();
   }
 
@@ -33,15 +60,16 @@ export function ProductsClient({ initialProducts }: { initialProducts: ProductWi
     setDeleting(null);
   }
 
-  async function handleToggle(product: ProductWithImage) {
+  async function handleToggle(product: ProductWithExtras) {
     await updateProduct(product.id, {
       name: product.name,
       price: product.price,
       emoji: product.emoji,
       active: !product.active,
       imageUrl: product.imageUrl,
+      categoryId: product.categoryId ?? null,
     });
-    setProducts((p) => p.map((x) => x.id === product.id ? { ...x, active: !x.active } : x));
+    setProducts((p) => p.map((x) => (x.id === product.id ? { ...x, active: !x.active } : x)));
   }
 
   return (
@@ -51,6 +79,7 @@ export function ProductsClient({ initialProducts }: { initialProducts: ProductWi
           onClose={() => setModal({ open: false })}
           onSave={modal.editing ? handleUpdate : handleCreate}
           initial={modal.editing}
+          categories={categories}
         />
       )}
 
@@ -96,6 +125,7 @@ export function ProductsClient({ initialProducts }: { initialProducts: ProductWi
             <thead>
               <tr className="border-b border-gray-800">
                 <th className="text-left text-gray-400 text-xs px-4 py-3 font-medium uppercase tracking-wider">Produto</th>
+                <th className="text-left text-gray-400 text-xs px-4 py-3 font-medium uppercase tracking-wider">Categoria</th>
                 <th className="text-left text-gray-400 text-xs px-4 py-3 font-medium uppercase tracking-wider">Preço</th>
                 <th className="text-left text-gray-400 text-xs px-4 py-3 font-medium uppercase tracking-wider">Status</th>
                 <th className="px-4 py-3"></th>
@@ -106,7 +136,6 @@ export function ProductsClient({ initialProducts }: { initialProducts: ProductWi
                 <tr key={p.id} className="hover:bg-gray-800/40 transition-colors">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      {/* Thumbnail */}
                       {p.imageUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
@@ -121,6 +150,16 @@ export function ProductsClient({ initialProducts }: { initialProducts: ProductWi
                       )}
                       <span className="text-white text-sm">{p.name}</span>
                     </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    {p.category ? (
+                      <span className="text-gray-300 text-sm flex items-center gap-1">
+                        <span>{p.category.emoji}</span>
+                        <span>{p.category.name}</span>
+                      </span>
+                    ) : (
+                      <span className="text-gray-600 text-xs">—</span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-gray-300 text-sm">
                     R$ {p.price.toFixed(2).replace(".", ",")}
