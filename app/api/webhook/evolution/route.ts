@@ -49,39 +49,22 @@ async function sendEvolution(instanceName: string, number: string, text: string)
 async function resolveReplyTo(
   remoteJid: string,
   senderPn: string | undefined,
-  instanceName: string
+  _instanceName: string
 ): Promise<string | undefined> {
   if (!remoteJid.endsWith("@lid")) {
     return normalizeBrNumber(remoteJid);
   }
 
+  // Evolution is patched to allow sendText to @lid JIDs directly
   if (senderPn) {
     const jid = senderPn.includes("@") ? senderPn : `${senderPn}@s.whatsapp.net`;
     console.log(`[WEBHOOK] @lid resolvido via senderPn: ${jid}`);
     return normalizeBrNumber(jid);
   }
 
-  try {
-    const where = encodeURIComponent(JSON.stringify({ id: remoteJid }));
-    const res = await fetch(
-      `${EVO_URL}/chat/findContacts/${encodeURIComponent(instanceName)}?where=${where}`,
-      { headers: { apikey: EVO_KEY }, signal: AbortSignal.timeout(3000) }
-    );
-    if (res.ok) {
-      const contacts = await res.json() as { id?: string; jid?: string }[];
-      const contact = Array.isArray(contacts) ? contacts[0] : contacts;
-      const realJid = contact?.id ?? contact?.jid;
-      if (realJid && !realJid.endsWith("@lid")) {
-        console.log(`[WEBHOOK] @lid resolvido via findContacts: ${realJid}`);
-        return normalizeBrNumber(realJid);
-      }
-    }
-  } catch {
-    console.warn(`[WEBHOOK] findContacts timeout para ${remoteJid}`);
-  }
-
-  console.warn(`[WEBHOOK] Nao foi possivel resolver @lid ${remoteJid} — mensagem ignorada`);
-  return undefined;
+  // Use @lid directly — patched Evolution sends to @lid natively
+  console.log(`[WEBHOOK] @lid ${remoteJid} usado diretamente (Evolution patched)`);
+  return remoteJid;
 }
 
 async function getFallbackMessage(instanceName: string): Promise<string> {
