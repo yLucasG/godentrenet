@@ -44,7 +44,11 @@ export async function getStoreBySlug(slug: string) {
   });
 }
 
-export async function getStoreQrCode(storeId: string): Promise<{ qrcode: string }> {
+export async function updateStore(storeId: string, data: { name: string; phoneNumber?: string }) {
+  await prisma.store.update({ where: { id: storeId }, data });
+}
+
+export async function getStoreQrCode(storeId: string): Promise<{ qr?: string }> {
   console.log(`[STORE ACTION] buscando instância para storeId=${storeId}`);
 
   const store = await prisma.store.findUnique({ where: { id: storeId } });
@@ -60,5 +64,6 @@ export async function getStoreQrCode(storeId: string): Promise<{ qrcode: string 
   console.log(`[STORE ACTION] instanceName resolvido: "${store.evolutionInstanceName}"`);
 
   const { getQrCode } = await import("@/actions/evolution");
-  return getQrCode(store.evolutionInstanceName);
+  const result = await getQrCode(store.evolutionInstanceName);
+  return { qr: result.qrcode };
 }

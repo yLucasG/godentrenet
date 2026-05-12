@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { redis } from "@/lib/redis";
-import { getStoreByInstanceName } from "@/actions/store";
+import { prisma } from "@/lib/prisma";
 
 const EVO_URL = process.env.EVOLUTION_API_URL ?? "http://localhost:8080";
 const EVO_KEY = process.env.EVOLUTION_API_KEY ?? "";
@@ -8,8 +8,19 @@ const TYPEBOT_VIEWER_URL = process.env.TYPEBOT_VIEWER_URL ?? "http://typebot-vie
 const TYPEBOT_PUBLIC_ID = process.env.TYPEBOT_PUBLIC_ID ?? "";
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://entrenet.tech";
 const SESSION_TTL = 60 * 60 * 24;
-// Instances where bot only responds to messages starting with @hello (e.g. personal WhatsApp)
+// Fallback env-var keyword filter for instances without BotConfig in DB
 const REQUIRE_KEYWORD_INSTANCES = (process.env.REQUIRE_KEYWORD_INSTANCES ?? "").split(",").map(s => s.trim()).filter(Boolean);
+
+type StoreWithConfig = {
+  id: string;
+  name: string;
+  evolutionInstanceName: string | null;
+  botConfig: {
+    requireKeyword: boolean;
+    keyword: string;
+    welcomeMessage: string;
+  } | null;
+};
 
 function normalizeBrNumber(jid: string): string {
   const match = jid.match(/^(\d+)(@.+)$/);
@@ -29,6 +40,28 @@ function extractTextFromRichText(richText: unknown[]): string {
     })
     .filter(Boolean)
     .join("\n");
+}
+
+async function getStoreWithConfig(instanceName: string): Promise<StoreWithConfig | null> {
+  return prisma.store.findFirst({
+    where: { evolutionInstanceName: instanceName },
+    select: {
+      id: true,
+      name: true,
+      evolutionInstanceName: true,
+      botConfig: {
+        select: { requireKeyword: true, keyword: true, welcomeMessage: true },
+      },
+    },
+  });
+}
+
+async function saveMessage(storeId: string, fromPhone: string, text: string, direction: "in" | "out") {
+  try {
+    await prisma.message.create({ data: { storeId, fromPhone, text, direction } });
+  } catch {
+    // non-critical — don't break the flow
+  }
 }
 
 async function sendEvolution(instanceName: string, number: string, text: string): Promise<boolean> {
@@ -55,29 +88,23 @@ async function resolveReplyTo(
     return normalizeBrNumber(remoteJid);
   }
 
-  // Evolution is patched to allow sendText to @lid JIDs directly
   if (senderPn) {
     const jid = senderPn.includes("@") ? senderPn : `${senderPn}@s.whatsapp.net`;
     console.log(`[WEBHOOK] @lid resolvido via senderPn: ${jid}`);
     return normalizeBrNumber(jid);
   }
 
-  // Use @lid directly — patched Evolution sends to @lid natively
   console.log(`[WEBHOOK] @lid ${remoteJid} usado diretamente (Evolution patched)`);
   return remoteJid;
 }
 
-async function getFallbackMessage(instanceName: string): Promise<string> {
-  try {
-    const store = await getStoreByInstanceName(instanceName);
-    if (store) {
-      const storeUrl = `${BASE_URL}/store/${store.id}`;
-      return `Ola! Seja bem-vindo a ${store.name}.\nAcesse nossa loja: ${storeUrl}`;
-    }
-  } catch {
-    // se DB falhar, usa mensagem generica
+function buildFallbackText(store: StoreWithConfig): string {
+  if (store.botConfig?.welcomeMessage) {
+    const storeUrl = `${BASE_URL}/${store.evolutionInstanceName}`;
+    return `${store.botConfig.welcomeMessage}\nAcesse nossa loja: ${storeUrl}`;
   }
-  return `Ola! Obrigado por entrar em contato. Em breve retornaremos.`;
+  const storeUrl = `${BASE_URL}/${store.evolutionInstanceName}`;
+  return `Ola! Seja bem-vindo a ${store.name}.\nAcesse nossa loja: ${storeUrl}`;
 }
 
 async function processWithTypebot(
@@ -225,8 +252,15 @@ async function handleMessage(body: Record<string, unknown>) {
   if (isGroup) { console.log("[WEBHOOK] Grupo, ignorando"); return; }
   if (!remoteJid) { console.log("[WEBHOOK] remoteJid vazio, ignorando"); return; }
 
-  if (REQUIRE_KEYWORD_INSTANCES.includes(instanceName) && !textRaw.trim().toLowerCase().startsWith("@hello")) {
-    console.log(`[WEBHOOK] Instancia ${instanceName} requer @hello — ignorando`);
+  // Fetch store + botConfig from DB
+  const store = await getStoreWithConfig(instanceName);
+
+  // Apply keyword filter: DB config takes priority, env var as fallback
+  const requireKeyword = store?.botConfig?.requireKeyword ?? REQUIRE_KEYWORD_INSTANCES.includes(instanceName);
+  const keyword = store?.botConfig?.keyword ?? "@hello";
+
+  if (requireKeyword && !textRaw.trim().toLowerCase().startsWith(keyword.toLowerCase())) {
+    console.log(`[WEBHOOK] Instancia ${instanceName} requer "${keyword}" — ignorando`);
     return;
   }
 
@@ -236,19 +270,30 @@ async function handleMessage(body: Record<string, unknown>) {
   const phone = replyTo.split("@")[0];
   console.log(`[WEBHOOK] Mensagem de ${replyTo} (instancia: ${instanceName}): "${textRaw}"`);
 
+  // Save incoming message
+  if (store) {
+    await saveMessage(store.id, phone, textRaw, "in");
+  }
+
   try {
     const typebotOk = await processWithTypebot(phone, instanceName, replyTo, textRaw);
 
     if (!typebotOk) {
-      const fallback = await getFallbackMessage(instanceName);
+      const fallbackText = store
+        ? buildFallbackText(store)
+        : `Ola! Obrigado por entrar em contato. Em breve retornaremos.`;
       console.log(`[WEBHOOK] Enviando fallback para ${replyTo}`);
-      await sendEvolution(instanceName, replyTo, fallback);
+      const sent = await sendEvolution(instanceName, replyTo, fallbackText);
+      if (sent && store) await saveMessage(store.id, phone, fallbackText, "out");
     }
   } catch (err) {
     console.error("[WEBHOOK] Erro no processamento:", err);
     try {
-      const fallback = await getFallbackMessage(instanceName);
-      await sendEvolution(instanceName, replyTo, fallback);
+      const fallbackText = store
+        ? buildFallbackText(store)
+        : `Ola! Obrigado por entrar em contato. Em breve retornaremos.`;
+      const sent = await sendEvolution(instanceName, replyTo, fallbackText);
+      if (sent && store) await saveMessage(store.id, phone, fallbackText, "out");
     } catch (e2) {
       console.error("[WEBHOOK] Fallback tambem falhou:", e2);
     }
@@ -269,7 +314,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ received: true }, { status: 200 });
   }
 
-  // Responde imediatamente e processa em background
   handleMessage(body).catch((err) => console.error("[WEBHOOK] handleMessage error:", err));
 
   return NextResponse.json({ received: true }, { status: 200 });

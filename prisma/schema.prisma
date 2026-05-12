@@ -8,12 +8,60 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Store {
-  id                      String  @id @default(uuid())
-  name                    String
-  evolutionInstanceName   String?
-  evolutionConnectionState String  @default("DISCONNECTED")
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  isAdmin   Boolean  @default(false)
+  store     Store?
+  createdAt DateTime @default(now())
+}
 
+model Store {
+  id                       String     @id @default(uuid())
+  name                     String
+  evolutionInstanceName    String?
+  evolutionConnectionState String     @default("DISCONNECTED")
+  phoneNumber              String?
+  userId                   String?    @unique
+  user                     User?      @relation(fields: [userId], references: [id])
+  products                 Product[]
+  botConfig                BotConfig?
+  messages                 Message[]
+  createdAt                DateTime   @default(now())
+  updatedAt                DateTime   @updatedAt
+}
+
+model Product {
+  id        String   @id @default(cuid())
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  name      String
+  price     Float
+  emoji     String   @default("🛍️")
+  active    Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model BotConfig {
+  id             String   @id @default(cuid())
+  storeId        String   @unique
+  store          Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  welcomeMessage String   @default("Olá! Seja bem-vindo.")
+  requireKeyword Boolean  @default(false)
+  keyword        String   @default("@hello")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  fromPhone String
+  fromName  String?
+  text      String
+  direction String
+  createdAt DateTime @default(now())
 }

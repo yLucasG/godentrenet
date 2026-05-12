@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { redis } from "@/lib/redis";
-import { getStoreByInstanceName } from "@/actions/store";
+import { prisma } from "@/lib/prisma";
 
 const WAHA_URL = process.env.WAHA_API_URL ?? "http://waha:3000";
 const WAHA_KEY = process.env.WAHA_API_KEY ?? "";
@@ -12,6 +12,17 @@ const REQUIRE_KEYWORD_INSTANCES = (process.env.REQUIRE_KEYWORD_INSTANCES ?? "").
 // WAHA Core only has "default" session — map it to the Evolution instance name for DB lookups
 const WAHA_SESSION_MAP: Record<string, string> = { default: "mapom" };
 
+type StoreWithConfig = {
+  id: string;
+  name: string;
+  evolutionInstanceName: string | null;
+  botConfig: {
+    requireKeyword: boolean;
+    keyword: string;
+    welcomeMessage: string;
+  } | null;
+};
+
 function extractTextFromRichText(richText: unknown[]): string {
   return richText
     .map((para: unknown) => {
@@ -20,6 +31,28 @@ function extractTextFromRichText(richText: unknown[]): string {
     })
     .filter(Boolean)
     .join("\n");
+}
+
+async function getStoreWithConfig(instanceName: string): Promise<StoreWithConfig | null> {
+  return prisma.store.findFirst({
+    where: { evolutionInstanceName: instanceName },
+    select: {
+      id: true,
+      name: true,
+      evolutionInstanceName: true,
+      botConfig: {
+        select: { requireKeyword: true, keyword: true, welcomeMessage: true },
+      },
+    },
+  });
+}
+
+async function saveMessage(storeId: string, fromPhone: string, text: string, direction: "in" | "out") {
+  try {
+    await prisma.message.create({ data: { storeId, fromPhone, text, direction } });
+  } catch {
+    // non-critical
+  }
 }
 
 async function sendWaha(session: string, chatId: string, text: string): Promise<boolean> {
@@ -40,17 +73,13 @@ async function sendWaha(session: string, chatId: string, text: string): Promise<
   }
 }
 
-async function getFallbackMessage(instanceName: string): Promise<string> {
-  try {
-    const store = await getStoreByInstanceName(instanceName);
-    if (store) {
-      const storeUrl = `${BASE_URL}/store/${store.id}`;
-      return `Ola! Seja bem-vindo a ${store.name}.\nAcesse nossa loja: ${storeUrl}`;
-    }
-  } catch {
-    // se DB falhar, usa mensagem generica
+function buildFallbackText(store: StoreWithConfig): string {
+  if (store.botConfig?.welcomeMessage) {
+    const storeUrl = `${BASE_URL}/${store.evolutionInstanceName}`;
+    return `${store.botConfig.welcomeMessage}\nAcesse nossa loja: ${storeUrl}`;
   }
-  return `Ola! Obrigado por entrar em contato. Em breve retornaremos.`;
+  const storeUrl = `${BASE_URL}/${store.evolutionInstanceName}`;
+  return `Ola! Seja bem-vindo a ${store.name}.\nAcesse nossa loja: ${storeUrl}`;
 }
 
 async function processWithTypebot(
@@ -170,10 +199,7 @@ async function processWithTypebot(
 }
 
 async function handleMessage(body: Record<string, unknown>) {
-  // WAHA webhook payload format:
-  // { event: "message", session: "mapom", me: {...}, payload: { id, from, to, body, ... } }
   const rawSession = (body?.session as string | undefined) ?? "";
-  // Map WAHA session name to Evolution instance name for store lookup
   const session = WAHA_SESSION_MAP[rawSession] ?? rawSession;
   const payload = body?.payload as Record<string, unknown> | undefined;
 
@@ -186,41 +212,50 @@ async function handleMessage(body: Record<string, unknown>) {
   const textRaw = (payload?.body as string | undefined) ?? "";
 
   if (!textRaw.trim()) { console.log("[WAHA WEBHOOK] Mensagem vazia, ignorando"); return; }
-
-  // Ignore groups
   if (from.endsWith("@g.us")) { console.log("[WAHA WEBHOOK] Grupo, ignorando"); return; }
-
-  // Ignore broadcasts
   if (from.includes("@broadcast")) { console.log("[WAHA WEBHOOK] Broadcast, ignorando"); return; }
-
   if (!from) { console.log("[WAHA WEBHOOK] from vazio, ignorando"); return; }
 
-  // @hello filter for personal instances
-  if (REQUIRE_KEYWORD_INSTANCES.includes(session) && !textRaw.trim().toLowerCase().startsWith("@hello")) {
-    console.log(`[WAHA WEBHOOK] Instancia ${session} requer @hello — ignorando`);
+  // Fetch store + botConfig from DB
+  const store = await getStoreWithConfig(session);
+
+  // Apply keyword filter: DB config takes priority, env var as fallback
+  const requireKeyword = store?.botConfig?.requireKeyword ?? REQUIRE_KEYWORD_INSTANCES.includes(session);
+  const keyword = store?.botConfig?.keyword ?? "@hello";
+
+  if (requireKeyword && !textRaw.trim().toLowerCase().startsWith(keyword.toLowerCase())) {
+    console.log(`[WAHA WEBHOOK] Instancia ${session} requer "${keyword}" — ignorando`);
     return;
   }
 
-  // WAHA resolves @lid natively — from is always the real phone JID like "5511999999999@c.us"
-  // Normalize to @s.whatsapp.net for Evolution compatibility if needed
   const chatId = from;
   const phone = chatId.replace(/@.*$/, "");
-
   console.log(`[WAHA WEBHOOK] Mensagem de ${chatId} (sessao: ${session}): "${textRaw}"`);
 
+  // Save incoming message
+  if (store) {
+    await saveMessage(store.id, phone, textRaw, "in");
+  }
+
   try {
-    const typebotOk = await processWithTypebot(phone, session, chatId, textRaw, session);
+    const typebotOk = await processWithTypebot(phone, session, chatId, textRaw, rawSession);
 
     if (!typebotOk) {
-      const fallback = await getFallbackMessage(session);
+      const fallbackText = store
+        ? buildFallbackText(store)
+        : `Ola! Obrigado por entrar em contato. Em breve retornaremos.`;
       console.log(`[WAHA WEBHOOK] Enviando fallback para ${chatId}`);
-      await sendWaha(session, chatId, fallback);
+      const sent = await sendWaha(rawSession, chatId, fallbackText);
+      if (sent && store) await saveMessage(store.id, phone, fallbackText, "out");
     }
   } catch (err) {
     console.error("[WAHA WEBHOOK] Erro no processamento:", err);
     try {
-      const fallback = await getFallbackMessage(session);
-      await sendWaha(session, chatId, fallback);
+      const fallbackText = store
+        ? buildFallbackText(store)
+        : `Ola! Obrigado por entrar em contato. Em breve retornaremos.`;
+      const sent = await sendWaha(rawSession, chatId, fallbackText);
+      if (sent && store) await saveMessage(store.id, phone, fallbackText, "out");
     } catch (e2) {
       console.error("[WAHA WEBHOOK] Fallback tambem falhou:", e2);
     }

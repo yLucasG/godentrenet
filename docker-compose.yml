@@ -101,9 +101,27 @@ services:
       WAHA_API_URL: "http://waha:3000"
       WAHA_API_KEY: "waha_entrenet_2024"
       REQUIRE_KEYWORD_INSTANCES: "mapom"
+      AUTH_SECRET: "godentrenet_auth_secret_2024_xK9mP3nQ"
     depends_on:
       - db
       - evolution
+    networks:
+      - godentrenet_network
+
+  waha:
+    image: devlikeapro/waha
+    container_name: godentrenet_waha
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      WHATSAPP_DEFAULT_ENGINE: "NOWEB"
+      WAHA_DASHBOARD_ENABLED: "true"
+      WAHA_DASHBOARD_USERNAME: "admin"
+      WAHA_DASHBOARD_PASSWORD: "entrenet123"
+      WHATSAPP_API_KEY: "waha_entrenet_2024"
+    volumes:
+      - waha_data:/app/.sessions
     networks:
       - godentrenet_network
 
@@ -163,6 +181,7 @@ volumes:
   postgres_data:
   evolution_instances:
   typebot_data:
+  waha_data:
 
 networks:
   godentrenet_network:
