@@ -28,6 +28,7 @@ model Store {
   products                 Product[]
   botConfig                BotConfig?
   messages                 BotMessage[]
+  orders                   Order[]
   createdAt                DateTime   @default(now())
   updatedAt                DateTime   @updatedAt
 }
@@ -53,6 +54,22 @@ model BotConfig {
   keyword        String   @default("@hello")
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+}
+
+model Order {
+  id            String   @id @default(cuid())
+  storeId       String
+  store         Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  customerPhone String
+  customerName  String?
+  address       String
+  items         Json
+  total         Float
+  paymentMethod String
+  needChange    Boolean  @default(false)
+  changeFor     Float?
+  status        String   @default("pending")
+  createdAt     DateTime @default(now())
 }
 
 model BotMessage {
