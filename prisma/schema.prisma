@@ -23,6 +23,7 @@ model Store {
   evolutionInstanceName    String?
   evolutionConnectionState String      @default("DISCONNECTED")
   phoneNumber              String?
+  logoUrl                  String?
   userId                   String?     @unique
   user                     User?       @relation(fields: [userId], references: [id])
   products                 Product[]

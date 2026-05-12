@@ -23,6 +23,7 @@ interface Props {
   storeId: string;
   instanceName: string;
   storeName: string;
+  logoUrl: string | null;
   products: Product[];
   categories: Category[];
 }
@@ -169,9 +170,10 @@ function CartBar({
 
 // ─── Products view ───────────────────────────────────────────────────────────
 function ProductsView({
-  storeName, products, dbCategories, cart, onAdd, onCheckout,
+  storeName, logoUrl, products, dbCategories, cart, onAdd, onCheckout,
 }: {
   storeName: string;
+  logoUrl: string | null;
   products: Product[];
   dbCategories: Category[];
   cart: Record<string, number>;
@@ -212,7 +214,10 @@ function ProductsView({
         <header className="store-header">
           <div className="store-header-center">
             <div className="logo-wrap">
-              <div className="logo-fallback">{initials}</div>
+              {logoUrl
+                ? <img src={logoUrl} alt={storeName} className="logo-img" />
+                : <div className="logo-fallback">{initials}</div>
+              }
             </div>
             <div className="store-brand">{storeName}</div>
           </div>
@@ -507,7 +512,7 @@ function SuccessView({ onBack }: { onBack: () => void }) {
 }
 
 // ─── Root component ──────────────────────────────────────────────────────────
-export function StoreClient({ storeId, instanceName, storeName, products, categories }: Props) {
+export function StoreClient({ storeId, instanceName, storeName, logoUrl, products, categories }: Props) {
   const [view, setView] = useState<View>("products");
   const [cart, setCart] = useState<Record<string, number>>({});
 
@@ -525,6 +530,7 @@ export function StoreClient({ storeId, instanceName, storeName, products, catego
       {view === "products" && (
         <ProductsView
           storeName={storeName}
+          logoUrl={logoUrl}
           products={products}
           dbCategories={categories}
           cart={cart}
