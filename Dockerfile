@@ -1,7 +1,8 @@
 FROM node:20-alpine AS deps
 WORKDIR /app
 COPY package.json ./
-RUN npm install
+# Force install all deps including devDependencies regardless of NODE_ENV
+RUN npm install --include=dev
 
 FROM node:20-alpine AS builder
 WORKDIR /app
