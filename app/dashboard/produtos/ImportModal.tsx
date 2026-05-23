@@ -1,8 +1,11 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Upload, X, Loader2, Check, ArrowLeft, FileText, Image as ImageIcon } from "lucide-react";
 import { createProduct } from "@/actions/product";
+import { listCategories } from "@/actions/category";
+
+type Category = { id: string; name: string; emoji: string };
 
 const EMOJI_MAP: [RegExp, string][] = [
   [/pão|paes|pao|baguete|brioche|ciabatta/i, "🍞"],
@@ -74,7 +77,7 @@ function parseProductText(text: string): ParsedItem[] {
     const namePart = line.slice(0, matchIndex).trim().replace(/[-–:;,.|]+$/, "").trim();
     if (namePart.length < 2 || namePart.length > 80) continue;
 
-    results.push({ name: namePart, price, emoji: suggestEmoji(namePart), selected: true });
+    results.push({ name: namePart, price, emoji: suggestEmoji(namePart), selected: true, categoryId: null });
   }
 
   return results;
@@ -85,6 +88,7 @@ type ParsedItem = {
   price: number;
   emoji: string;
   selected: boolean;
+  categoryId: string | null;
 };
 
 type Step = "upload" | "preview" | "saving" | "done";
@@ -100,6 +104,11 @@ export function ImportModal({ onClose, onDone }: { onClose: () => void; onDone: 
   const [items, setItems] = useState<ParsedItem[]>([]);
   const [saved, setSaved] = useState(0);
   const [error, setError] = useState("");
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    listCategories().then((cats) => setCategories(cats)).catch(() => {});
+  }, []);
 
   async function processFile(file: File) {
     setProcessing(true);
@@ -185,7 +194,7 @@ export function ImportModal({ onClose, onDone }: { onClose: () => void; onDone: 
     setSaved(0);
 
     for (let i = 0; i < selected.length; i++) {
-      await createProduct({ name: selected[i].name.trim(), price: selected[i].price, emoji: selected[i].emoji });
+      await createProduct({ name: selected[i].name.trim(), price: selected[i].price, emoji: selected[i].emoji, categoryId: selected[i].categoryId });
       setSaved(i + 1);
     }
 
@@ -314,39 +323,57 @@ Café;2,00`}</pre>
 
               <div className="space-y-2">
                 {items.map((item, i) => (
-                  <div key={i} className={`bg-gray-800 rounded-xl p-3 flex items-center gap-3 transition-opacity ${!item.selected ? "opacity-50" : ""}`}>
-                    <input
-                      type="checkbox"
-                      checked={item.selected}
-                      onChange={() => toggleItem(i)}
-                      className="w-4 h-4 accent-emerald-500 flex-shrink-0"
-                    />
-                    {/* Emoji picker */}
-                    <select
-                      value={item.emoji}
-                      onChange={(e) => updateItem(i, "emoji", e.target.value)}
-                      className="bg-gray-700 text-white text-lg rounded-lg px-1 py-1 border-none focus:outline-none w-12 text-center cursor-pointer"
-                    >
-                      {EMOJIS.map((e) => <option key={e} value={e}>{e}</option>)}
-                    </select>
-                    {/* Name */}
-                    <input
-                      value={item.name}
-                      onChange={(e) => updateItem(i, "name", e.target.value)}
-                      className="flex-1 bg-gray-700 text-white text-sm rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 min-w-0"
-                    />
-                    {/* Price */}
-                    <div className="flex items-center gap-1 flex-shrink-0">
-                      <span className="text-gray-500 text-xs">R$</span>
+                  <div key={i} className={`bg-gray-800 rounded-xl p-3 flex flex-col gap-2 transition-opacity ${!item.selected ? "opacity-50" : ""}`}>
+                    <div className="flex items-center gap-3">
                       <input
-                        type="number"
-                        value={item.price}
-                        onChange={(e) => updateItem(i, "price", parseFloat(e.target.value) || 0)}
-                        step="0.01"
-                        min="0"
-                        className="w-20 bg-gray-700 text-white text-sm rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 text-right"
+                        type="checkbox"
+                        checked={item.selected}
+                        onChange={() => toggleItem(i)}
+                        className="w-4 h-4 accent-emerald-500 flex-shrink-0"
                       />
+                      {/* Emoji picker */}
+                      <select
+                        value={item.emoji}
+                        onChange={(e) => updateItem(i, "emoji", e.target.value)}
+                        className="bg-gray-700 text-white text-lg rounded-lg px-1 py-1 border-none focus:outline-none w-12 text-center cursor-pointer"
+                      >
+                        {EMOJIS.map((e) => <option key={e} value={e}>{e}</option>)}
+                      </select>
+                      {/* Name */}
+                      <input
+                        value={item.name}
+                        onChange={(e) => updateItem(i, "name", e.target.value)}
+                        className="flex-1 bg-gray-700 text-white text-sm rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 min-w-0"
+                      />
+                      {/* Price */}
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <span className="text-gray-500 text-xs">R$</span>
+                        <input
+                          type="number"
+                          value={item.price}
+                          onChange={(e) => updateItem(i, "price", parseFloat(e.target.value) || 0)}
+                          step="0.01"
+                          min="0"
+                          className="w-20 bg-gray-700 text-white text-sm rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 text-right"
+                        />
+                      </div>
                     </div>
+                    {/* Category selector */}
+                    {categories.length > 0 && (
+                      <div className="flex items-center gap-2 pl-7">
+                        <span className="text-gray-500 text-xs flex-shrink-0">Categoria:</span>
+                        <select
+                          value={item.categoryId ?? ""}
+                          onChange={(e) => updateItem(i, "categoryId", e.target.value || null)}
+                          className="flex-1 bg-gray-700 text-white text-xs rounded-lg px-2 py-1 border-none focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+                        >
+                          <option value="">— sem categoria —</option>
+                          {categories.map((c) => (
+                            <option key={c.id} value={c.id}>{c.emoji} {c.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
