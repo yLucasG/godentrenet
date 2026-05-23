@@ -53,27 +53,37 @@ export async function getStoreQrCode(storeId: string): Promise<{ qr?: string; co
 
   const store = await prisma.store.findUnique({ where: { id: storeId } });
 
-  if (!store) {
-    throw new Error(`Loja não encontrada: ${storeId}`);
+  if (!store) throw new Error(`Loja não encontrada: ${storeId}`);
+  if (!store.evolutionInstanceName) throw new Error(`Loja ${storeId} sem instância configurada`);
+
+  const instanceName = store.evolutionInstanceName;
+  console.log(`[STORE ACTION] instanceName resolvido: "${instanceName}"`);
+
+  // Use WAHA for instances that have a WAHA session mapping
+  const { getWahaSession, getWahaQrCode } = await import("@/actions/waha");
+  const wahaSession = getWahaSession(instanceName);
+
+  if (wahaSession) {
+    try {
+      const result = await getWahaQrCode(wahaSession);
+      if (result.connected) {
+        await prisma.store.update({ where: { id: storeId }, data: { evolutionConnectionState: "open" } });
+      }
+      return result;
+    } catch (err) {
+      console.error(`[STORE ACTION] WAHA QR falhou: ${(err as Error).message}`);
+      throw err;
+    }
   }
 
-  if (!store.evolutionInstanceName) {
-    throw new Error(`Loja ${storeId} não possui instância Evolution configurada`);
-  }
-
-  console.log(`[STORE ACTION] instanceName resolvido: "${store.evolutionInstanceName}"`);
-
+  // Fallback: Evolution API
   const { getQrCode } = await import("@/actions/evolution");
   try {
-    const result = await getQrCode(store.evolutionInstanceName);
+    const result = await getQrCode(instanceName);
     return { qr: result.qrcode };
   } catch (err) {
     if ((err as Error).message === "ALREADY_CONNECTED") {
-      // Instance is connected — update DB state and signal the UI
-      await prisma.store.update({
-        where: { id: storeId },
-        data: { evolutionConnectionState: "open" },
-      });
+      await prisma.store.update({ where: { id: storeId }, data: { evolutionConnectionState: "open" } });
       return { connected: true };
     }
     throw err;
