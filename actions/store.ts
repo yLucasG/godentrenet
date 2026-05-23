@@ -61,7 +61,7 @@ export async function getStoreQrCode(storeId: string): Promise<{ qr?: string; co
 
   // Use WAHA for instances that have a WAHA session mapping
   const { getWahaSession, getWahaQrCode } = await import("@/actions/waha");
-  const wahaSession = getWahaSession(instanceName);
+  const wahaSession = await getWahaSession(instanceName);
 
   if (wahaSession) {
     try {

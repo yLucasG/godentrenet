@@ -6,7 +6,7 @@ const WAHA_KEY = process.env.WAHA_API_KEY ?? "";
 // Maps evolutionInstanceName → WAHA session name
 const WAHA_INSTANCE_MAP: Record<string, string> = { mapom: "default" };
 
-export function getWahaSession(instanceName: string): string | null {
+export async function getWahaSession(instanceName: string): Promise<string | null> {
   return WAHA_INSTANCE_MAP[instanceName] ?? null;
 }
 
