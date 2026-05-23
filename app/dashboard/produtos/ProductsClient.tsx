@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { createProduct, updateProduct, deleteProduct } from "@/actions/product";
+import { createProduct, updateProduct, deleteProduct, clearStoreProducts } from "@/actions/product";
+import { Trash2 } from "lucide-react";
 import type { Product } from "@prisma/client";
 import { ProductModal } from "./ProductModal";
 import { ImportModal } from "./ImportModal";
@@ -72,6 +73,22 @@ export function ProductsClient({
     setProducts((p) => p.map((x) => (x.id === product.id ? { ...x, active: !x.active } : x)));
   }
 
+  const [clearing, setClearing] = useState(false);
+
+  async function handleClearProducts() {
+    if (!confirm("Tem certeza que deseja apagar TODOS os produtos do sistema? Esta ação não pode ser desfeita.")) return;
+    setClearing(true);
+    try {
+      await clearStoreProducts();
+      setProducts([]);
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao limpar produtos.");
+    } finally {
+      setClearing(false);
+    }
+  }
+
   return (
     <>
       {modal.open && (
@@ -91,19 +108,31 @@ export function ProductsClient({
       )}
 
       {/* Action buttons */}
-      <div className="flex items-center gap-3 mb-6">
-        <button
-          onClick={() => setModal({ open: true })}
-          className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-        >
-          + Novo produto
-        </button>
-        <button
-          onClick={() => setShowImport(true)}
-          className="bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
-        >
-          📥 Importar produtos
-        </button>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setModal({ open: true })}
+            className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+          >
+            + Novo produto
+          </button>
+          <button
+            onClick={() => setShowImport(true)}
+            className="bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
+          >
+            📥 Importar produtos
+          </button>
+        </div>
+        {products.length > 0 && (
+          <button
+            onClick={handleClearProducts}
+            disabled={clearing}
+            className="flex items-center gap-2 text-sm text-red-400 hover:text-red-300 border border-red-900/30 hover:border-red-500/50 bg-red-950/10 px-4 py-2 rounded-lg transition-all duration-200 disabled:opacity-50"
+          >
+            <Trash2 size={15} />
+            Limpar Produtos
+          </button>
+        )}
       </div>
 
       {products.length === 0 ? (

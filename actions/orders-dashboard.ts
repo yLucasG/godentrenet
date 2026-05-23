@@ -37,3 +37,12 @@ export async function updateOrderStatus(orderId: string, status: string) {
     data: { status },
   });
 }
+
+export async function clearStoreOrders() {
+  const session = await auth();
+  if (!session?.user?.storeId) throw new Error("Unauthorized");
+
+  await prisma.order.deleteMany({
+    where: { storeId: session.user.storeId },
+  });
+}

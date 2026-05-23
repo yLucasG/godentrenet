@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { QrSection } from "./QrSection";
+import { DisconnectButton } from "./DisconnectButton";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -14,7 +15,18 @@ export default async function DashboardPage() {
     prisma.store.findUnique({ where: { id: storeId } }),
   ]);
 
-  const connected = store?.evolutionConnectionState === "open";
+  let connected = store?.evolutionConnectionState === "open";
+  if (store?.evolutionInstanceName) {
+    const { checkInstanceConnection } = await import("@/actions/evolution");
+    const realConnected = await checkInstanceConnection(store.evolutionInstanceName, connected);
+    if (realConnected !== connected) {
+      connected = realConnected;
+      await prisma.store.update({
+        where: { id: storeId },
+        data: { evolutionConnectionState: realConnected ? "open" : "close" },
+      });
+    }
+  }
 
   return (
     <div className="p-8">
@@ -58,15 +70,18 @@ export default async function DashboardPage() {
           <p className="text-gray-400 text-sm">
             Sua loja está online. O bot responde automaticamente às mensagens dos clientes.
           </p>
-          {session.user.instanceName && (
-            <a
-              href={`/${session.user.instanceName}`}
-              target="_blank"
-              className="inline-block mt-3 text-green-500 text-sm hover:underline"
-            >
-              Ver página pública da loja →
-            </a>
-          )}
+          <div className="flex flex-col gap-1 items-start mt-3">
+            {session.user.instanceName && (
+              <a
+                href={`/${session.user.instanceName}`}
+                target="_blank"
+                className="inline-block text-green-500 text-sm hover:underline"
+              >
+                Ver página pública da loja →
+              </a>
+            )}
+            <DisconnectButton />
+          </div>
         </div>
       )}
     </div>

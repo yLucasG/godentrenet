@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { createCategory, updateCategory, deleteCategory } from "@/actions/category";
-import { X } from "lucide-react";
+import { createCategory, updateCategory, deleteCategory, clearStoreCategories } from "@/actions/category";
+import { X, Trash2 } from "lucide-react";
 
 const EMOJIS = [
   "🛍️","🍞","🥐","🎂","🧁","🍕","🍔","🌮","☕","🧃",
@@ -141,6 +141,22 @@ export function CategoriesClient({ initialCategories }: { initialCategories: Cat
     setDeleting(null);
   }
 
+  const [clearing, setClearing] = useState(false);
+
+  async function handleClearCategories() {
+    if (!confirm("Tem certeza que deseja apagar TODAS as categorias do sistema? Os produtos ficarão sem categoria. Esta ação não pode ser desfeita.")) return;
+    setClearing(true);
+    try {
+      await clearStoreCategories();
+      setCategories([]);
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao limpar categorias.");
+    } finally {
+      setClearing(false);
+    }
+  }
+
   return (
     <>
       {modal.open && (
@@ -151,13 +167,23 @@ export function CategoriesClient({ initialCategories }: { initialCategories: Cat
         />
       )}
 
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center justify-between mb-6">
         <button
           onClick={() => setModal({ open: true })}
           className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
         >
           + Nova categoria
         </button>
+        {categories.length > 0 && (
+          <button
+            onClick={handleClearCategories}
+            disabled={clearing}
+            className="flex items-center gap-2 text-sm text-red-400 hover:text-red-300 border border-red-900/30 hover:border-red-500/50 bg-red-950/10 px-4 py-2 rounded-lg transition-all duration-200 disabled:opacity-50"
+          >
+            <Trash2 size={15} />
+            Limpar Categorias
+          </button>
+        )}
       </div>
 
       {categories.length === 0 ? (

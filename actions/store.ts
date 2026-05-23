@@ -89,3 +89,24 @@ export async function getStoreQrCode(storeId: string): Promise<{ qr?: string; co
     throw err;
   }
 }
+
+export async function disconnectWhatsApp(): Promise<{ success: boolean }> {
+  const { auth } = await import("@/auth");
+  const session = await auth();
+  if (!session?.user?.storeId) throw new Error("Unauthorized");
+  const storeId = session.user.storeId;
+  const store = await prisma.store.findUnique({ where: { id: storeId } });
+  if (!store || !store.evolutionInstanceName) return { success: false };
+
+  const { logoutInstance } = await import("@/actions/evolution");
+  await logoutInstance(store.evolutionInstanceName);
+
+  await prisma.store.update({
+    where: { id: storeId },
+    data: { evolutionConnectionState: "close" },
+  });
+
+  const { revalidatePath } = await import("next/cache");
+  revalidatePath("/dashboard");
+  return { success: true };
+}

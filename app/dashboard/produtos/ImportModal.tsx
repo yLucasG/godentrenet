@@ -182,7 +182,7 @@ export function ImportModal({ onClose, onDone }: { onClose: () => void; onDone: 
     setItems((prev) => prev.map((item) => ({ ...item, selected: !allSelected })));
   }
 
-  function updateItem(i: number, field: keyof ParsedItem, value: string | number | boolean) {
+  function updateItem(i: number, field: keyof ParsedItem, value: string | number | boolean | null) {
     setItems((prev) => prev.map((item, idx) => idx === i ? { ...item, [field]: value } : item));
   }
 

@@ -134,3 +134,43 @@ export async function getQrCode(
 
   throw new Error(`QR Code não gerado.`);
 }
+
+export async function checkInstanceConnection(
+  instanceName: string,
+  fallbackState: boolean = false
+): Promise<boolean> {
+  const endpoint = `${EVO_URL}/instance/connect/${encodeURIComponent(instanceName)}`;
+  try {
+    const res = await fetch(endpoint, {
+      method: "GET",
+      headers: { apikey: EVO_KEY },
+      cache: "no-store",
+      signal: AbortSignal.timeout(3000),
+    });
+    if (!res.ok) return false;
+    const data = (await res.json()) as Record<string, unknown>;
+    const state = (data?.instance as Record<string, unknown>)?.state ?? data?.state;
+    return state === "open";
+  } catch (err) {
+    console.error(`[EVO CHECK CONNECTION] erro para ${instanceName}:`, err);
+    return fallbackState;
+  }
+}
+
+export async function logoutInstance(instanceName: string): Promise<boolean> {
+  const endpoint = `${EVO_URL}/instance/logout/${encodeURIComponent(instanceName)}`;
+  try {
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: EVO_KEY,
+      },
+    });
+    console.log(`[EVO LOGOUT] status ${res.status} para ${instanceName}`);
+    return res.ok;
+  } catch (err) {
+    console.error(`[EVO LOGOUT] erro para ${instanceName}:`, err);
+    return false;
+  }
+}

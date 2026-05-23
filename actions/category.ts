@@ -41,3 +41,12 @@ export async function deleteCategory(id: string) {
   revalidatePath("/dashboard/categorias");
   revalidatePath("/dashboard/produtos");
 }
+
+export async function clearStoreCategories() {
+  const storeId = await getStoreId();
+  // Deletes all categories for this store. Product model has onDelete: SetNull on category relation,
+  // but let's also be explicit or let Prisma handle it.
+  await prisma.category.deleteMany({ where: { storeId } });
+  revalidatePath("/dashboard/categorias");
+  revalidatePath("/dashboard/produtos");
+}

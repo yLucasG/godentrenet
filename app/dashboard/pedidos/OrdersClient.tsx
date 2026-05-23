@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { updateOrderStatus, getStoreOrders } from "@/actions/orders-dashboard";
+import { updateOrderStatus, getStoreOrders, clearStoreOrders } from "@/actions/orders-dashboard";
+import { Trash2 } from "lucide-react";
 
 type Order = {
   id: string;
@@ -87,6 +88,22 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
     setRefreshing(false);
   }
 
+  const [clearing, setClearing] = useState(false);
+
+  async function handleClearOrders() {
+    if (!confirm("Tem certeza que deseja apagar TODOS os pedidos do sistema? Esta ação não pode ser desfeita.")) return;
+    setClearing(true);
+    try {
+      await clearStoreOrders();
+      setOrders([]);
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao limpar pedidos.");
+    } finally {
+      setClearing(false);
+    }
+  }
+
   return (
     <div className="p-6 min-h-screen">
       {/* Header */}
@@ -99,17 +116,29 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
             </p>
           )}
         </div>
-        <button
-          onClick={handleRefresh}
-          disabled={refreshing}
-          className="flex items-center gap-2 text-sm text-gray-400 hover:text-white border border-gray-700 px-3 py-2 rounded-lg transition-colors"
-        >
-          <svg className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-          Atualizar
-        </button>
+        <div className="flex items-center gap-2">
+          {orders.length > 0 && (
+            <button
+              onClick={handleClearOrders}
+              disabled={clearing || refreshing}
+              className="flex items-center gap-2 text-sm text-red-400 hover:text-red-300 border border-red-900/30 hover:border-red-500/50 bg-red-950/10 px-3 py-2 rounded-lg transition-all duration-200 disabled:opacity-50"
+            >
+              <Trash2 size={16} />
+              Limpar Pedidos
+            </button>
+          )}
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing || clearing}
+            className="flex items-center gap-2 text-sm text-gray-400 hover:text-white border border-gray-700 px-3 py-2 rounded-lg transition-colors disabled:opacity-50"
+          >
+            <svg className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Atualizar
+          </button>
+        </div>
       </div>
 
       {/* Tabs */}

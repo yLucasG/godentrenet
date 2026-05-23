@@ -59,3 +59,9 @@ export async function deleteProduct(id: string) {
   await prisma.product.deleteMany({ where: { id, storeId } });
   revalidatePath("/dashboard/produtos");
 }
+
+export async function clearStoreProducts() {
+  const storeId = await getStoreId();
+  await prisma.product.deleteMany({ where: { storeId } });
+  revalidatePath("/dashboard/produtos");
+}
