@@ -65,3 +65,39 @@ export async function clearStoreProducts() {
   await prisma.product.deleteMany({ where: { storeId } });
   revalidatePath("/dashboard/produtos");
 }
+
+export async function importProductsBulk(
+  items: { name: string; price: number; emoji: string; categoryId: string | null }[],
+  globalCategoryName?: string
+) {
+  const storeId = await getStoreId();
+
+  let globalCategoryId: string | null = null;
+
+  if (globalCategoryName?.trim()) {
+    const name = globalCategoryName.trim();
+    const existing = await prisma.category.findFirst({
+      where: { storeId, name: { equals: name, mode: "insensitive" } },
+    });
+    if (existing) {
+      globalCategoryId = existing.id;
+    } else {
+      const created = await prisma.category.create({
+        data: { name, storeId, emoji: "🛍️" },
+      });
+      globalCategoryId = created.id;
+    }
+  }
+
+  const data = items.map((item) => ({
+    name: item.name.trim(),
+    price: item.price,
+    emoji: item.emoji,
+    storeId,
+    categoryId: item.categoryId ?? globalCategoryId ?? null,
+  }));
+
+  const result = await prisma.product.createMany({ data });
+  revalidatePath("/dashboard/produtos");
+  return result.count;
+}

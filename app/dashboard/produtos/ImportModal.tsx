@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Upload, X, Loader2, Check, ArrowLeft, FileText, Image as ImageIcon } from "lucide-react";
-import { createProduct } from "@/actions/product";
+import { importProductsBulk } from "@/actions/product";
 import { listCategories } from "@/actions/category";
 
 type Category = { id: string; name: string; emoji: string };
@@ -105,6 +105,7 @@ export function ImportModal({ onClose, onDone }: { onClose: () => void; onDone: 
   const [saved, setSaved] = useState(0);
   const [error, setError] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
+  const [globalCategory, setGlobalCategory] = useState("");
 
   useEffect(() => {
     listCategories().then((cats) => setCategories(cats)).catch(() => {});
@@ -191,14 +192,14 @@ export function ImportModal({ onClose, onDone }: { onClose: () => void; onDone: 
     if (selected.length === 0) return;
 
     setStep("saving");
-    setSaved(0);
-
-    for (let i = 0; i < selected.length; i++) {
-      await createProduct({ name: selected[i].name.trim(), price: selected[i].price, emoji: selected[i].emoji, categoryId: selected[i].categoryId });
-      setSaved(i + 1);
+    try {
+      const count = await importProductsBulk(selected, globalCategory.trim());
+      setSaved(count);
+      setStep("done");
+    } catch {
+      setError("Erro ao salvar produtos. Tente novamente.");
+      setStep("preview");
     }
-
-    setStep("done");
   }
 
   const selectedCount = items.filter((i) => i.selected).length;
@@ -314,6 +315,21 @@ Café;2,00`}</pre>
           {/* ── PREVIEW STEP ── */}
           {step === "preview" && (
             <div className="space-y-3">
+              {/* Global category input */}
+              <div className="bg-gray-800/60 rounded-xl p-3 space-y-1.5">
+                <label className="text-gray-400 text-xs font-medium">
+                  Categoria global para esta lista{" "}
+                  <span className="text-gray-600">(Opcional)</span>
+                </label>
+                <input
+                  value={globalCategory}
+                  onChange={(e) => setGlobalCategory(e.target.value)}
+                  placeholder="Ex: Bebidas, Pães, Salgados..."
+                  className="w-full bg-gray-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 placeholder:text-gray-600"
+                />
+                <p className="text-gray-600 text-[11px]">Se não existir, criaremos automaticamente para você.</p>
+              </div>
+
               <div className="flex items-center justify-between">
                 <button onClick={toggleAll} className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors">
                   {items.every((i) => i.selected) ? "Desmarcar todos" : "Selecionar todos"}
@@ -385,8 +401,8 @@ Café;2,00`}</pre>
             <div className="flex flex-col items-center justify-center py-12 gap-4">
               <Loader2 size={40} className="text-emerald-500 animate-spin" />
               <div className="text-center">
-                <p className="text-white font-medium">Salvando produtos...</p>
-                <p className="text-gray-400 text-sm mt-1">{saved} de {items.filter((i) => i.selected).length}</p>
+                <p className="text-white font-medium">Importando produtos...</p>
+                <p className="text-gray-400 text-sm mt-1">Inserindo {items.filter((i) => i.selected).length} produto{items.filter((i) => i.selected).length !== 1 ? "s" : ""} de uma vez só</p>
               </div>
             </div>
           )}
