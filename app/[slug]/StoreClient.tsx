@@ -54,18 +54,6 @@ function CartIcon({ size = 18 }: { size?: number }) {
   );
 }
 
-// ─── Corner brackets ────────────────────────────────────────────────────────
-function Corners() {
-  return (
-    <>
-      <div className="corner tl" />
-      <div className="corner tr" />
-      <div className="corner bl" />
-      <div className="corner br" />
-    </>
-  );
-}
-
 // ─── Price display ───────────────────────────────────────────────────────────
 function Price({ value, sm }: { value: number; sm?: boolean }) {
   return (
@@ -89,7 +77,6 @@ function FeaturedCard({
           ? <img src={product.imageUrl} alt={product.name} className="s-feat-img" />
           : <span className="s-feat-emoji">{product.emoji}</span>
         }
-        <div className="scan-overlay" />
       </div>
       <div className="s-feat-body">
         <span className="s-tag-pill">{tag}</span>
@@ -104,7 +91,6 @@ function FeaturedCard({
           </button>
         </div>
       </div>
-      <Corners />
     </div>
   );
 }
@@ -122,7 +108,6 @@ function ProductCard({
           ? <img src={product.imageUrl} alt={product.name} className="s-prod-img" />
           : <span className="s-prod-emoji">{product.emoji}</span>
         }
-        <div className="scan-overlay" />
       </div>
       <div className="s-prod-body">
         <div className="s-prod-name">{product.name}</div>
@@ -136,7 +121,6 @@ function ProductCard({
           </button>
         </div>
       </div>
-      <Corners />
     </div>
   );
 }
@@ -456,7 +440,6 @@ function CheckoutView({
           <span className="s-order-total-label mono">TOTAL</span>
           <span className="s-order-total-val mono">{fmt(total)}</span>
         </div>
-        <Corners />
       </div>
 
       {/* Form */}
@@ -606,7 +589,6 @@ function SuccessView({ onBack }: { onBack: () => void }) {
         <button className="s-success-back" onClick={onBack}>
           Voltar à loja
         </button>
-        <Corners />
       </div>
     </div>
   );

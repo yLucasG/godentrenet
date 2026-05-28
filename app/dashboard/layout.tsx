@@ -10,9 +10,9 @@ const navItems = [
   { href: "/dashboard/pedidos",       label: "Pedidos",       icon: "🧾" },
   { href: "/dashboard/produtos",      label: "Produtos",      icon: "📦" },
   { href: "/dashboard/categorias",    label: "Categorias",    icon: "🏷️" },
-  { href: "/dashboard/estoque",        label: "Estoque",       icon: "📦" },
-  { href: "/dashboard/compras",        label: "Compras",       icon: "🧾" },
-  { href: "/dashboard/fiscal",         label: "Fiscal",        icon: "🧾" },
+  { href: "/dashboard/estoque",       label: "Estoque",       icon: "📦" },
+  { href: "/dashboard/compras",       label: "Compras",       icon: "🧾" },
+  { href: "/dashboard/fiscal",        label: "Fiscal",        icon: "🧾" },
   { href: "/dashboard/bot",           label: "Bot",           icon: "🤖" },
   { href: "/dashboard/config",        label: "Configurações", icon: "⚙️" },
 ];
@@ -26,22 +26,22 @@ export default async function DashboardLayout({ children }: { children: React.Re
     : 0;
 
   return (
-    <div className="min-h-screen bg-gray-950 flex">
+    <div className="min-h-screen bg-slate-50 flex">
       {/* Sidebar */}
-      <aside className="w-56 bg-gray-900 border-r border-gray-800 flex flex-col">
-        <div className="px-5 py-5 border-b border-gray-800">
-          <p className="text-xs text-gray-500 uppercase tracking-widest">GODENTRENET</p>
-          <p className="text-white font-semibold mt-1 truncate">{session.user.storeName ?? "Minha Loja"}</p>
+      <aside className="w-56 bg-white border-r border-gray-100 flex flex-col shadow-sm shrink-0">
+        <div className="px-5 py-5 border-b border-gray-100">
+          <p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold">GODENTRENET</p>
+          <p className="text-gray-900 font-bold mt-1 truncate text-sm">{session.user.storeName ?? "Minha Loja"}</p>
         </div>
 
-        <nav className="flex-1 px-3 py-4 space-y-1">
+        <nav className="flex-1 px-3 py-4 space-y-0.5">
           {navItems.map(item => (
             <Link
               key={item.href}
               href={item.href}
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white text-sm transition-colors"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-500 hover:bg-indigo-50 hover:text-indigo-700 text-sm transition-colors font-medium"
             >
-              <span>{item.icon}</span>
+              <span className="text-base">{item.icon}</span>
               <span className="flex-1">{item.label}</span>
               {item.href === "/dashboard/pedidos" && pendingOrders > 0 && (
                 <span className="bg-orange-500 text-white text-xs font-bold rounded-full px-1.5 py-0.5 min-w-[20px] text-center">
@@ -52,8 +52,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
           ))}
         </nav>
 
-        <div className="px-3 pb-4 border-t border-gray-800 pt-4">
-          <p className="text-gray-500 text-xs px-3 mb-2 truncate">{session.user.email}</p>
+        <div className="px-3 pb-4 border-t border-gray-100 pt-3">
+          <p className="text-gray-400 text-xs px-3 mb-2 truncate">{session.user.email}</p>
           <SignOutButton />
         </div>
       </aside>
