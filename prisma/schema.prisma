@@ -37,6 +37,7 @@ model Store {
   transactions             FinancialTransaction[]
   acceptsPickup            Boolean         @default(true)
   acceptsLocal             Boolean         @default(true)
+  theme                    String          @default("amber-dark")
   cnpj                     String?
   stateRegistration        String?
   taxRegime                String?         @default("Simples Nacional")

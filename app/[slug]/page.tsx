@@ -44,6 +44,7 @@ export default async function StorefrontPage({
         categoryName: p.category?.name ?? null,
       }))}
       categories={store.categories}
+      theme={store.theme}
     />
   );
 }

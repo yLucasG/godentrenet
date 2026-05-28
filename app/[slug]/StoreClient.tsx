@@ -29,6 +29,7 @@ interface Props {
   categories: Category[];
   acceptsPickup: boolean;
   acceptsLocal: boolean;
+  theme: string;
 }
 type View = "products" | "checkout" | "success";
 type PayMethod = "pix" | "dinheiro";
@@ -802,7 +803,7 @@ function SuccessView({ onBack }: { onBack: () => void }) {
 }
 
 // ─── Root component ───────────────────────────────────────────────────────────
-export function StoreClient({ storeId, instanceName, storeName, logoUrl, products, categories, acceptsPickup, acceptsLocal }: Props) {
+export function StoreClient({ storeId, instanceName, storeName, logoUrl, products, categories, acceptsPickup, acceptsLocal, theme }: Props) {
   const [view, setView] = useState<View>("products");
   const [cart, setCart] = useState<Record<string, number>>({});
   const [sheetProduct, setSheetProduct] = useState<Product | null>(null);
@@ -832,7 +833,7 @@ export function StoreClient({ storeId, instanceName, storeName, logoUrl, product
   }
 
   return (
-    <div className="store-root">
+    <div className="store-root" data-theme={theme}>
       {view === "products" && (
         <ProductsView
           storeName={storeName}
