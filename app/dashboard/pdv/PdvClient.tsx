@@ -2,7 +2,9 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { FileText, X, Copy, CheckCheck, Loader2 } from "lucide-react";
 import { createPdvOrder } from "@/actions/order";
+import { generateNFCePayload } from "@/actions/fiscal";
 
 type Product = {
   id: string;
@@ -55,6 +57,9 @@ export function PdvClient({ storeName, acceptsPickup, acceptsLocal, products, ca
   const [activeCat, setActiveCat] = useState("all");
   const [submitting, setSubmitting] = useState(false);
   const [flash, setFlash] = useState(false);
+  const [nfcePayload, setNfcePayload] = useState<string | null>(null);
+  const [loadingNfce, setLoadingNfce] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   // ── Derived ──────────────────────────────────────────────────────────────
   const cartItems = useMemo(() =>
@@ -142,9 +147,64 @@ export function PdvClient({ storeName, acceptsPickup, acceptsLocal, products, ca
     }
   }
 
+  async function handleNFCe() {
+    if (cartItems.length === 0) return;
+    setLoadingNfce(true);
+    try {
+      const payload = await generateNFCePayload(
+        cartItems.map(i => ({ name: i.product.name, qty: i.qty, price: i.product.price })),
+        payMethod,
+        total
+      );
+      setNfcePayload(JSON.stringify(payload, null, 2));
+    } catch {
+      alert("Erro ao gerar payload NFC-e.");
+    } finally {
+      setLoadingNfce(false);
+    }
+  }
+
+  function handleCopy() {
+    if (!nfcePayload) return;
+    navigator.clipboard.writeText(nfcePayload);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
   // ── Render ───────────────────────────────────────────────────────────────
   return (
     <div className="fixed inset-0 z-50 bg-gray-950 flex flex-col">
+
+      {/* NFC-e payload modal */}
+      {nfcePayload && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-lg bg-gray-950 rounded-2xl border border-gray-800 flex flex-col max-h-[85vh]">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 flex-shrink-0">
+              <div className="flex items-center gap-2">
+                <FileText size={16} className="text-emerald-400" />
+                <span className="text-white font-bold text-sm">Payload NFC-e (Focus NFe)</span>
+              </div>
+              <button onClick={() => setNfcePayload(null)} className="text-gray-500 hover:text-white transition-colors">
+                <X size={18} />
+              </button>
+            </div>
+            <pre className="flex-1 overflow-y-auto p-4 text-xs text-emerald-300 font-mono leading-relaxed bg-gray-900/50">
+              {nfcePayload}
+            </pre>
+            <div className="px-5 py-3 border-t border-gray-800 flex gap-2 flex-shrink-0">
+              <p className="text-gray-600 text-xs flex-1 self-center">Integração com API emissora em breve.</p>
+              <button
+                onClick={handleCopy}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
+                  copied ? "bg-emerald-700 text-white" : "bg-gray-800 hover:bg-gray-700 text-gray-300"
+                }`}
+              >
+                {copied ? <><CheckCheck size={14} /> Copiado!</> : <><Copy size={14} /> Copiar JSON</>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Success flash */}
       {flash && (
@@ -396,6 +456,17 @@ export function PdvClient({ storeName, acceptsPickup, acceptsLocal, products, ca
                 : cartItems.length === 0
                 ? "Adicione produtos"
                 : `✓ Finalizar  ${fmt(total)}`}
+            </button>
+
+            {/* NFC-e button */}
+            <button
+              onClick={handleNFCe}
+              disabled={loadingNfce || cartItems.length === 0}
+              className="w-full flex items-center justify-center gap-2 border border-gray-700 hover:border-gray-500 text-gray-400 hover:text-white text-sm font-semibold py-2.5 rounded-xl transition-colors disabled:opacity-40"
+            >
+              {loadingNfce
+                ? <><Loader2 size={14} className="animate-spin" /> Gerando...</>
+                : <><FileText size={14} /> Gerar NFC-e (JSON)</>}
             </button>
 
             {cartItems.length > 0 && (

@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { updateOrderStatus, getStoreOrders, clearStoreOrders } from "@/actions/orders-dashboard";
-import { RefreshCw, Trash2 } from "lucide-react";
+import { RefreshCw, Trash2, FileText, X, Copy, CheckCheck, Loader2 } from "lucide-react";
+import { generateNFCePayload } from "@/actions/fiscal";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Order = {
@@ -88,6 +89,41 @@ function DeliveryBadge({ method, identifier }: { method: string; identifier: str
   );
 }
 
+// ─── NFC-e payload modal ──────────────────────────────────────────────────────
+function NfceModal({ payload, onClose }: { payload: string; onClose: () => void }) {
+  const [copied, setCopied] = useState(false);
+  function handleCopy() {
+    navigator.clipboard.writeText(payload);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+  return (
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 p-4">
+      <div className="w-full max-w-lg bg-gray-950 rounded-2xl border border-gray-800 flex flex-col max-h-[85vh]">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <FileText size={16} className="text-emerald-400" />
+            <span className="text-white font-bold text-sm">Payload NFC-e</span>
+          </div>
+          <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors">
+            <X size={18} />
+          </button>
+        </div>
+        <pre className="flex-1 overflow-y-auto p-4 text-xs text-emerald-300 font-mono leading-relaxed bg-gray-900/50">{payload}</pre>
+        <div className="px-5 py-3 border-t border-gray-800 flex gap-2 flex-shrink-0">
+          <p className="text-gray-600 text-xs flex-1 self-center">Integração com API emissora em breve.</p>
+          <button
+            onClick={handleCopy}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${copied ? "bg-emerald-700 text-white" : "bg-gray-800 hover:bg-gray-700 text-gray-300"}`}
+          >
+            {copied ? <><CheckCheck size={14} /> Copiado!</> : <><Copy size={14} /> Copiar JSON</>}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Order card ───────────────────────────────────────────────────────────────
 function OrderCard({
   order,
@@ -106,8 +142,26 @@ function OrderCard({
   onCancel: (id: string) => void;
   busy: boolean;
 }) {
+  const [nfcePayload, setNfcePayload] = useState<string | null>(null);
+  const [loadingNfce, setLoadingNfce] = useState(false);
   const isDone = order.status === "delivered";
   const totalItems = order.items.reduce((s, i) => s + i.qty, 0);
+
+  async function handleNFCe() {
+    setLoadingNfce(true);
+    try {
+      const payload = await generateNFCePayload(
+        order.items.map(i => ({ name: i.name, qty: i.qty, price: i.price })),
+        order.paymentMethod,
+        order.total
+      );
+      setNfcePayload(JSON.stringify(payload, null, 2));
+    } catch {
+      alert("Erro ao gerar NFC-e.");
+    } finally {
+      setLoadingNfce(false);
+    }
+  }
 
   return (
     <div
@@ -187,7 +241,17 @@ function OrderCard({
             {advanceLabel}
           </button>
         )}
+        <button
+          onClick={handleNFCe}
+          disabled={loadingNfce || busy}
+          title="Gerar NFC-e"
+          className="px-2 py-1.5 rounded-lg border border-gray-700 text-gray-500 hover:text-emerald-400 hover:border-emerald-800 text-xs transition-colors disabled:opacity-40"
+        >
+          {loadingNfce ? <Loader2 size={13} className="animate-spin" /> : <FileText size={13} />}
+        </button>
       </div>
+
+      {nfcePayload && <NfceModal payload={nfcePayload} onClose={() => setNfcePayload(null)} />}
     </div>
   );
 }

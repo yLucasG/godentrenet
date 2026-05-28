@@ -37,6 +37,9 @@ model Store {
   transactions             FinancialTransaction[]
   acceptsPickup            Boolean         @default(true)
   acceptsLocal             Boolean         @default(true)
+  cnpj                     String?
+  stateRegistration        String?
+  taxRegime                String?         @default("Simples Nacional")
   createdAt                DateTime        @default(now())
   updatedAt                DateTime        @updatedAt
 }
@@ -56,6 +59,10 @@ model Product {
   linkedInventoryItemId String?
   linkedInventoryItem   InventoryItem?       @relation("ProductLinkedItem", fields: [linkedInventoryItemId], references: [id], onDelete: SetNull)
   ingredients           ProductIngredient[]
+  ncm                   String?
+  cfop                  String?
+  cest                  String?
+  icmsRate              Float?
   createdAt             DateTime             @default(now())
   updatedAt             DateTime             @updatedAt
 }

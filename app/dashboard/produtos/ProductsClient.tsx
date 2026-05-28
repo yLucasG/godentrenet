@@ -4,7 +4,7 @@ import { useState } from "react";
 import { createProduct, updateProduct, deleteProduct, clearStoreProducts } from "@/actions/product";
 import { Trash2 } from "lucide-react";
 import type { Product } from "@prisma/client";
-import { ProductModal } from "./ProductModal";
+import { ProductModal, type SaveData } from "./ProductModal";
 import { ImportModal } from "./ImportModal";
 
 type CategoryOption = { id: string; name: string; emoji: string };
@@ -26,24 +26,12 @@ export function ProductsClient({
   const [showImport, setShowImport] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
 
-  async function handleCreate(data: {
-    name: string;
-    price: number;
-    emoji: string;
-    imageUrl: string | null;
-    categoryId: string | null;
-  }) {
+  async function handleCreate(data: SaveData) {
     await createProduct({ ...data, imageUrl: data.imageUrl ?? undefined });
     window.location.reload();
   }
 
-  async function handleUpdate(data: {
-    name: string;
-    price: number;
-    emoji: string;
-    imageUrl: string | null;
-    categoryId: string | null;
-  }) {
+  async function handleUpdate(data: SaveData) {
     if (!modal.editing) return;
     await updateProduct(modal.editing.id, {
       ...data,

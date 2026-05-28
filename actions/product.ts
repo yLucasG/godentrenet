@@ -19,13 +19,20 @@ export async function listProducts() {
   });
 }
 
+type FiscalFields = {
+  ncm?: string | null;
+  cfop?: string | null;
+  cest?: string | null;
+  icmsRate?: number | null;
+};
+
 export async function createProduct(data: {
   name: string;
   price: number;
   emoji: string;
   imageUrl?: string | null;
   categoryId?: string | null;
-}) {
+} & FiscalFields) {
   const storeId = await getStoreId();
   const { categoryId, ...rest } = data;
   await prisma.product.create({
@@ -43,7 +50,7 @@ export async function updateProduct(
     active: boolean;
     imageUrl?: string | null;
     categoryId?: string | null;
-  }
+  } & FiscalFields
 ) {
   const storeId = await getStoreId();
   const { categoryId, ...rest } = data;
