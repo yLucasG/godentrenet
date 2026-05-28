@@ -12,6 +12,8 @@ interface OrderItem {
   qty: number;
 }
 
+type DeliveryMethod = "DELIVERY" | "PICKUP" | "LOCAL";
+
 interface CreateOrderInput {
   storeId: string;
   instanceName: string;
@@ -24,6 +26,8 @@ interface CreateOrderInput {
   paymentMethod: "dinheiro" | "pix";
   needChange: boolean;
   changeFor?: number;
+  deliveryMethod: DeliveryMethod;
+  localIdentifier?: string;
 }
 
 function formatPhone(phone: string): string {
@@ -45,14 +49,28 @@ function buildConfirmationMessage(input: CreateOrderInput): string {
       ? `Dinheiro — troco para R$ ${input.changeFor.toFixed(2).replace(".", ",")}`
       : "Dinheiro";
 
+  const locationLine =
+    input.deliveryMethod === "DELIVERY"
+      ? `📍 *Endereço:* ${input.address}\n\n`
+      : input.deliveryMethod === "PICKUP"
+      ? `🏪 *Retirada no local*\n\n`
+      : `📍 *Local:* ${input.localIdentifier || "No local"}\n\n`;
+
+  const closing =
+    input.deliveryMethod === "DELIVERY"
+      ? `Em breve nosso entregador estará aí! 🛵`
+      : input.deliveryMethod === "PICKUP"
+      ? `Seu pedido estará pronto em breve! 🏪`
+      : `Seu pedido já está sendo preparado! ✨`;
+
   return (
     `✅ *Pedido confirmado!*\n\n` +
     `🏪 *${input.storeName}*\n\n` +
     `📦 *Itens:*\n${itemLines}\n\n` +
     `💰 *Total:* R$ ${input.total.toFixed(2).replace(".", ",")}\n\n` +
-    `📍 *Endereço:* ${input.address}\n\n` +
+    locationLine +
     `💳 *Pagamento:* ${payment}\n\n` +
-    `Em breve nosso entregador estará aí! 🛵`
+    closing
   );
 }
 
@@ -86,6 +104,8 @@ export async function createOrder(input: CreateOrderInput): Promise<{ orderId: s
       paymentMethod: input.paymentMethod,
       needChange: input.needChange,
       changeFor: input.changeFor,
+      deliveryMethod: input.deliveryMethod,
+      localIdentifier: input.localIdentifier,
       status: "pending",
     },
   });

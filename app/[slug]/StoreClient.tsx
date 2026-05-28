@@ -26,9 +26,12 @@ interface Props {
   logoUrl: string | null;
   products: Product[];
   categories: Category[];
+  acceptsPickup: boolean;
+  acceptsLocal: boolean;
 }
 type View = "products" | "checkout" | "success";
 type PayMethod = "pix" | "dinheiro";
+type DeliveryMethod = "DELIVERY" | "PICKUP" | "LOCAL";
 
 // ─── Search normalization (strips diacritics) ───────────────────────────────
 function norm(s: string): string {
@@ -322,18 +325,22 @@ function ProductsView({
 
 // ─── Checkout view ───────────────────────────────────────────────────────────
 function CheckoutView({
-  cart, products, storeId, instanceName, storeName, onBack, onSuccess,
+  cart, products, storeId, instanceName, storeName, acceptsPickup, acceptsLocal, onBack, onSuccess,
 }: {
   cart: Record<string, number>;
   products: Product[];
   storeId: string;
   instanceName: string;
   storeName: string;
+  acceptsPickup: boolean;
+  acceptsLocal: boolean;
   onBack: () => void;
   onSuccess: () => void;
 }) {
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
+  const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>("DELIVERY");
+  const [localIdentifier, setLocalIdentifier] = useState("");
   const [payMethod, setPayMethod] = useState<PayMethod>("pix");
   const [changeFor, setChangeFor] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -349,7 +356,7 @@ function CheckoutView({
   function validate() {
     const e: Record<string, string> = {};
     if (phone.replace(/\D/g, "").length < 8) e.phone = "Número muito curto";
-    if (address.trim().length < 3) e.address = "Endereço obrigatório";
+    if (deliveryMethod === "DELIVERY" && address.trim().length < 3) e.address = "Endereço obrigatório";
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -363,7 +370,7 @@ function CheckoutView({
         instanceName,
         storeName,
         customerPhone: phone,
-        address: address.trim(),
+        address: deliveryMethod === "DELIVERY" ? address.trim() : "",
         items: cartItems.map(i => ({
           name: i.product.name,
           emoji: i.product.emoji,
@@ -374,6 +381,8 @@ function CheckoutView({
         paymentMethod: payMethod,
         needChange: payMethod === "dinheiro" && !!changeFor,
         changeFor: payMethod === "dinheiro" && changeFor ? parseFloat(changeFor) : undefined,
+        deliveryMethod,
+        localIdentifier: localIdentifier.trim() || undefined,
       });
       onSuccess();
     } catch (err) {
@@ -415,6 +424,46 @@ function CheckoutView({
 
       {/* Form */}
       <div className="s-form">
+        {/* Delivery method selector */}
+        {(acceptsPickup || acceptsLocal) && (
+          <div className="s-field">
+            <label className="s-field-label">Como quer receber?</label>
+            <div className="s-payment-opts">
+              <button
+                className={`s-pay-opt${deliveryMethod === "DELIVERY" ? " selected" : ""}`}
+                onClick={() => setDeliveryMethod("DELIVERY")}
+                role="radio"
+                aria-checked={deliveryMethod === "DELIVERY"}
+              >
+                <span className="s-pay-radio" />
+                <span className="s-pay-label">🛵 Receber em casa</span>
+              </button>
+              {acceptsPickup && (
+                <button
+                  className={`s-pay-opt${deliveryMethod === "PICKUP" ? " selected" : ""}`}
+                  onClick={() => setDeliveryMethod("PICKUP")}
+                  role="radio"
+                  aria-checked={deliveryMethod === "PICKUP"}
+                >
+                  <span className="s-pay-radio" />
+                  <span className="s-pay-label">🏪 Vou retirar</span>
+                </button>
+              )}
+              {acceptsLocal && (
+                <button
+                  className={`s-pay-opt${deliveryMethod === "LOCAL" ? " selected" : ""}`}
+                  onClick={() => setDeliveryMethod("LOCAL")}
+                  role="radio"
+                  aria-checked={deliveryMethod === "LOCAL"}
+                >
+                  <span className="s-pay-radio" />
+                  <span className="s-pay-label">📍 Estou no local</span>
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Phone */}
         <div className="s-field">
           <label className="s-field-label">WhatsApp</label>
@@ -432,17 +481,32 @@ function CheckoutView({
           {errors.phone && <span className="s-field-error">{errors.phone}</span>}
         </div>
 
-        {/* Address */}
-        <div className="s-field">
-          <label className="s-field-label">Endereço de entrega</label>
-          <input
-            className={`s-input${errors.address ? " error" : ""}`}
-            value={address}
-            onChange={e => setAddress(e.target.value)}
-            placeholder="Rua, número, bairro"
-          />
-          {errors.address && <span className="s-field-error">{errors.address}</span>}
-        </div>
+        {/* Address — only for DELIVERY */}
+        {deliveryMethod === "DELIVERY" && (
+          <div className="s-field">
+            <label className="s-field-label">Endereço de entrega</label>
+            <input
+              className={`s-input${errors.address ? " error" : ""}`}
+              value={address}
+              onChange={e => setAddress(e.target.value)}
+              placeholder="Rua, número, bairro"
+            />
+            {errors.address && <span className="s-field-error">{errors.address}</span>}
+          </div>
+        )}
+
+        {/* Local identifier — only for LOCAL */}
+        {deliveryMethod === "LOCAL" && (
+          <div className="s-field">
+            <label className="s-field-label">Identificador <span style={{ opacity: 0.5, fontWeight: 400 }}>(opcional)</span></label>
+            <input
+              className="s-input"
+              value={localIdentifier}
+              onChange={e => setLocalIdentifier(e.target.value)}
+              placeholder="Ex: Mesa 2, Comanda 10, Provador 3..."
+            />
+          </div>
+        )}
 
         {/* Payment */}
         <div className="s-field">
@@ -512,7 +576,7 @@ function SuccessView({ onBack }: { onBack: () => void }) {
 }
 
 // ─── Root component ──────────────────────────────────────────────────────────
-export function StoreClient({ storeId, instanceName, storeName, logoUrl, products, categories }: Props) {
+export function StoreClient({ storeId, instanceName, storeName, logoUrl, products, categories, acceptsPickup, acceptsLocal }: Props) {
   const [view, setView] = useState<View>("products");
   const [cart, setCart] = useState<Record<string, number>>({});
 
@@ -545,6 +609,8 @@ export function StoreClient({ storeId, instanceName, storeName, logoUrl, product
           storeId={storeId}
           instanceName={instanceName}
           storeName={storeName}
+          acceptsPickup={acceptsPickup}
+          acceptsLocal={acceptsLocal}
           onBack={() => setView("products")}
           onSuccess={() => setView("success")}
         />

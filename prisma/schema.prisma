@@ -31,6 +31,8 @@ model Store {
   botConfig                BotConfig?
   messages                 BotMessage[]
   orders                   Order[]
+  acceptsPickup            Boolean     @default(true)
+  acceptsLocal             Boolean     @default(true)
   createdAt                DateTime    @default(now())
   updatedAt                DateTime    @updatedAt
 }
@@ -81,11 +83,13 @@ model Order {
   address       String
   items         Json
   total         Float
-  paymentMethod String
-  needChange    Boolean  @default(false)
-  changeFor     Float?
-  status        String   @default("pending")
-  createdAt     DateTime @default(now())
+  paymentMethod    String
+  needChange       Boolean  @default(false)
+  changeFor        Float?
+  deliveryMethod   String   @default("DELIVERY")
+  localIdentifier  String?
+  status           String   @default("pending")
+  createdAt        DateTime @default(now())
 }
 
 model BotMessage {

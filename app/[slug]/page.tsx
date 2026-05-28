@@ -32,6 +32,8 @@ export default async function StorefrontPage({
       instanceName={store.evolutionInstanceName ?? ""}
       storeName={store.name}
       logoUrl={store.logoUrl ?? null}
+      acceptsPickup={store.acceptsPickup}
+      acceptsLocal={store.acceptsLocal}
       products={store.products.map((p) => ({
         id: p.id,
         name: p.name,
