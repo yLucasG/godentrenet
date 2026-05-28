@@ -2,53 +2,54 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Tema: Amber Dark (padrão) ───────────────────────────────────────────── */
-[data-theme='amber-dark'] {
-  --background:        25 15% 8%;
-  --card:              25 15% 12%;
-  --card-foreground:   40 20% 95%;
-  --foreground:        40 20% 95%;
-  --primary:           38 92% 50%;
-  --primary-foreground: 25 15% 8%;
-  --muted:             25 15% 16%;
-  --muted-foreground:  40 15% 55%;
-  --accent:            38 92% 50%;
-  --accent-foreground: 25 15% 8%;
-  --border:            25 15% 20%;
-  --input:             25 15% 18%;
-  --ring:              38 92% 50%;
+/* ─── Amber Dark ──────────────────────────────────────────────────────────── */
+/* Especificidade (0,2,0) > .store-root (0,1,0) → garante que o tema vence   */
+.store-root[data-theme='amber-dark'] {
+  --background:           25 15% 8%;
+  --card:                 25 15% 12%;
+  --card-foreground:      40 20% 95%;
+  --foreground:           40 20% 95%;
+  --primary:              38 92% 50%;
+  --primary-foreground:   25 15% 8%;
+  --muted:                25 15% 16%;
+  --muted-foreground:     40 15% 55%;
+  --accent:               38 92% 50%;
+  --accent-foreground:    25 15% 8%;
+  --border:               25 15% 22%;
+  --input:                25 15% 18%;
+  --ring:                 38 92% 50%;
 }
 
-/* ── Tema: Rose Light ────────────────────────────────────────────────────── */
-[data-theme='rose-light'] {
-  --background:        350 100% 98%;
-  --card:              0 0% 100%;
-  --card-foreground:   350 20% 15%;
-  --foreground:        350 20% 15%;
-  --primary:           346 87% 43%;
-  --primary-foreground: 0 0% 100%;
-  --muted:             350 40% 96%;
-  --muted-foreground:  350 12% 52%;
-  --accent:            346 87% 43%;
-  --accent-foreground: 0 0% 100%;
-  --border:            350 20% 88%;
-  --input:             350 20% 88%;
-  --ring:              346 87% 43%;
+/* ─── Rose Light ──────────────────────────────────────────────────────────── */
+.store-root[data-theme='rose-light'] {
+  --background:           350 100% 98%;
+  --card:                 0 0% 100%;
+  --card-foreground:      350 20% 15%;
+  --foreground:           350 20% 15%;
+  --primary:              346 87% 43%;
+  --primary-foreground:   0 0% 100%;
+  --muted:                350 40% 96%;
+  --muted-foreground:     350 12% 52%;
+  --accent:               346 87% 43%;
+  --accent-foreground:    0 0% 100%;
+  --border:               350 20% 88%;
+  --input:                350 20% 88%;
+  --ring:                 346 87% 43%;
 }
 
-/* ── Tema: Ocean Blue ────────────────────────────────────────────────────── */
-[data-theme='ocean-blue'] {
-  --background:        204 100% 98%;
-  --card:              0 0% 100%;
-  --card-foreground:   200 20% 15%;
-  --foreground:        200 20% 15%;
-  --primary:           199 89% 48%;
-  --primary-foreground: 0 0% 100%;
-  --muted:             204 50% 96%;
-  --muted-foreground:  200 12% 52%;
-  --accent:            199 89% 48%;
-  --accent-foreground: 0 0% 100%;
-  --border:            204 30% 86%;
-  --input:             204 30% 86%;
-  --ring:              199 89% 48%;
+/* ─── Ocean Blue ──────────────────────────────────────────────────────────── */
+.store-root[data-theme='ocean-blue'] {
+  --background:           204 100% 98%;
+  --card:                 0 0% 100%;
+  --card-foreground:      200 20% 15%;
+  --foreground:           200 20% 15%;
+  --primary:              199 89% 48%;
+  --primary-foreground:   0 0% 100%;
+  --muted:                204 50% 96%;
+  --muted-foreground:     200 12% 52%;
+  --accent:               199 89% 48%;
+  --accent-foreground:    0 0% 100%;
+  --border:               204 30% 86%;
+  --input:                204 30% 86%;
+  --ring:                 199 89% 48%;
 }

@@ -80,7 +80,7 @@ function ProductSheet({ product, onClose, onAddToCart }: {
 
       {/* Sheet */}
       <motion.div
-        className="fixed bottom-0 left-0 right-0 z-50 bg-white flex flex-col overflow-hidden"
+        className="fixed bottom-0 left-0 right-0 z-50 bg-card flex flex-col overflow-hidden"
         style={{ borderRadius: "2.5rem 2.5rem 0 0", maxHeight: "92dvh" }}
         initial={{ y: "100%" }}
         animate={{ y: 0 }}
@@ -89,15 +89,15 @@ function ProductSheet({ product, onClose, onAddToCart }: {
       >
         {/* Handle */}
         <div className="flex-shrink-0 pt-3 pb-1">
-          <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto" />
+          <div className="w-12 h-1.5 bg-muted rounded-full mx-auto" />
         </div>
 
         {/* Scrollable body */}
         <div className="flex-1 overflow-y-auto">
           {/* Hero image */}
           <div
-            className="mx-4 mt-3 mb-5 overflow-hidden flex items-center justify-center"
-            style={{ borderRadius: "1.75rem", background: "var(--surface-tint)", aspectRatio: "4/3" }}
+            className="mx-4 mt-3 mb-5 overflow-hidden flex items-center justify-center bg-muted"
+            style={{ borderRadius: "1.75rem", aspectRatio: "4/3" }}
           >
             {product.imageUrl
               ? <img src={product.imageUrl} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -107,10 +107,10 @@ function ProductSheet({ product, onClose, onAddToCart }: {
 
           {/* Info */}
           <div className="px-5 pb-6">
-            <h2 className="text-2xl font-extrabold tracking-tight text-gray-900 leading-tight">
+            <h2 className="text-2xl font-extrabold tracking-tight text-foreground leading-tight">
               {product.name}
             </h2>
-            <p className="text-xl font-bold mt-2" style={{ color: "var(--primary)" }}>
+            <p className="text-xl font-bold mt-2 text-primary">
               {fmt(product.price)}
             </p>
           </div>
@@ -118,28 +118,26 @@ function ProductSheet({ product, onClose, onAddToCart }: {
 
         {/* Sticky footer: qty + CTA */}
         <div
-          className="flex-shrink-0 flex items-center gap-3 px-5 py-4 bg-white"
-          style={{ borderTop: "1px solid rgba(0,0,0,0.06)" }}
+          className="flex-shrink-0 flex items-center gap-3 px-5 py-4 bg-card"
+          style={{ borderTop: "1px solid hsl(var(--border) / 0.4)" }}
         >
           {/* Qty stepper pill */}
-          <div className="flex items-center gap-2 rounded-full px-2 py-1.5 bg-gray-100">
+          <div className="flex items-center gap-2 rounded-full px-2 py-1.5 bg-muted">
             <button
               onClick={() => setLocalQty(q => Math.max(1, q - 1))}
-              className="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center text-gray-700 font-bold text-xl transition-transform active:scale-90"
+              className="w-9 h-9 rounded-full bg-card shadow-sm flex items-center justify-center text-foreground font-bold text-xl transition-transform active:scale-90"
             >−</button>
-            <span className="w-7 text-center font-bold text-sm tabular-nums text-gray-900 select-none">{localQty}</span>
+            <span className="w-7 text-center font-bold text-sm tabular-nums text-foreground select-none">{localQty}</span>
             <button
               onClick={() => setLocalQty(q => q + 1)}
-              className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-xl transition-transform active:scale-90"
-              style={{ background: "var(--primary)" }}
+              className="w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-xl transition-transform active:scale-90"
             >+</button>
           </div>
 
           {/* Add to order */}
           <motion.button
             whileTap={{ scale: 0.97 }}
-            className="flex-1 rounded-full py-3.5 text-white text-sm font-bold tracking-tight"
-            style={{ background: "#0f172a" }}
+            className="flex-1 rounded-full py-3.5 bg-primary text-primary-foreground text-sm font-bold tracking-tight"
             onClick={() => { onAddToCart(product, localQty); onClose(); }}
           >
             Adicionar · {fmt(total)}
@@ -180,7 +178,7 @@ function CartSheet({ cart, products, onClose, onAdd, onRemove, onCheckout }: {
 
       {/* Sheet */}
       <motion.div
-        className="fixed bottom-0 left-0 right-0 z-50 bg-white flex flex-col overflow-hidden"
+        className="fixed bottom-0 left-0 right-0 z-50 bg-card flex flex-col overflow-hidden"
         style={{ borderRadius: "2.5rem 2.5rem 0 0", maxHeight: "85dvh" }}
         initial={{ y: "100%" }}
         animate={{ y: 0 }}
@@ -188,11 +186,11 @@ function CartSheet({ cart, products, onClose, onAdd, onRemove, onCheckout }: {
         transition={{ type: "spring", damping: 32, stiffness: 360 }}
       >
         {/* Header */}
-        <div className="flex-shrink-0 px-5 pt-3 pb-4" style={{ borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
-          <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-4" />
+        <div className="flex-shrink-0 px-5 pt-3 pb-4" style={{ borderBottom: "1px solid hsl(var(--border) / 0.4)" }}>
+          <div className="w-12 h-1.5 bg-muted rounded-full mx-auto mb-4" />
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-extrabold tracking-tight text-gray-900">Meu Pedido</h2>
-            <span className="text-sm font-medium text-gray-400">
+            <h2 className="text-xl font-extrabold tracking-tight text-foreground">Meu Pedido</h2>
+            <span className="text-sm font-medium text-muted-foreground">
               {totalItems} {totalItems === 1 ? "item" : "itens"}
             </span>
           </div>
@@ -201,7 +199,7 @@ function CartSheet({ cart, products, onClose, onAdd, onRemove, onCheckout }: {
         {/* Items list */}
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
           {cartItems.length === 0 ? (
-            <div className="text-center py-12 text-gray-400 text-sm font-medium">
+            <div className="text-center py-12 text-muted-foreground text-sm font-medium">
               Seu carrinho está vazio
             </div>
           ) : (
@@ -214,14 +212,10 @@ function CartSheet({ cart, products, onClose, onAdd, onRemove, onCheckout }: {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20, height: 0, marginBottom: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="flex items-center gap-3 rounded-2xl p-3"
-                  style={{ background: "rgba(0,0,0,0.03)" }}
+                  className="flex items-center gap-3 rounded-2xl p-3 bg-muted/50"
                 >
                   {/* Thumbnail */}
-                  <div
-                    className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center"
-                    style={{ background: "var(--surface-tint)" }}
-                  >
+                  <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center bg-muted">
                     {product.imageUrl
                       ? <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
                       : <span className="text-2xl">{product.emoji}</span>
@@ -230,8 +224,8 @@ function CartSheet({ cart, products, onClose, onAdd, onRemove, onCheckout }: {
 
                   {/* Info */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-gray-900 leading-tight truncate">{product.name}</p>
-                    <p className="text-sm font-bold mt-0.5" style={{ color: "var(--primary)" }}>
+                    <p className="text-sm font-bold text-foreground leading-tight truncate">{product.name}</p>
+                    <p className="text-sm font-bold mt-0.5 text-primary">
                       {fmt(product.price * qty)}
                     </p>
                   </div>
@@ -240,16 +234,14 @@ function CartSheet({ cart, products, onClose, onAdd, onRemove, onCheckout }: {
                   <div className="flex items-center gap-1.5 flex-shrink-0">
                     <button
                       onClick={() => onRemove(product)}
-                      className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-base transition-colors active:scale-90"
-                      style={{ background: "rgba(0,0,0,0.07)", color: "#374151" }}
+                      className="w-7 h-7 rounded-full bg-muted text-foreground flex items-center justify-center font-bold text-base transition-colors active:scale-90"
                     >
                       {qty === 1 ? <TrashIcon /> : "−"}
                     </button>
-                    <span className="w-5 text-center font-bold text-sm tabular-nums text-gray-900 select-none">{qty}</span>
+                    <span className="w-5 text-center font-bold text-sm tabular-nums text-foreground select-none">{qty}</span>
                     <button
                       onClick={() => onAdd(product)}
-                      className="w-7 h-7 rounded-full flex items-center justify-center text-white font-bold text-base transition-colors active:scale-90"
-                      style={{ background: "var(--primary)" }}
+                      className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-base transition-colors active:scale-90"
                     >+</button>
                   </div>
                 </motion.div>
@@ -259,16 +251,15 @@ function CartSheet({ cart, products, onClose, onAdd, onRemove, onCheckout }: {
         </div>
 
         {/* Footer */}
-        <div className="flex-shrink-0 px-5 py-4 bg-white" style={{ borderTop: "1px solid rgba(0,0,0,0.06)" }}>
+        <div className="flex-shrink-0 px-5 py-4 bg-card" style={{ borderTop: "1px solid hsl(var(--border) / 0.4)" }}>
           <div className="flex justify-between items-center mb-4">
-            <span className="text-gray-500 font-medium text-sm">Total do pedido</span>
-            <span className="text-xl font-extrabold tracking-tight text-gray-900">{fmt(total)}</span>
+            <span className="text-muted-foreground font-medium text-sm">Total do pedido</span>
+            <span className="text-xl font-extrabold tracking-tight text-foreground">{fmt(total)}</span>
           </div>
           <motion.button
             whileTap={{ scale: 0.97 }}
             onClick={() => { onClose(); onCheckout(); }}
-            className="w-full rounded-full py-4 text-white font-bold text-sm tracking-tight"
-            style={{ background: "#0f172a" }}
+            className="w-full rounded-full py-4 bg-primary text-primary-foreground font-bold text-sm tracking-tight"
           >
             Confirmar Pedido →
           </motion.button>
@@ -278,7 +269,7 @@ function CartSheet({ cart, products, onClose, onAdd, onRemove, onCheckout }: {
   );
 }
 
-// ─── Product Card (new premium design) ───────────────────────────────────────
+// ─── Product Card ─────────────────────────────────────────────────────────────
 function ProductCard({ product, qty, onOpen, onAdd, onRemove }: {
   product: Product;
   qty: number;
@@ -288,54 +279,48 @@ function ProductCard({ product, qty, onOpen, onAdd, onRemove }: {
 }) {
   return (
     <div
-      className="bg-white rounded-3xl p-3 border flex flex-col gap-2.5 cursor-pointer"
-      style={{
-        borderColor: qty > 0 ? "var(--primary)" : "rgba(0,0,0,0.06)",
-        boxShadow: qty > 0
-          ? "0 10px 40px -20px rgba(0,0,0,0.05), 0 0 0 1.5px var(--primary)"
-          : "0 10px 40px -20px rgba(0,0,0,0.05)",
-      }}
+      className={`rounded-[2rem] overflow-hidden border shadow-sm flex flex-col cursor-pointer bg-card transition-all ${
+        qty > 0 ? "border-primary/60" : "border-border/20"
+      }`}
       onClick={onOpen}
     >
-      {/* Image — ~60% of card */}
+      {/* Image — topo do card */}
       <div
-        className="w-full rounded-2xl overflow-hidden flex items-center justify-center"
-        style={{ aspectRatio: "1/1", background: "var(--surface-tint)" }}
+        className="w-full overflow-hidden flex items-center justify-center bg-muted"
+        style={{ aspectRatio: "1/1" }}
       >
         {product.imageUrl
-          ? <img src={product.imageUrl} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          ? <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
           : <span style={{ fontSize: 48, lineHeight: 1 }}>{product.emoji}</span>
         }
       </div>
 
-      {/* Info */}
-      <div className="flex flex-col gap-1">
-        <p className="text-[12.5px] font-extrabold tracking-tight text-gray-900 leading-snug line-clamp-2 min-h-[2.5em]">
+      {/* Body */}
+      <div className="p-3 flex flex-col gap-2">
+        <p className="text-[12.5px] font-bold text-foreground leading-snug line-clamp-2 min-h-[2.5em]">
           {product.name}
         </p>
-        <div className="flex items-center justify-between gap-1 mt-0.5">
-          <span className="text-sm font-bold text-gray-900 tabular-nums">
+        <div className="flex items-center justify-between gap-1">
+          <span className="text-sm font-extrabold text-primary tabular-nums">
             R$ {product.price.toFixed(2).replace(".", ",")}
           </span>
           {qty > 0 ? (
             <div className="flex items-center gap-0.5" onClick={e => e.stopPropagation()}>
               <button
                 onClick={onRemove}
-                className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-700 font-bold text-sm transition-transform active:scale-90"
+                className="w-6 h-6 rounded-full bg-muted text-foreground flex items-center justify-center font-bold text-sm transition-transform active:scale-90"
               >−</button>
-              <span className="w-4 text-center font-bold text-xs tabular-nums text-gray-900 select-none">{qty}</span>
+              <span className="w-4 text-center font-bold text-xs tabular-nums text-foreground select-none">{qty}</span>
               <button
                 onClick={onAdd}
-                className="w-6 h-6 rounded-full flex items-center justify-center text-white font-bold text-sm transition-transform active:scale-90"
-                style={{ background: "var(--primary)" }}
+                className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm transition-transform active:scale-90"
               >+</button>
             </div>
           ) : (
             <button
               onClick={e => { e.stopPropagation(); onOpen(); }}
-              className="w-7 h-7 rounded-full flex items-center justify-center text-white font-semibold text-lg leading-none transition-transform active:scale-90"
-              style={{ background: "var(--primary)", boxShadow: "0 4px 12px -4px var(--primary-glow)" }}
-            >+</button>
+              className="px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-bold hover:bg-primary hover:text-primary-foreground transition-colors active:scale-90"
+            >+ Add</button>
           )}
         </div>
       </div>
@@ -354,50 +339,45 @@ function FeaturedCard({ product, tag, qty, onOpen, onAdd, onRemove }: {
 }) {
   return (
     <div
-      className="bg-white rounded-3xl p-3 border flex flex-col gap-2.5 cursor-pointer"
-      style={{
-        borderColor: qty > 0 ? "var(--primary)" : "rgba(0,0,0,0.06)",
-        boxShadow: "0 10px 40px -20px rgba(0,0,0,0.06)",
-      }}
+      className={`rounded-[2rem] overflow-hidden border shadow-sm flex flex-col cursor-pointer bg-card transition-all ${
+        qty > 0 ? "border-primary/60" : "border-border/20"
+      }`}
       onClick={onOpen}
     >
       {/* Image */}
       <div
-        className="w-full rounded-2xl overflow-hidden flex items-center justify-center relative"
-        style={{ aspectRatio: "1/1", background: "var(--surface-tint)" }}
+        className="w-full overflow-hidden flex items-center justify-center bg-muted relative"
+        style={{ aspectRatio: "1/1" }}
       >
         {product.imageUrl
-          ? <img src={product.imageUrl} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          ? <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
           : <span style={{ fontSize: 48, lineHeight: 1 }}>{product.emoji}</span>
         }
-        {/* Tag badge */}
-        <span
-          className="absolute top-2 left-2 text-white text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-full"
-          style={{ background: "var(--primary)" }}
-        >{tag}</span>
+        <span className="absolute top-2 left-2 bg-primary text-primary-foreground text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-full">
+          {tag}
+        </span>
       </div>
 
-      {/* Info */}
-      <div className="flex flex-col gap-1">
-        <p className="text-[12.5px] font-extrabold tracking-tight text-gray-900 leading-snug line-clamp-2 min-h-[2.5em]">
+      {/* Body */}
+      <div className="p-3 flex flex-col gap-2">
+        <p className="text-[12.5px] font-bold text-foreground leading-snug line-clamp-2 min-h-[2.5em]">
           {product.name}
         </p>
-        <div className="flex items-center justify-between gap-1 mt-0.5">
-          <span className="text-sm font-bold text-gray-900 tabular-nums">
+        <div className="flex items-center justify-between gap-1">
+          <span className="text-sm font-extrabold text-primary tabular-nums">
             R$ {product.price.toFixed(2).replace(".", ",")}
           </span>
           {qty > 0 ? (
             <div className="flex items-center gap-0.5" onClick={e => e.stopPropagation()}>
-              <button onClick={onRemove} className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-700 font-bold text-sm active:scale-90">−</button>
-              <span className="w-4 text-center font-bold text-xs tabular-nums text-gray-900 select-none">{qty}</span>
-              <button onClick={onAdd} className="w-6 h-6 rounded-full flex items-center justify-center text-white font-bold text-sm active:scale-90" style={{ background: "var(--primary)" }}>+</button>
+              <button onClick={onRemove} className="w-6 h-6 rounded-full bg-muted text-foreground flex items-center justify-center font-bold text-sm active:scale-90">−</button>
+              <span className="w-4 text-center font-bold text-xs tabular-nums text-foreground select-none">{qty}</span>
+              <button onClick={onAdd} className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm active:scale-90">+</button>
             </div>
           ) : (
             <button
               onClick={e => { e.stopPropagation(); onOpen(); }}
-              className="w-7 h-7 rounded-full flex items-center justify-center text-white font-semibold text-lg leading-none active:scale-90"
-              style={{ background: "var(--primary)" }}
-            >+</button>
+              className="px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-bold hover:bg-primary hover:text-primary-foreground transition-colors active:scale-90"
+            >+ Add</button>
           )}
         </div>
       </div>
@@ -496,42 +476,42 @@ function ProductsView({ storeName, logoUrl, products, dbCategories, cart, onOpen
       <header
         className="sticky top-0 z-30"
         style={{
-          background: "rgba(255,255,255,0.72)",
+          background: "hsl(var(--card) / 0.85)",
           backdropFilter: "blur(24px)",
           WebkitBackdropFilter: "blur(24px)",
-          borderBottom: "1px solid rgba(0,0,0,0.06)",
+          borderBottom: "1px solid hsl(var(--border) / 0.4)",
         }}
       >
-        {/* Store identity */}
-        <div className="flex items-center gap-3 px-4 pt-4 pb-3 max-w-[480px] mx-auto">
-          <div className="shrink-0">
-            {logoUrl
-              ? <img src={logoUrl} alt={storeName} className="w-10 h-10 rounded-full object-cover" style={{ boxShadow: "0 0 0 2px rgba(0,0,0,0.06)" }} />
-              : <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm" style={{ background: "var(--surface-tint)", color: "var(--primary)" }}>{initials}</div>
-            }
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="font-bold text-gray-900 text-base leading-tight truncate">{storeName}</div>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" style={{ animation: "s-pulse 1.6s ease-in-out infinite", boxShadow: "0 0 5px rgba(52,211,153,0.7)" }} />
-              <span className="text-[11px] text-gray-400 font-medium">Em funcionamento</span>
+        {/* Store identity — centralizado */}
+        <div className="flex flex-col items-center gap-2 px-4 pt-5 pb-3 max-w-[480px] mx-auto">
+          {/* Logo */}
+          {logoUrl
+            ? <img src={logoUrl} alt={storeName} className="w-14 h-14 rounded-full object-cover shrink-0" style={{ boxShadow: "0 0 0 2.5px hsl(var(--border) / 0.5)" }} />
+            : <div className="w-14 h-14 rounded-full flex items-center justify-center font-bold text-base bg-muted text-primary shrink-0">{initials}</div>
+          }
+          {/* Nome + status */}
+          <div className="text-center">
+            <div className="font-extrabold text-primary text-xl tracking-tight leading-tight">{storeName}</div>
+            <div className="flex items-center justify-center gap-1.5 mt-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block shrink-0" />
+              <span className="text-xs text-muted-foreground font-medium">Em funcionamento</span>
             </div>
           </div>
         </div>
 
         {/* Search pill */}
         <div className="px-4 pb-3 max-w-[480px] mx-auto">
-          <div className="flex items-center gap-2.5 rounded-full px-4 py-2.5" style={{ background: "rgba(0,0,0,0.05)" }}>
-            <span className="text-gray-400 shrink-0"><SearchIcon /></span>
+          <div className="flex items-center gap-2.5 rounded-full px-4 py-2.5 bg-card border border-border/40">
+            <span className="text-muted-foreground shrink-0"><SearchIcon /></span>
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Buscar produto…"
               aria-label="Buscar produto"
-              className="flex-1 bg-transparent outline-none text-sm text-gray-800 placeholder:text-gray-400 font-medium"
+              className="flex-1 bg-transparent outline-none text-sm text-foreground placeholder:text-muted-foreground font-medium"
             />
             {search && (
-              <button onClick={() => setSearch("")} className="text-gray-400 hover:text-gray-600 leading-none text-xl shrink-0" aria-label="Limpar">×</button>
+              <button onClick={() => setSearch("")} className="text-muted-foreground hover:text-foreground leading-none text-xl shrink-0" aria-label="Limpar">×</button>
             )}
           </div>
         </div>
@@ -541,15 +521,21 @@ function ProductsView({ storeName, logoUrl, products, dbCategories, cart, onOpen
           <div className="flex gap-2 pb-3 px-4 overflow-x-auto scrollbar-hide max-w-[480px] mx-auto">
             <button
               onClick={() => setActiveCat("all")}
-              className="shrink-0 rounded-full px-4 py-1.5 text-sm font-semibold whitespace-nowrap transition-colors"
-              style={activeCat === "all" ? { background: "#0f172a", color: "#fff" } : { background: "rgba(0,0,0,0.06)", color: "#6b7280" }}
+              className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-semibold whitespace-nowrap transition-colors ${
+                activeCat === "all"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-card text-foreground border border-border/50"
+              }`}
             >🛍️ Tudo</button>
             {visibleCategories.map(cat => (
               <button
                 key={cat.id}
                 onClick={() => setActiveCat(cat.id)}
-                className="shrink-0 rounded-full px-4 py-1.5 text-sm font-semibold whitespace-nowrap transition-colors"
-                style={activeCat === cat.id ? { background: "#0f172a", color: "#fff" } : { background: "rgba(0,0,0,0.06)", color: "#6b7280" }}
+                className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-semibold whitespace-nowrap transition-colors ${
+                  activeCat === cat.id
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-card text-foreground border border-border/50"
+                }`}
               >{cat.emoji} {cat.name}</button>
             ))}
           </div>
@@ -561,7 +547,7 @@ function ProductsView({ storeName, logoUrl, products, dbCategories, cart, onOpen
         {/* Featured grid */}
         {featured.length > 0 && (
           <section className="pt-5 pb-2">
-            <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-3">✦ Em Destaque</p>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-3">✦ Em Destaque</p>
             <div className="grid grid-cols-2 gap-3">
               {featured.map((p, i) => (
                 <motion.div
@@ -589,13 +575,12 @@ function ProductsView({ storeName, logoUrl, products, dbCategories, cart, onOpen
         {filtered.length > 0 && (
           <section className="pt-5">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
                 {activeCat === "all" ? "✦ Todos os Produtos" : `✦ ${activeCatLabel}`}
               </p>
-              <span
-                className="text-[10px] font-semibold text-gray-400 px-2.5 py-0.5 rounded-full"
-                style={{ background: "rgba(0,0,0,0.05)" }}
-              >{filtered.length} itens</span>
+              <span className="text-[10px] font-semibold text-muted-foreground px-2.5 py-0.5 rounded-full bg-muted">
+                {filtered.length} itens
+              </span>
             </div>
             <div className="grid grid-cols-2 gap-3">
               {filtered.map((p, i) => (
@@ -620,7 +605,7 @@ function ProductsView({ storeName, logoUrl, products, dbCategories, cart, onOpen
         )}
 
         {filtered.length === 0 && featured.length === 0 && (
-          <div className="text-center py-20 text-gray-400 text-sm font-medium">
+          <div className="text-center py-20 text-muted-foreground text-sm font-medium">
             Nenhum produto encontrado
           </div>
         )}
