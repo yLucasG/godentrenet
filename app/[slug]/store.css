@@ -683,6 +683,13 @@
   box-shadow: 0 10px 28px -6px var(--primary-glow);
 }
 
+/* ─── Scrollbar hide utility ─────────────────────────────────────────────── */
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+
 /* ─── Responsive ────────────────────────────────────────────────────────── */
 @media (max-width: 360px) {
   .s-feat-row, .s-prod-grid { grid-template-columns: 1fr; }

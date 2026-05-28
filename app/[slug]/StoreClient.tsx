@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef, useCallback, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { createOrder } from "@/actions/order";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -33,7 +33,6 @@ type View = "products" | "checkout" | "success";
 type PayMethod = "pix" | "dinheiro";
 type DeliveryMethod = "DELIVERY" | "PICKUP" | "LOCAL";
 
-// ─── Search normalization (strips diacritics) ───────────────────────────────
 function norm(s: string): string {
   return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 }
@@ -41,15 +40,8 @@ function norm(s: string): string {
 // ─── Icons ──────────────────────────────────────────────────────────────────
 function SearchIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
-    </svg>
-  );
-}
-function CartIcon({ size = 18 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 4h2l2.5 11h11l2-8H6"/><circle cx="9" cy="20" r="1.5"/><circle cx="17" cy="20" r="1.5"/>
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
     </svg>
   );
 }
@@ -64,11 +56,39 @@ function Price({ value, sm }: { value: number; sm?: boolean }) {
   );
 }
 
+// ─── Qty Stepper — inline ± controls ────────────────────────────────────────
+function QtyStepper({ qty, onAdd, onRemove, sm }: {
+  qty: number; onAdd: () => void; onRemove: () => void; sm?: boolean;
+}) {
+  const btn = sm
+    ? "w-7 h-7 text-sm rounded-full flex items-center justify-center font-bold transition-all active:scale-90"
+    : "w-8 h-8 text-base rounded-full flex items-center justify-center font-bold transition-all active:scale-90";
+  const num = sm ? "w-5 text-xs" : "w-6 text-sm";
+  return (
+    <div className="flex items-center gap-0.5">
+      <button
+        onClick={e => { e.stopPropagation(); onRemove(); }}
+        className={`${btn} bg-gray-100 text-gray-700 hover:bg-gray-200`}
+        aria-label="Remover"
+      >
+        −
+      </button>
+      <span className={`${num} text-center font-bold text-gray-900 tabular-nums`}>{qty}</span>
+      <button
+        onClick={e => { e.stopPropagation(); onAdd(); }}
+        className={`${btn} text-white hover:opacity-90`}
+        style={{ background: "var(--primary)" }}
+        aria-label="Adicionar"
+      >
+        +
+      </button>
+    </div>
+  );
+}
+
 // ─── Featured card ───────────────────────────────────────────────────────────
-function FeaturedCard({
-  product, tag, onAdd, qty,
-}: {
-  product: Product; tag: string; onAdd: () => void; qty: number;
+function FeaturedCard({ product, tag, onAdd, onRemove, qty }: {
+  product: Product; tag: string; onAdd: () => void; onRemove: () => void; qty: number;
 }) {
   return (
     <div className="s-feat-card">
@@ -83,12 +103,14 @@ function FeaturedCard({
         <div className="s-feat-name">{product.name}</div>
         <div className="s-feat-foot">
           <Price value={product.price} />
-          <button className="s-btn-add" onClick={onAdd} aria-label={`Adicionar ${product.name}`}>
-            {qty > 0
-              ? <span className="s-qty mono">×{qty}</span>
-              : <><span style={{ fontSize: 14 }}>+</span><span>ADICIONAR</span></>
-            }
-          </button>
+          {qty > 0
+            ? <QtyStepper qty={qty} onAdd={onAdd} onRemove={onRemove} />
+            : (
+              <button className="s-btn-add" onClick={onAdd} aria-label={`Adicionar ${product.name}`}>
+                <span style={{ fontSize: 14 }}>+</span><span>ADICIONAR</span>
+              </button>
+            )
+          }
         </div>
       </div>
     </div>
@@ -96,10 +118,8 @@ function FeaturedCard({
 }
 
 // ─── Product card ────────────────────────────────────────────────────────────
-function ProductCard({
-  product, onAdd, qty,
-}: {
-  product: Product; onAdd: () => void; qty: number;
+function ProductCard({ product, onAdd, onRemove, qty }: {
+  product: Product; onAdd: () => void; onRemove: () => void; qty: number;
 }) {
   return (
     <div className={`s-prod-card${qty > 0 ? " in-cart" : ""}`}>
@@ -113,22 +133,22 @@ function ProductCard({
         <div className="s-prod-name">{product.name}</div>
         <div className="s-prod-foot">
           <Price value={product.price} sm />
-          <button className="s-btn-add sm" onClick={onAdd} aria-label={`Adicionar ${product.name}`}>
-            {qty > 0
-              ? <span className="s-qty mono">×{qty}</span>
-              : <span style={{ fontSize: 20, lineHeight: 1 }}>+</span>
-            }
-          </button>
+          {qty > 0
+            ? <QtyStepper qty={qty} onAdd={onAdd} onRemove={onRemove} sm />
+            : (
+              <button className="s-btn-add sm" onClick={onAdd} aria-label={`Adicionar ${product.name}`}>
+                <span style={{ fontSize: 20, lineHeight: 1 }}>+</span>
+              </button>
+            )
+          }
         </div>
       </div>
     </div>
   );
 }
 
-// ─── Cart bar ────────────────────────────────────────────────────────────────
-function CartBar({
-  cart, products, onCheckout,
-}: {
+// ─── Floating Cart Bar (dark glass pill) ─────────────────────────────────────
+function FloatingCartBar({ cart, products, onCheckout }: {
   cart: Record<string, number>;
   products: Product[];
   onCheckout: () => void;
@@ -139,72 +159,58 @@ function CartBar({
     return sum + (p ? p.price * q : 0);
   }, 0);
 
+  if (count === 0) return null;
+
   return (
-    <div className={`s-cart-bar${count > 0 ? " visible" : ""}`} aria-hidden={count === 0}>
-      <div className="s-cart-info">
-        <span className="s-cart-icon"><CartIcon /></span>
-        <div className="s-cart-lines">
-          <span className="s-cart-count mono">{String(count).padStart(2, "0")} ITENS</span>
-          <span className="s-cart-total mono">R$ {total.toFixed(2).replace(".", ",")}</span>
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-sm z-50">
+      <button
+        onClick={onCheckout}
+        aria-label="Ver carrinho"
+        className="w-full flex justify-between items-center px-5 py-3.5 rounded-full text-white transition-transform active:scale-[0.98]"
+        style={{
+          background: "rgba(26,26,26,0.92)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          boxShadow: "0 20px 48px -8px rgba(0,0,0,0.45)",
+        }}
+      >
+        <div className="flex items-center gap-3">
+          <span
+            className="text-xs font-bold px-2.5 py-1 rounded-full min-w-[28px] text-center"
+            style={{ background: "rgba(255,255,255,0.18)" }}
+          >
+            {count}
+          </span>
+          <span className="text-sm font-semibold tracking-tight">Ver Carrinho</span>
         </div>
-      </div>
-      <button className="s-cart-cta" onClick={onCheckout} aria-label="Finalizar pedido">
-        FINALIZAR →
+        <span className="font-bold text-sm tracking-tight">
+          R$ {total.toFixed(2).replace(".", ",")}
+        </span>
       </button>
     </div>
   );
 }
 
 // ─── Products view ───────────────────────────────────────────────────────────
-function ProductsView({
-  storeName, logoUrl, products, dbCategories, cart, onAdd, onCheckout,
-}: {
+function ProductsView({ storeName, logoUrl, products, dbCategories, cart, onAdd, onRemove, onCheckout }: {
   storeName: string;
   logoUrl: string | null;
   products: Product[];
   dbCategories: Category[];
   cart: Record<string, number>;
   onAdd: (p: Product) => void;
+  onRemove: (p: Product) => void;
   onCheckout: () => void;
 }) {
   const [search, setSearch] = useState("");
   const [activeCat, setActiveCat] = useState("all");
-  const chipRowRef = useRef<HTMLDivElement>(null);
-  const [canLeft, setCanLeft] = useState(false);
-  const [canRight, setCanRight] = useState(false);
 
-  const syncArrows = useCallback(() => {
-    const el = chipRowRef.current;
-    if (!el) return;
-    setCanLeft(el.scrollLeft > 4);
-    setCanRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
-  }, []);
-
-  useEffect(() => {
-    syncArrows();
-    const el = chipRowRef.current;
-    if (!el) return;
-    const ro = new ResizeObserver(syncArrows);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [syncArrows]);
-
-  function scrollChips(dir: "left" | "right") {
-    const el = chipRowRef.current;
-    if (!el) return;
-    el.scrollBy({ left: dir === "right" ? 200 : -200, behavior: "smooth" });
-  }
-
-  // Only show categories that have at least one product
   const visibleCategories = useMemo(() => {
     const usedIds = new Set(products.map(p => p.categoryId).filter(Boolean));
     return dbCategories.filter(c => usedIds.has(c.id));
   }, [products, dbCategories]);
 
-  // Featured = first 2 products (only in "all" view with no search)
-  const featured = activeCat === "all" && !search.trim()
-    ? products.slice(0, 2)
-    : [];
+  const featured = activeCat === "all" && !search.trim() ? products.slice(0, 2) : [];
 
   const filtered = useMemo(() => {
     let list = products.filter(p => !featured.includes(p));
@@ -216,80 +222,73 @@ function ProductsView({
     return list;
   }, [products, featured, activeCat, search]);
 
-  const activeCatLabel = visibleCategories.find(c => c.id === activeCat)?.name ?? "TODOS OS PRODUTOS";
+  const activeCatLabel = visibleCategories.find(c => c.id === activeCat)?.name ?? "Todos";
   const initials = storeName.split(" ").slice(0, 2).map(w => w[0]).join("").toUpperCase();
 
   return (
     <>
-      <div className="store-scroll">
-        {/* Header */}
-        <header className="store-header">
-          <div className="store-header-center">
-            <div className="logo-wrap">
-              {logoUrl
-                ? <img src={logoUrl} alt={storeName} className="logo-img" />
-                : <div className="logo-fallback">{initials}</div>
-              }
+      {/* ── Sticky Glassmorphism Header ── */}
+      <header className="sticky top-0 z-40" style={{ background: "rgba(255,255,255,0.72)", backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
+        {/* Store identity */}
+        <div className="flex items-center gap-3 px-4 pt-4 pb-3">
+          <div className="shrink-0">
+            {logoUrl
+              ? <img src={logoUrl} alt={storeName} className="w-10 h-10 rounded-full object-cover" style={{ boxShadow: "0 0 0 2px rgba(0,0,0,0.06)" }} />
+              : <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm" style={{ background: "var(--surface-tint)", color: "var(--primary)" }}>{initials}</div>
+            }
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="font-bold text-gray-900 text-base leading-tight truncate">{storeName}</div>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" style={{ boxShadow: "0 0 6px rgba(52,211,153,0.7)", animation: "s-pulse 1.6s ease-in-out infinite" }} />
+              <span className="text-[11px] text-gray-400 font-medium">Em funcionamento</span>
             </div>
-            <div className="store-brand">{storeName}</div>
           </div>
-          <div className="store-ticker">
-            <span className="ticker-dot" />
-            <span className="mono">EM FUNCIONAMENTO</span>
-          </div>
-        </header>
-
-        {/* Search */}
-        <div className="store-search">
-          <SearchIcon />
-          <input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Buscar produto…"
-            aria-label="Buscar produto"
-          />
         </div>
 
-        {/* Categories — only shown when store has DB categories with products */}
+        {/* Search pill */}
+        <div className="px-4 pb-3">
+          <div className="flex items-center gap-2.5 rounded-full px-4 py-2.5" style={{ background: "rgba(0,0,0,0.05)" }}>
+            <span className="text-gray-400 shrink-0"><SearchIcon /></span>
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Buscar produto…"
+              aria-label="Buscar produto"
+              className="flex-1 bg-transparent outline-none text-sm text-gray-800 placeholder:text-gray-400 font-medium"
+            />
+            {search && (
+              <button onClick={() => setSearch("")} className="text-gray-400 hover:text-gray-600 leading-none text-lg shrink-0" aria-label="Limpar busca">×</button>
+            )}
+          </div>
+        </div>
+
+        {/* Category pills — horizontal scroll */}
         {visibleCategories.length > 0 && (
-          <div className="s-cats">
-            <div className="s-section-head" style={{ padding: "6px 18px 12px", marginBottom: 0, borderBottom: 0 }}>
-              <span className="s-section-label mono">› CATEGORIAS</span>
-            </div>
-            <div className="s-chip-wrap">
-              {canLeft && (
-                <button className="s-chip-arrow s-chip-arrow--left" onClick={() => scrollChips("left")} aria-label="Anterior">
-                  ‹
-                </button>
-              )}
-              <div className="s-chip-row" ref={chipRowRef} onScroll={syncArrows}>
-                <button
-                  className={`s-chip${activeCat === "all" ? " active" : ""}`}
-                  onClick={() => setActiveCat("all")}
-                >
-                  <span className="s-chip-icon">🛍️</span>
-                  <span>TUDO</span>
-                </button>
-                {visibleCategories.map(cat => (
-                  <button
-                    key={cat.id}
-                    className={`s-chip${activeCat === cat.id ? " active" : ""}`}
-                    onClick={() => setActiveCat(cat.id)}
-                  >
-                    <span className="s-chip-icon">{cat.emoji}</span>
-                    <span>{cat.name}</span>
-                  </button>
-                ))}
-              </div>
-              {canRight && (
-                <button className="s-chip-arrow s-chip-arrow--right" onClick={() => scrollChips("right")} aria-label="Próximo">
-                  ›
-                </button>
-              )}
-            </div>
+          <div className="flex gap-2 px-4 pb-3 overflow-x-auto scrollbar-hide">
+            <button
+              onClick={() => setActiveCat("all")}
+              className="shrink-0 rounded-full px-4 py-1.5 text-sm font-semibold whitespace-nowrap transition-colors"
+              style={activeCat === "all" ? { background: "#0f172a", color: "#fff" } : { background: "rgba(0,0,0,0.06)", color: "#6b7280" }}
+            >
+              🛍️ Tudo
+            </button>
+            {visibleCategories.map(cat => (
+              <button
+                key={cat.id}
+                onClick={() => setActiveCat(cat.id)}
+                className="shrink-0 rounded-full px-4 py-1.5 text-sm font-semibold whitespace-nowrap transition-colors"
+                style={activeCat === cat.id ? { background: "#0f172a", color: "#fff" } : { background: "rgba(0,0,0,0.06)", color: "#6b7280" }}
+              >
+                {cat.emoji} {cat.name}
+              </button>
+            ))}
           </div>
         )}
+      </header>
 
+      {/* ── Scrollable content ── */}
+      <div className="store-scroll">
         {/* Featured */}
         {featured.length > 0 && (
           <section className="s-section">
@@ -303,6 +302,7 @@ function ProductsView({
                   product={p}
                   tag={i === 0 ? "DESTAQUE" : "POPULAR"}
                   onAdd={() => onAdd(p)}
+                  onRemove={() => onRemove(p)}
                   qty={cart[p.id] ?? 0}
                 />
               ))}
@@ -325,6 +325,7 @@ function ProductsView({
                   key={p.id}
                   product={p}
                   onAdd={() => onAdd(p)}
+                  onRemove={() => onRemove(p)}
                   qty={cart[p.id] ?? 0}
                 />
               ))}
@@ -333,21 +334,19 @@ function ProductsView({
         )}
 
         {filtered.length === 0 && featured.length === 0 && (
-          <div style={{ padding: "48px 24px", textAlign: "center", color: "var(--text-mute)", fontSize: 14 }}>
+          <div className="text-center py-16 px-6" style={{ color: "var(--text-mute)", fontSize: 14 }}>
             Nenhum produto encontrado.
           </div>
         )}
       </div>
 
-      <CartBar cart={cart} products={products} onCheckout={onCheckout} />
+      <FloatingCartBar cart={cart} products={products} onCheckout={onCheckout} />
     </>
   );
 }
 
 // ─── Checkout view ───────────────────────────────────────────────────────────
-function CheckoutView({
-  cart, products, storeId, instanceName, storeName, acceptsPickup, acceptsLocal, onBack, onSuccess,
-}: {
+function CheckoutView({ cart, products, storeId, instanceName, storeName, acceptsPickup, acceptsLocal, onBack, onSuccess }: {
   cart: Record<string, number>;
   products: Product[];
   storeId: string;
@@ -415,7 +414,6 @@ function CheckoutView({
 
   return (
     <div className="s-checkout">
-      {/* Header */}
       <div className="s-checkout-head">
         <button className="s-back-btn" onClick={onBack} aria-label="Voltar">←</button>
         <div>
@@ -424,7 +422,6 @@ function CheckoutView({
         </div>
       </div>
 
-      {/* Order summary */}
       <div className="s-order-summary">
         <div className="s-order-head">› RESUMO DO PEDIDO</div>
         {cartItems.map(i => (
@@ -442,9 +439,7 @@ function CheckoutView({
         </div>
       </div>
 
-      {/* Form */}
       <div className="s-form">
-        {/* Delivery method selector */}
         {(acceptsPickup || acceptsLocal) && (
           <div className="s-field">
             <label className="s-field-label">Como quer receber?</label>
@@ -452,8 +447,7 @@ function CheckoutView({
               <button
                 className={`s-pay-opt${deliveryMethod === "DELIVERY" ? " selected" : ""}`}
                 onClick={() => setDeliveryMethod("DELIVERY")}
-                role="radio"
-                aria-checked={deliveryMethod === "DELIVERY"}
+                role="radio" aria-checked={deliveryMethod === "DELIVERY"}
               >
                 <span className="s-pay-radio" />
                 <span className="s-pay-label">🛵 Receber em casa</span>
@@ -462,8 +456,7 @@ function CheckoutView({
                 <button
                   className={`s-pay-opt${deliveryMethod === "PICKUP" ? " selected" : ""}`}
                   onClick={() => setDeliveryMethod("PICKUP")}
-                  role="radio"
-                  aria-checked={deliveryMethod === "PICKUP"}
+                  role="radio" aria-checked={deliveryMethod === "PICKUP"}
                 >
                   <span className="s-pay-radio" />
                   <span className="s-pay-label">🏪 Vou retirar</span>
@@ -473,8 +466,7 @@ function CheckoutView({
                 <button
                   className={`s-pay-opt${deliveryMethod === "LOCAL" ? " selected" : ""}`}
                   onClick={() => setDeliveryMethod("LOCAL")}
-                  role="radio"
-                  aria-checked={deliveryMethod === "LOCAL"}
+                  role="radio" aria-checked={deliveryMethod === "LOCAL"}
                 >
                   <span className="s-pay-radio" />
                   <span className="s-pay-label">📍 Estou no local</span>
@@ -484,7 +476,6 @@ function CheckoutView({
           </div>
         )}
 
-        {/* Phone */}
         <div className="s-field">
           <label className="s-field-label">WhatsApp</label>
           <div className="s-field-row">
@@ -501,7 +492,6 @@ function CheckoutView({
           {errors.phone && <span className="s-field-error">{errors.phone}</span>}
         </div>
 
-        {/* Address — only for DELIVERY */}
         {deliveryMethod === "DELIVERY" && (
           <div className="s-field">
             <label className="s-field-label">Endereço de entrega</label>
@@ -515,7 +505,6 @@ function CheckoutView({
           </div>
         )}
 
-        {/* Local identifier — only for LOCAL */}
         {deliveryMethod === "LOCAL" && (
           <div className="s-field">
             <label className="s-field-label">Identificador <span style={{ opacity: 0.5, fontWeight: 400 }}>(opcional)</span></label>
@@ -528,20 +517,15 @@ function CheckoutView({
           </div>
         )}
 
-        {/* Payment */}
         <div className="s-field">
           <label className="s-field-label">Forma de pagamento</label>
           <div className="s-payment-opts">
-            {([
-              ["pix", "💳 PIX"],
-              ["dinheiro", "💵 Dinheiro"],
-            ] as [PayMethod, string][]).map(([val, label]) => (
+            {([ ["pix", "💳 PIX"], ["dinheiro", "💵 Dinheiro"] ] as [PayMethod, string][]).map(([val, label]) => (
               <button
                 key={val}
                 className={`s-pay-opt${payMethod === val ? " selected" : ""}`}
                 onClick={() => setPayMethod(val)}
-                role="radio"
-                aria-checked={payMethod === val}
+                role="radio" aria-checked={payMethod === val}
               >
                 <span className="s-pay-radio" />
                 <span className="s-pay-label">{label}</span>
@@ -550,7 +534,6 @@ function CheckoutView({
           </div>
         </div>
 
-        {/* Troco */}
         {payMethod === "dinheiro" && (
           <div className="s-field">
             <label className="s-field-label">Troco para (opcional)</label>
@@ -564,11 +547,7 @@ function CheckoutView({
           </div>
         )}
 
-        <button
-          className="s-submit-btn"
-          onClick={handleSubmit}
-          disabled={submitting}
-        >
+        <button className="s-submit-btn" onClick={handleSubmit} disabled={submitting}>
           {submitting ? "ENVIANDO…" : "CONFIRMAR PEDIDO →"}
         </button>
       </div>
@@ -583,12 +562,8 @@ function SuccessView({ onBack }: { onBack: () => void }) {
       <div className="s-success-card">
         <div className="s-check-circle">✓</div>
         <div className="s-success-title">Pedido enviado!</div>
-        <div className="s-success-sub mono">
-          AGUARDE A CONFIRMAÇÃO VIA WHATSAPP
-        </div>
-        <button className="s-success-back" onClick={onBack}>
-          Voltar à loja
-        </button>
+        <div className="s-success-sub mono">AGUARDE A CONFIRMAÇÃO VIA WHATSAPP</div>
+        <button className="s-success-back" onClick={onBack}>Voltar à loja</button>
       </div>
     </div>
   );
@@ -601,6 +576,16 @@ export function StoreClient({ storeId, instanceName, storeName, logoUrl, product
 
   function addToCart(p: Product) {
     setCart(c => ({ ...c, [p.id]: (c[p.id] ?? 0) + 1 }));
+  }
+
+  function removeFromCart(p: Product) {
+    setCart(c => {
+      const next = { ...c };
+      const qty = (next[p.id] ?? 0) - 1;
+      if (qty <= 0) delete next[p.id];
+      else next[p.id] = qty;
+      return next;
+    });
   }
 
   function resetCart() {
@@ -618,6 +603,7 @@ export function StoreClient({ storeId, instanceName, storeName, logoUrl, product
           dbCategories={categories}
           cart={cart}
           onAdd={addToCart}
+          onRemove={removeFromCart}
           onCheckout={() => setView("checkout")}
         />
       )}
