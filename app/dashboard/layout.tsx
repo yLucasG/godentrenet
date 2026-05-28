@@ -11,6 +11,7 @@ const navItems = [
   { href: "/dashboard/produtos",      label: "Produtos",      icon: "📦" },
   { href: "/dashboard/categorias",    label: "Categorias",    icon: "🏷️" },
   { href: "/dashboard/estoque",        label: "Estoque",       icon: "📦" },
+  { href: "/dashboard/compras",        label: "Compras",       icon: "🧾" },
   { href: "/dashboard/bot",           label: "Bot",           icon: "🤖" },
   { href: "/dashboard/config",        label: "Configurações", icon: "⚙️" },
 ];
