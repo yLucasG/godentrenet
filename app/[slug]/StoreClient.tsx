@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { createOrder } from "@/actions/order";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -185,6 +185,31 @@ function ProductsView({
 }) {
   const [search, setSearch] = useState("");
   const [activeCat, setActiveCat] = useState("all");
+  const chipRowRef = useRef<HTMLDivElement>(null);
+  const [canLeft, setCanLeft] = useState(false);
+  const [canRight, setCanRight] = useState(false);
+
+  const syncArrows = useCallback(() => {
+    const el = chipRowRef.current;
+    if (!el) return;
+    setCanLeft(el.scrollLeft > 4);
+    setCanRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  }, []);
+
+  useEffect(() => {
+    syncArrows();
+    const el = chipRowRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(syncArrows);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [syncArrows]);
+
+  function scrollChips(dir: "left" | "right") {
+    const el = chipRowRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir === "right" ? 200 : -200, behavior: "smooth" });
+  }
 
   // Only show categories that have at least one product
   const visibleCategories = useMemo(() => {
@@ -247,24 +272,36 @@ function ProductsView({
             <div className="s-section-head" style={{ padding: "6px 18px 12px", marginBottom: 0, borderBottom: 0 }}>
               <span className="s-section-label mono">› CATEGORIAS</span>
             </div>
-            <div className="s-chip-row">
-              <button
-                className={`s-chip${activeCat === "all" ? " active" : ""}`}
-                onClick={() => setActiveCat("all")}
-              >
-                <span className="s-chip-icon">🛍️</span>
-                <span>TUDO</span>
-              </button>
-              {visibleCategories.map(cat => (
-                <button
-                  key={cat.id}
-                  className={`s-chip${activeCat === cat.id ? " active" : ""}`}
-                  onClick={() => setActiveCat(cat.id)}
-                >
-                  <span className="s-chip-icon">{cat.emoji}</span>
-                  <span>{cat.name}</span>
+            <div className="s-chip-wrap">
+              {canLeft && (
+                <button className="s-chip-arrow s-chip-arrow--left" onClick={() => scrollChips("left")} aria-label="Anterior">
+                  ‹
                 </button>
-              ))}
+              )}
+              <div className="s-chip-row" ref={chipRowRef} onScroll={syncArrows}>
+                <button
+                  className={`s-chip${activeCat === "all" ? " active" : ""}`}
+                  onClick={() => setActiveCat("all")}
+                >
+                  <span className="s-chip-icon">🛍️</span>
+                  <span>TUDO</span>
+                </button>
+                {visibleCategories.map(cat => (
+                  <button
+                    key={cat.id}
+                    className={`s-chip${activeCat === cat.id ? " active" : ""}`}
+                    onClick={() => setActiveCat(cat.id)}
+                  >
+                    <span className="s-chip-icon">{cat.emoji}</span>
+                    <span>{cat.name}</span>
+                  </button>
+                ))}
+              </div>
+              {canRight && (
+                <button className="s-chip-arrow s-chip-arrow--right" onClick={() => scrollChips("right")} aria-label="Próximo">
+                  ›
+                </button>
+              )}
             </div>
           </div>
         )}

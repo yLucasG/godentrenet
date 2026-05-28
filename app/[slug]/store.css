@@ -190,13 +190,46 @@
 /* ─── Category chips ────────────────────────────────────────────────────── */
 .s-cats { padding: 8px 0 0; }
 .s-cats .s-section-head { padding: 6px 18px 12px; margin-bottom: 0; border-bottom: 0; }
+.s-chip-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
 .s-chip-row {
   display: flex; gap: 8px;
   padding: 0 18px 8px;
   overflow-x: auto;
   scrollbar-width: none;
+  flex: 1;
+  min-width: 0;
 }
 .s-chip-row::-webkit-scrollbar { display: none; }
+.s-chip-arrow {
+  display: none; /* hidden on touch devices */
+  position: absolute;
+  top: 50%;
+  transform: translateY(-60%);
+  z-index: 2;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text-dim);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  transition: background 0.15s, color 0.15s;
+}
+.s-chip-arrow:hover { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+.s-chip-arrow--left  { left: 2px; }
+.s-chip-arrow--right { right: 2px; }
+/* only show arrows on pointer:fine (mouse/trackpad desktop) */
+@media (pointer: fine) {
+  .s-chip-arrow { display: flex; }
+}
 .s-chip {
   flex: 0 0 auto;
   display: flex; align-items: center; gap: 8px;
