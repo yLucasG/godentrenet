@@ -7,10 +7,35 @@ import { X, Upload, Image as ImageIcon } from "lucide-react";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://entrenet.tech";
 
+const THEMES = [
+  {
+    value: "amber-dark",
+    label: "Âmbar Premium",
+    sub: "Dark",
+    bg: "#161311",
+    primary: "#F59E0B",
+  },
+  {
+    value: "rose-light",
+    label: "Rosa Suave",
+    sub: "Light",
+    bg: "#FFF5F7",
+    primary: "#E11D48",
+  },
+  {
+    value: "ocean-blue",
+    label: "Azul Oceano",
+    sub: "Light",
+    bg: "#F0F9FF",
+    primary: "#0EA5E9",
+  },
+] as const;
+
 export function ConfigClient({ store }: { store: Store & { logoUrl?: string | null } }) {
   const [name, setName] = useState(store.name);
   const [phoneNumber, setPhoneNumber] = useState(store.phoneNumber ?? "");
   const [logoUrl, setLogoUrl] = useState<string | null>(store.logoUrl ?? null);
+  const [theme, setTheme] = useState<string>(store.theme ?? "amber-dark");
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(store.logoUrl ?? null);
   const [uploading, setUploading] = useState(false);
@@ -58,6 +83,7 @@ export function ConfigClient({ store }: { store: Store & { logoUrl?: string | nu
         name,
         phoneNumber: phoneNumber || undefined,
         logoUrl: finalLogoUrl,
+        theme,
       });
 
       setSaved(true);
@@ -166,6 +192,57 @@ export function ConfigClient({ store }: { store: Store & { logoUrl?: string | nu
             </a>
           </div>
           <p className="text-gray-500 text-xs mt-1">Esta é a página que seus clientes veem.</p>
+        </div>
+      </div>
+
+      {/* Aparência da Loja */}
+      <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
+        <h2 className="text-white text-sm font-semibold mb-1">Aparência da Loja</h2>
+        <p className="text-gray-500 text-xs mb-4">
+          Escolha o tema visual exibido aos seus clientes.
+        </p>
+        <div className="grid grid-cols-3 gap-3">
+          {THEMES.map((t) => {
+            const active = theme === t.value;
+            return (
+              <button
+                key={t.value}
+                onClick={() => setTheme(t.value)}
+                className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all ${
+                  active
+                    ? "border-white/40 bg-white/5"
+                    : "border-gray-700 hover:border-gray-500 hover:bg-gray-800/50"
+                }`}
+              >
+                {/* Swatch: preview do background com bolinha primary */}
+                <div
+                  className="w-12 h-12 rounded-xl flex items-end justify-end p-2 transition-all"
+                  style={{
+                    background: t.bg,
+                    boxShadow: active
+                      ? `0 0 0 2px ${t.primary}, 0 4px 16px -4px ${t.primary}60`
+                      : "0 0 0 1.5px rgba(255,255,255,0.08)",
+                  }}
+                >
+                  <div
+                    className="w-4 h-4 rounded-full"
+                    style={{ background: t.primary }}
+                  />
+                </div>
+                {/* Labels */}
+                <div className="text-center">
+                  <div className={`text-xs font-semibold leading-tight ${active ? "text-white" : "text-gray-400"}`}>
+                    {t.label}
+                  </div>
+                  <div className="text-[10px] text-gray-600 mt-0.5">{t.sub}</div>
+                </div>
+                {/* Indicador ativo */}
+                {active && (
+                  <div className="w-1.5 h-1.5 rounded-full" style={{ background: t.primary }} />
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 

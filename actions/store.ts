@@ -44,7 +44,10 @@ export async function getStoreBySlug(slug: string) {
   });
 }
 
-export async function updateStore(storeId: string, data: { name: string; phoneNumber?: string; logoUrl?: string | null }) {
+export async function updateStore(
+  storeId: string,
+  data: { name: string; phoneNumber?: string; logoUrl?: string | null; theme?: string }
+) {
   await prisma.store.update({ where: { id: storeId }, data });
 }
 
