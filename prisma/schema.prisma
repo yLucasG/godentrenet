@@ -18,38 +18,43 @@ model User {
 }
 
 model Store {
-  id                       String      @id @default(uuid())
+  id                       String          @id @default(uuid())
   name                     String
   evolutionInstanceName    String?
-  evolutionConnectionState String      @default("DISCONNECTED")
+  evolutionConnectionState String          @default("DISCONNECTED")
   phoneNumber              String?
   logoUrl                  String?
-  userId                   String?     @unique
-  user                     User?       @relation(fields: [userId], references: [id])
+  userId                   String?         @unique
+  user                     User?           @relation(fields: [userId], references: [id])
   products                 Product[]
   categories               Category[]
   botConfig                BotConfig?
   messages                 BotMessage[]
   orders                   Order[]
-  acceptsPickup            Boolean     @default(true)
-  acceptsLocal             Boolean     @default(true)
-  createdAt                DateTime    @default(now())
-  updatedAt                DateTime    @updatedAt
+  inventoryItems           InventoryItem[]
+  acceptsPickup            Boolean         @default(true)
+  acceptsLocal             Boolean         @default(true)
+  createdAt                DateTime        @default(now())
+  updatedAt                DateTime        @updatedAt
 }
 
 model Product {
-  id         String     @id @default(cuid())
-  storeId    String
-  store      Store      @relation(fields: [storeId], references: [id], onDelete: Cascade)
-  categoryId String?
-  category   Category?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  name       String
-  price      Float
-  emoji      String     @default("🛍️")
-  imageUrl   String?
-  active     Boolean    @default(true)
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
+  id                    String               @id @default(cuid())
+  storeId               String
+  store                 Store                @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  categoryId            String?
+  category              Category?            @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  name                  String
+  price                 Float
+  emoji                 String               @default("🛍️")
+  imageUrl              String?
+  active                Boolean              @default(true)
+  isTracked             Boolean              @default(false)
+  linkedInventoryItemId String?
+  linkedInventoryItem   InventoryItem?       @relation("ProductLinkedItem", fields: [linkedInventoryItemId], references: [id], onDelete: SetNull)
+  ingredients           ProductIngredient[]
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
 }
 
 model Category {
@@ -101,4 +106,31 @@ model BotMessage {
   text      String
   direction String
   createdAt DateTime @default(now())
+}
+
+model InventoryItem {
+  id            String              @id @default(cuid())
+  storeId       String
+  store         Store               @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  name          String
+  sku           String?
+  unit          String              @default("UN")
+  currentStock  Float               @default(0)
+  minStock      Float               @default(0)
+  costPrice     Float               @default(0)
+  ingredients   ProductIngredient[]
+  linkedProducts Product[]          @relation("ProductLinkedItem")
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+}
+
+model ProductIngredient {
+  id              String        @id @default(cuid())
+  productId       String
+  product         Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  inventoryItemId String
+  inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+  quantity        Float
+
+  @@unique([productId, inventoryItemId])
 }
