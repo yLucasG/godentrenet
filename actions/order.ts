@@ -1,6 +1,8 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
+import { revalidatePath } from "next/cache";
 
 const EVO_URL = process.env.EVOLUTION_API_URL ?? "http://localhost:8080";
 const EVO_KEY = process.env.EVOLUTION_API_KEY ?? "";
@@ -114,5 +116,69 @@ export async function createOrder(input: CreateOrderInput): Promise<{ orderId: s
   const message = buildConfirmationMessage(input);
   await sendWhatsApp(input.instanceName, phone, message);
 
+  return { orderId: order.id };
+}
+
+export async function createPdvOrder(input: {
+  items: OrderItem[];
+  total: number;
+  paymentMethod: "pix" | "dinheiro";
+  deliveryMethod: DeliveryMethod;
+  customerPhone?: string;
+  customerName?: string;
+  localIdentifier?: string;
+  needChange?: boolean;
+  changeFor?: number;
+}): Promise<{ orderId: string }> {
+  const session = await auth();
+  if (!session?.user.storeId) throw new Error("Não autenticado.");
+
+  const storeId = session.user.storeId;
+  const store = await prisma.store.findUnique({
+    where: { id: storeId },
+    select: { name: true, evolutionInstanceName: true },
+  });
+  if (!store) throw new Error("Loja não encontrada.");
+
+  const hasPhone = !!input.customerPhone?.trim();
+  const phone = hasPhone ? formatPhone(input.customerPhone!) : "55000000000";
+
+  const order = await prisma.order.create({
+    data: {
+      storeId,
+      customerPhone: phone,
+      customerName: input.customerName?.trim() || null,
+      address: "",
+      items: input.items as unknown as import("@prisma/client").Prisma.JsonArray,
+      total: input.total,
+      paymentMethod: input.paymentMethod,
+      needChange: input.needChange ?? false,
+      changeFor: input.changeFor ?? null,
+      deliveryMethod: input.deliveryMethod,
+      localIdentifier: input.localIdentifier?.trim() || null,
+      status: "pending",
+    },
+  });
+
+  if (hasPhone && store.evolutionInstanceName) {
+    const msg = buildConfirmationMessage({
+      storeId,
+      instanceName: store.evolutionInstanceName,
+      storeName: store.name,
+      customerPhone: phone,
+      customerName: input.customerName,
+      address: "",
+      items: input.items,
+      total: input.total,
+      paymentMethod: input.paymentMethod,
+      needChange: input.needChange ?? false,
+      changeFor: input.changeFor,
+      deliveryMethod: input.deliveryMethod,
+      localIdentifier: input.localIdentifier,
+    });
+    await sendWhatsApp(store.evolutionInstanceName, phone, msg);
+  }
+
+  revalidatePath("/dashboard/pedidos");
   return { orderId: order.id };
 }

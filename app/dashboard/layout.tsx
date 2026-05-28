@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 
 const navItems = [
   { href: "/dashboard",               label: "Início",        icon: "🏠" },
+  { href: "/dashboard/pdv",           label: "PDV",           icon: "🖥️" },
   { href: "/dashboard/pedidos",       label: "Pedidos",       icon: "🧾" },
   { href: "/dashboard/produtos",      label: "Produtos",      icon: "📦" },
   { href: "/dashboard/categorias",    label: "Categorias",    icon: "🏷️" },
