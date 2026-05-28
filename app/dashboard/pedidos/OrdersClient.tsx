@@ -2,8 +2,9 @@
 
 import { useState, useTransition } from "react";
 import { updateOrderStatus, getStoreOrders, clearStoreOrders } from "@/actions/orders-dashboard";
-import { Trash2 } from "lucide-react";
+import { RefreshCw, Trash2 } from "lucide-react";
 
+// ─── Types ────────────────────────────────────────────────────────────────────
 type Order = {
   id: string;
   customerName: string | null;
@@ -16,68 +17,265 @@ type Order = {
   changeFor: number | null;
   status: string;
   createdAt: string;
+  deliveryMethod: string;
+  localIdentifier: string | null;
 };
 
-const STATUS_LABELS: Record<string, { label: string; color: string; bg: string }> = {
-  pending:    { label: "Pendente",          color: "text-yellow-400", bg: "bg-yellow-400/10 border-yellow-400/30" },
-  preparing:  { label: "Em preparo",        color: "text-blue-400",   bg: "bg-blue-400/10 border-blue-400/30" },
-  delivering: { label: "Saiu p/ entrega",   color: "text-orange-400", bg: "bg-orange-400/10 border-orange-400/30" },
-  delivered:  { label: "Entregue",          color: "text-green-400",  bg: "bg-green-400/10 border-green-400/30" },
-  cancelled:  { label: "Cancelado",         color: "text-red-400",    bg: "bg-red-400/10 border-red-400/30" },
-};
+// ─── Kanban config ────────────────────────────────────────────────────────────
+const COLUMNS = [
+  {
+    statuses: ["pending"],
+    label: "Novos / Em Análise",
+    icon: "🔔",
+    accent: "#f97316",           // orange-500
+    advanceLabel: "→ Em Produção",
+    advanceNext: "preparing",
+    emptyText: "Nenhum pedido novo",
+  },
+  {
+    statuses: ["preparing"],
+    label: "Em Produção / Separação",
+    icon: "⚡",
+    accent: "#eab308",           // yellow-500
+    advanceLabel: "→ Pronto p/ Entrega",
+    advanceNext: "delivering",
+    emptyText: "Nada em produção",
+  },
+  {
+    statuses: ["delivering", "delivered"],
+    label: "Prontos / Despachados",
+    icon: "✅",
+    accent: "#22c55e",           // green-500
+    advanceLabel: "✓ Confirmar Entrega",
+    advanceNext: "delivered",
+    emptyText: "Nenhum pedido despachado",
+  },
+] as const;
 
-const NEXT_STATUS: Record<string, string | null> = {
-  pending:    "preparing",
-  preparing:  "delivering",
-  delivering: "delivered",
-  delivered:  null,
-  cancelled:  null,
-};
-
-const NEXT_LABEL: Record<string, string> = {
-  pending:    "→ Iniciar preparo",
-  preparing:  "→ Saiu para entrega",
-  delivering: "→ Marcar como entregue",
-};
-
-function fmt(v: number) {
-  return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function fmt(n: number) {
+  return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
 function timeAgo(iso: string) {
   const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
-  if (diff < 60) return "agora mesmo";
-  if (diff < 3600) return `${Math.floor(diff / 60)}min atrás`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h atrás`;
-  return new Date(iso).toLocaleDateString("pt-BR");
+  if (diff < 60) return "agora";
+  if (diff < 3600) return `${Math.floor(diff / 60)}min`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
+  return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
 }
 
+// ─── Delivery badge ───────────────────────────────────────────────────────────
+function DeliveryBadge({ method, identifier }: { method: string; identifier: string | null }) {
+  if (method === "DELIVERY") {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-red-500/15 text-red-400 border border-red-500/25">
+        🛵 Delivery
+      </span>
+    );
+  }
+  if (method === "PICKUP") {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-500/15 text-blue-400 border border-blue-500/25">
+        🏪 Retirada
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">
+      📍 {identifier || "Local"}
+    </span>
+  );
+}
+
+// ─── Order card ───────────────────────────────────────────────────────────────
+function OrderCard({
+  order,
+  accentColor,
+  advanceLabel,
+  advanceNext,
+  onAdvance,
+  onCancel,
+  busy,
+}: {
+  order: Order;
+  accentColor: string;
+  advanceLabel: string;
+  advanceNext: string;
+  onAdvance: (id: string, next: string) => void;
+  onCancel: (id: string) => void;
+  busy: boolean;
+}) {
+  const isDone = order.status === "delivered";
+  const totalItems = order.items.reduce((s, i) => s + i.qty, 0);
+
+  return (
+    <div
+      className="bg-gray-900 rounded-2xl overflow-hidden border border-gray-800 flex flex-col"
+      style={{ borderLeftColor: accentColor, borderLeftWidth: 3 }}
+    >
+      {/* Card header */}
+      <div className="px-3 pt-3 pb-2 flex items-start justify-between gap-2">
+        <DeliveryBadge method={order.deliveryMethod} identifier={order.localIdentifier} />
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <span className="text-gray-600 text-[10px] tabular-nums">{timeAgo(order.createdAt)}</span>
+          <span className="text-gray-700 text-[10px] font-mono">#{order.id.slice(-5).toUpperCase()}</span>
+        </div>
+      </div>
+
+      {/* Customer */}
+      <div className="px-3 pb-2">
+        <p className="text-white font-semibold text-sm leading-tight">
+          {order.customerName || "Cliente"}
+        </p>
+        {order.customerPhone !== "55000000000" && (
+          <p className="text-gray-500 text-xs mt-0.5">📱 {order.customerPhone}</p>
+        )}
+      </div>
+
+      {/* Items */}
+      <div className="mx-3 mb-2 bg-gray-800/60 rounded-xl p-2.5 space-y-1">
+        <p className="text-gray-500 text-[10px] font-bold uppercase tracking-wider mb-1.5">
+          {totalItems} {totalItems === 1 ? "item" : "itens"}
+        </p>
+        {order.items.map((item, i) => (
+          <div key={i} className="flex items-center justify-between gap-2">
+            <span className="text-gray-300 text-xs truncate">
+              {item.emoji} {item.name}
+              <span className="text-gray-500 ml-1">×{item.qty}</span>
+            </span>
+            <span className="text-gray-500 text-[11px] flex-shrink-0 tabular-nums">
+              {fmt(item.price * item.qty)}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* Total + payment */}
+      <div className="px-3 pb-2.5 flex items-center justify-between">
+        <span className="text-white font-bold text-sm tabular-nums">{fmt(order.total)}</span>
+        <span className="text-gray-500 text-xs">
+          {order.paymentMethod === "pix" ? "💳 PIX" : "💵 Dinheiro"}
+          {order.needChange && order.changeFor
+            ? ` · troco p/ ${fmt(order.changeFor)}`
+            : ""}
+        </span>
+      </div>
+
+      {/* Actions */}
+      <div className="border-t border-gray-800 px-3 py-2 flex gap-2">
+        {!isDone && (
+          <button
+            onClick={() => onCancel(order.id)}
+            disabled={busy}
+            className="px-2.5 py-1.5 rounded-lg border border-gray-700 text-gray-500 hover:text-red-400 hover:border-red-800 text-xs transition-colors disabled:opacity-40"
+          >
+            Cancelar
+          </button>
+        )}
+        {isDone ? (
+          <div className="flex-1 text-center text-emerald-500 text-xs font-semibold py-1.5">
+            ✓ Entregue
+          </div>
+        ) : (
+          <button
+            onClick={() => onAdvance(order.id, advanceNext)}
+            disabled={busy}
+            className="flex-1 py-1.5 rounded-lg text-xs font-bold text-white transition-colors disabled:opacity-40"
+            style={{ backgroundColor: accentColor, opacity: busy ? 0.6 : 1 }}
+          >
+            {advanceLabel}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Kanban column ────────────────────────────────────────────────────────────
+function KanbanColumn({
+  col,
+  orders,
+  onAdvance,
+  onCancel,
+  busy,
+}: {
+  col: (typeof COLUMNS)[number];
+  orders: Order[];
+  onAdvance: (id: string, next: string) => void;
+  onCancel: (id: string) => void;
+  busy: boolean;
+}) {
+  return (
+    <div className="flex flex-col flex-1 min-w-[280px] max-w-[420px] overflow-hidden rounded-2xl bg-gray-900/40 border border-gray-800">
+      {/* Column header */}
+      <div
+        className="flex-shrink-0 px-4 py-3 flex items-center justify-between"
+        style={{ borderBottom: `3px solid ${col.accent}` }}
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-base">{col.icon}</span>
+          <span className="text-white font-bold text-sm">{col.label}</span>
+        </div>
+        {orders.length > 0 && (
+          <span
+            className="text-white text-xs font-black w-6 h-6 rounded-full flex items-center justify-center"
+            style={{ backgroundColor: col.accent }}
+          >
+            {orders.length}
+          </span>
+        )}
+      </div>
+
+      {/* Cards list */}
+      <div className="flex-1 overflow-y-auto p-3 space-y-3">
+        {orders.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 gap-2 text-gray-700">
+            <span className="text-3xl opacity-40">📋</span>
+            <span className="text-sm">{col.emptyText}</span>
+          </div>
+        ) : (
+          orders.map(order => (
+            <OrderCard
+              key={order.id}
+              order={order}
+              accentColor={col.accent}
+              advanceLabel={col.advanceLabel}
+              advanceNext={col.advanceNext}
+              onAdvance={onAdvance}
+              onCancel={onCancel}
+              busy={busy}
+            />
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Root component ───────────────────────────────────────────────────────────
 export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
   const [orders, setOrders] = useState<Order[]>(initialOrders);
-  const [filter, setFilter] = useState<string>("active");
   const [isPending, startTransition] = useTransition();
   const [refreshing, setRefreshing] = useState(false);
+  const [clearing, setClearing] = useState(false);
+  const [showCancelled, setShowCancelled] = useState(false);
 
-  const activeStatuses = ["pending", "preparing", "delivering"];
-  const filtered = filter === "active"
-    ? orders.filter((o) => activeStatuses.includes(o.status))
-    : filter === "done"
-    ? orders.filter((o) => o.status === "delivered" || o.status === "cancelled")
-    : orders;
-
-  const pendingCount = orders.filter((o) => o.status === "pending").length;
+  const activeOrders = orders.filter(o => o.status !== "cancelled");
+  const cancelledOrders = orders.filter(o => o.status === "cancelled");
+  const pendingCount = orders.filter(o => o.status === "pending").length;
 
   function handleAdvance(orderId: string, nextStatus: string) {
     startTransition(async () => {
       await updateOrderStatus(orderId, nextStatus);
-      setOrders((prev) => prev.map((o) => o.id === orderId ? { ...o, status: nextStatus } : o));
+      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: nextStatus } : o));
     });
   }
 
   function handleCancel(orderId: string) {
     startTransition(async () => {
       await updateOrderStatus(orderId, "cancelled");
-      setOrders((prev) => prev.map((o) => o.id === orderId ? { ...o, status: "cancelled" } : o));
+      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: "cancelled" } : o));
     });
   }
 
@@ -88,176 +286,105 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
     setRefreshing(false);
   }
 
-  const [clearing, setClearing] = useState(false);
-
-  async function handleClearOrders() {
-    if (!confirm("Tem certeza que deseja apagar TODOS os pedidos do sistema? Esta ação não pode ser desfeita.")) return;
+  async function handleClear() {
+    if (!confirm("Apagar TODOS os pedidos? Esta ação não pode ser desfeita.")) return;
     setClearing(true);
     try {
       await clearStoreOrders();
       setOrders([]);
-    } catch (err) {
-      console.error(err);
-      alert("Erro ao limpar pedidos.");
     } finally {
       setClearing(false);
     }
   }
 
+  const busy = isPending || refreshing || clearing;
+
   return (
-    <div className="p-6 min-h-screen">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+    <div className="flex flex-col" style={{ height: "100vh" }}>
+      {/* ── Top bar ───────────────────────────────────────────────────── */}
+      <div className="flex-shrink-0 flex items-center justify-between px-6 py-4 border-b border-gray-800 bg-gray-950">
         <div>
-          <h1 className="text-xl font-bold text-white">Pedidos</h1>
-          {pendingCount > 0 && (
-            <p className="text-yellow-400 text-sm mt-0.5">
-              {pendingCount} pedido{pendingCount > 1 ? "s" : ""} aguardando
+          <h1 className="text-white font-bold text-lg leading-none">Pedidos</h1>
+          {pendingCount > 0 ? (
+            <p className="text-orange-400 text-xs mt-1">
+              {pendingCount} novo{pendingCount > 1 ? "s" : ""} aguardando
             </p>
+          ) : (
+            <p className="text-gray-600 text-xs mt-1">Quadro Kanban</p>
           )}
         </div>
+
         <div className="flex items-center gap-2">
+          {cancelledOrders.length > 0 && (
+            <button
+              onClick={() => setShowCancelled(v => !v)}
+              className="text-xs text-gray-500 hover:text-gray-300 border border-gray-800 px-3 py-2 rounded-lg transition-colors"
+            >
+              {showCancelled ? "Ocultar" : `Ver`} cancelados ({cancelledOrders.length})
+            </button>
+          )}
           {orders.length > 0 && (
             <button
-              onClick={handleClearOrders}
-              disabled={clearing || refreshing}
-              className="flex items-center gap-2 text-sm text-red-400 hover:text-red-300 border border-red-900/30 hover:border-red-500/50 bg-red-950/10 px-3 py-2 rounded-lg transition-all duration-200 disabled:opacity-50"
+              onClick={handleClear}
+              disabled={busy}
+              className="flex items-center gap-1.5 text-xs text-red-400 hover:text-red-300 border border-red-900/30 hover:border-red-500/40 px-3 py-2 rounded-lg transition-colors disabled:opacity-50"
             >
-              <Trash2 size={16} />
-              Limpar Pedidos
+              <Trash2 size={13} />
+              Limpar
             </button>
           )}
           <button
             onClick={handleRefresh}
-            disabled={refreshing || clearing}
-            className="flex items-center gap-2 text-sm text-gray-400 hover:text-white border border-gray-700 px-3 py-2 rounded-lg transition-colors disabled:opacity-50"
+            disabled={busy}
+            className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-white border border-gray-700 px-3 py-2 rounded-lg transition-colors disabled:opacity-50"
           >
-            <svg className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
+            <RefreshCw size={13} className={refreshing ? "animate-spin" : ""} />
             Atualizar
           </button>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 mb-5 bg-gray-900 rounded-xl p-1 w-fit">
-        {[
-          { key: "active", label: "Ativos" },
-          { key: "done",   label: "Histórico" },
-          { key: "all",    label: "Todos" },
-        ].map(({ key, label }) => (
-          <button
-            key={key}
-            onClick={() => setFilter(key)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              filter === key ? "bg-gray-700 text-white" : "text-gray-500 hover:text-gray-300"
-            }`}
-          >
-            {label}
-            {key === "active" && pendingCount > 0 && (
-              <span className="ml-1.5 bg-orange-500 text-white text-xs rounded-full px-1.5 py-0.5">{pendingCount}</span>
-            )}
-          </button>
-        ))}
+      {/* ── Kanban board ─────────────────────────────────────────────── */}
+      <div className="flex-1 flex gap-4 p-4 overflow-hidden">
+        {COLUMNS.map(col => {
+          const colOrders = activeOrders
+            .filter(o => col.statuses.includes(o.status as never))
+            .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+          return (
+            <KanbanColumn
+              key={col.label}
+              col={col}
+              orders={colOrders}
+              onAdvance={handleAdvance}
+              onCancel={handleCancel}
+              busy={busy}
+            />
+          );
+        })}
       </div>
 
-      {/* Orders list */}
-      {filtered.length === 0 ? (
-        <div className="text-center py-16">
-          <p className="text-5xl mb-3">📋</p>
-          <p className="text-gray-400 font-medium">Nenhum pedido aqui</p>
-          <p className="text-gray-600 text-sm mt-1">
-            {filter === "active" ? "Pedidos novos aparecerão aqui" : "Sem histórico ainda"}
+      {/* ── Cancelled orders (collapsed panel) ───────────────────────── */}
+      {showCancelled && cancelledOrders.length > 0 && (
+        <div className="flex-shrink-0 border-t border-gray-800 bg-gray-950 px-4 pb-4">
+          <p className="text-gray-600 text-xs font-bold uppercase tracking-widest py-3">
+            Cancelados ({cancelledOrders.length})
           </p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {filtered.map((order) => {
-            const s = STATUS_LABELS[order.status] ?? STATUS_LABELS.pending;
-            const next = NEXT_STATUS[order.status];
-
-            return (
-              <div key={order.id} className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-                {/* Top bar */}
-                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
-                  <div className="flex items-center gap-3">
-                    <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${s.bg} ${s.color}`}>
-                      {s.label}
-                    </span>
-                    <span className="text-gray-500 text-xs">#{order.id.slice(-6).toUpperCase()}</span>
-                  </div>
-                  <span className="text-gray-500 text-xs">{timeAgo(order.createdAt)}</span>
+          <div className="flex gap-3 overflow-x-auto pb-1">
+            {cancelledOrders.map(order => (
+              <div
+                key={order.id}
+                className="flex-shrink-0 w-56 bg-gray-900/60 border border-gray-800 rounded-xl p-3 opacity-60"
+              >
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <DeliveryBadge method={order.deliveryMethod} identifier={order.localIdentifier} />
+                  <span className="text-gray-600 text-[10px]">{timeAgo(order.createdAt)}</span>
                 </div>
-
-                {/* Body */}
-                <div className="p-4 space-y-3">
-                  {/* Customer */}
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-white font-semibold text-sm">
-                        {order.customerName || "Cliente"}
-                      </p>
-                      <p className="text-gray-400 text-xs mt-0.5">📱 {order.customerPhone}</p>
-                    </div>
-                    <p className="text-orange-400 font-bold text-lg">{fmt(order.total)}</p>
-                  </div>
-
-                  {/* Items */}
-                  <div className="bg-gray-800/50 rounded-xl p-3 space-y-1.5">
-                    {order.items.map((item, i) => (
-                      <div key={i} className="flex justify-between text-sm">
-                        <span className="text-gray-300">{item.emoji} {item.name} <span className="text-gray-500">×{item.qty}</span></span>
-                        <span className="text-gray-400">{fmt(item.price * item.qty)}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Address + Payment */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-gray-800/50 rounded-xl p-3">
-                      <p className="text-gray-500 text-xs mb-1">Endereço</p>
-                      <p className="text-gray-300 text-xs leading-snug">{order.address}</p>
-                    </div>
-                    <div className="bg-gray-800/50 rounded-xl p-3">
-                      <p className="text-gray-500 text-xs mb-1">Pagamento</p>
-                      <p className="text-gray-300 text-xs">
-                        {order.paymentMethod === "pix" ? "PIX" : "Dinheiro"}
-                        {order.needChange && order.changeFor && (
-                          <span className="block text-yellow-400">troco p/ {fmt(order.changeFor)}</span>
-                        )}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  {(next || order.status === "pending" || order.status === "preparing") && (
-                    <div className="flex gap-2 pt-1">
-                      {next && (
-                        <button
-                          onClick={() => handleAdvance(order.id, next)}
-                          disabled={isPending}
-                          className="flex-1 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white text-sm font-semibold py-2.5 rounded-xl transition-colors"
-                        >
-                          {NEXT_LABEL[order.status]}
-                        </button>
-                      )}
-                      {(order.status === "pending" || order.status === "preparing") && (
-                        <button
-                          onClick={() => handleCancel(order.id)}
-                          disabled={isPending}
-                          className="px-4 py-2.5 rounded-xl border border-red-800 text-red-400 hover:bg-red-900/30 text-sm transition-colors"
-                        >
-                          Cancelar
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </div>
+                <p className="text-gray-400 text-xs font-medium truncate">{order.customerName || "Cliente"}</p>
+                <p className="text-gray-600 text-xs mt-0.5">{fmt(order.total)} · {order.items.reduce((s,i)=>s+i.qty,0)} itens</p>
               </div>
-            );
-          })}
+            ))}
+          </div>
         </div>
       )}
     </div>

@@ -25,6 +25,8 @@ export async function getStoreOrders() {
     changeFor: o.changeFor,
     status: o.status,
     createdAt: o.createdAt.toISOString(),
+    deliveryMethod: o.deliveryMethod,
+    localIdentifier: o.localIdentifier,
   }));
 }
 
