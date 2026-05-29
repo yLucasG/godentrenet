@@ -271,6 +271,22 @@ export async function POST(req: NextRequest) {
 
   console.log(`[WAHA WEBHOOK] Evento: ${body?.event} sessao: ${body?.session}`);
 
+  if (body?.event === "session.status") {
+    const rawSession = (body?.session as string | undefined) ?? "";
+    const instanceName = WAHA_SESSION_MAP[rawSession] ?? rawSession;
+    const payload = body?.payload as Record<string, unknown> | undefined;
+    const status = payload?.status as string | undefined;
+    if (instanceName && status) {
+      const isOpen = status === "WORKING";
+      await prisma.store.updateMany({
+        where: { evolutionInstanceName: instanceName },
+        data: { evolutionConnectionState: isOpen ? "open" : "close" },
+      }).catch(() => {});
+      console.log(`[WAHA WEBHOOK] session.status → ${instanceName} = ${status} (DB: ${isOpen ? "open" : "close"})`);
+    }
+    return NextResponse.json({ received: true }, { status: 200 });
+  }
+
   if (body?.event !== "message") {
     return NextResponse.json({ received: true }, { status: 200 });
   }
