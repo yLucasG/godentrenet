@@ -95,48 +95,53 @@ export async function getStoreQrCode(storeId: string): Promise<{ qr?: string; co
 
 export async function checkStoreConnection(storeId: string): Promise<boolean> {
   const store = await prisma.store.findUnique({ where: { id: storeId } });
-  if (!store?.evolutionInstanceName) return false;
+  if (!store || !store.evolutionInstanceName) return false;
 
+  const dbConnected = store.evolutionConnectionState === "open";
   const instanceName = store.evolutionInstanceName;
 
   const { getWahaSession } = await import("@/actions/waha");
   const wahaSession = await getWahaSession(instanceName);
 
   if (wahaSession) {
-    try {
-      const WAHA_URL = process.env.WAHA_API_URL ?? "http://godentrenet-waha:3000";
-      const WAHA_KEY = process.env.WAHA_API_KEY ?? "";
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
-      if (WAHA_KEY) headers["X-Api-Key"] = WAHA_KEY;
+    const WAHA_URL = process.env.WAHA_API_URL ?? "http://godentrenet-waha:3000";
+    const WAHA_KEY = process.env.WAHA_API_KEY ?? "";
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (WAHA_KEY) headers["X-Api-Key"] = WAHA_KEY;
 
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 5000);
       const statusRes = await fetch(`${WAHA_URL}/api/sessions/${wahaSession}`, {
         headers,
         cache: "no-store",
-        signal: AbortSignal.timeout(4000),
-      });
-      if (!statusRes.ok) return false;
+        signal: controller.signal,
+      }).finally(() => clearTimeout(timer));
+
+      if (!statusRes.ok) {
+        console.log(`[CHECK CONN] WAHA ${wahaSession} status=${statusRes.status} → fallback DB: ${dbConnected}`);
+        return dbConnected;
+      }
+
       const data = (await statusRes.json()) as { status?: string; me?: unknown };
+      console.log(`[CHECK CONN] WAHA ${wahaSession} status=${data.status} me=${!!data.me} dbConnected=${dbConnected}`);
 
       if (data.status === "WORKING" && data.me) return true;
 
-      // Session STOPPED but DB says previously connected — start it in background and report as connected
-      // WAHA restores from saved credentials quickly, so this is safe to be optimistic
-      if (data.status === "STOPPED" && store.evolutionConnectionState === "open") {
-        fetch(`${WAHA_URL}/api/sessions/${wahaSession}/start`, {
-          method: "POST",
-          headers,
-        }).catch(() => {});
+      if (data.status === "STOPPED" && dbConnected) {
+        fetch(`${WAHA_URL}/api/sessions/${wahaSession}/start`, { method: "POST", headers }).catch(() => {});
         return true;
       }
 
       return false;
-    } catch {
-      return store.evolutionConnectionState === "open";
+    } catch (err) {
+      console.log(`[CHECK CONN] WAHA fetch error: ${(err as Error).message} → fallback DB: ${dbConnected}`);
+      return dbConnected;
     }
   }
 
   const { checkInstanceConnection } = await import("@/actions/evolution");
-  return checkInstanceConnection(instanceName, store.evolutionConnectionState === "open");
+  return checkInstanceConnection(instanceName, dbConnected);
 }
 
 export async function disconnectWhatsApp(): Promise<{ success: boolean }> {
