@@ -60,6 +60,7 @@ model Product {
   linkedInventoryItemId String?
   linkedInventoryItem   InventoryItem?       @relation("ProductLinkedItem", fields: [linkedInventoryItemId], references: [id], onDelete: SetNull)
   ingredients           ProductIngredient[]
+  options               Json?
   ncm                   String?
   cfop                  String?
   cest                  String?

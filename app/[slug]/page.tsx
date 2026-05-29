@@ -42,6 +42,8 @@ export default async function StorefrontPage({
         imageUrl: p.imageUrl,
         categoryId: p.categoryId,
         categoryName: p.category?.name ?? null,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        options: (p.options as any[] | null) ?? null,
       }))}
       categories={store.categories}
       theme={store.theme}
