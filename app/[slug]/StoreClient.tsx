@@ -3,6 +3,9 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createOrder } from "@/actions/order";
+import {
+  Sparkles, Search, X, Plus, Minus, ShoppingBag, ArrowRight,
+} from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface Product {
@@ -38,27 +41,39 @@ type DeliveryMethod = "DELIVERY" | "PICKUP" | "LOCAL";
 function norm(s: string) {
   return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 }
+const fmt = (n: number) =>
+  n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-const fmt = (n: number) => `R$ ${n.toFixed(2).replace(".", ",")}`;
-
-// ─── Icons ────────────────────────────────────────────────────────────────────
-function SearchIcon() {
+// ─── Section Label ────────────────────────────────────────────────────────────
+function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
-    </svg>
+    <h2 className="flex items-center text-xs font-bold uppercase tracking-section text-muted-foreground">
+      <span className="mr-2 text-primary">›</span>
+      {children}
+    </h2>
   );
 }
-function TrashIcon() {
+
+// ─── Background Glows ────────────────────────────────────────────────────────
+function AmbientGlows() {
   return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6M14 11v6" /><path d="M9 6V4h6v2" />
-    </svg>
+    <div aria-hidden className="pointer-events-none fixed inset-0 -z-10">
+      <div
+        className="animate-glow-pulse absolute left-1/2 top-0 h-96 w-[120%] -translate-x-1/2 rounded-full"
+        style={{ background: "hsl(var(--primary) / 0.10)", filter: "blur(80px)" }}
+      />
+      <div
+        className="animate-glow-pulse absolute bottom-0 right-0 h-72 w-72 rounded-full"
+        style={{ background: "hsl(var(--accent) / 0.08)", filter: "blur(80px)", animationDelay: "1.5s" }}
+      />
+    </div>
   );
 }
 
 // ─── Product Sheet (Bottom Sheet) ────────────────────────────────────────────
-function ProductSheet({ product, onClose, onAddToCart }: {
+function ProductSheet({
+  product, onClose, onAddToCart,
+}: {
   product: Product;
   onClose: () => void;
   onAddToCart: (product: Product, qty: number) => void;
@@ -68,78 +83,83 @@ function ProductSheet({ product, onClose, onAddToCart }: {
 
   return (
     <>
-      {/* Backdrop */}
       <motion.div
         className="fixed inset-0 z-50"
-        style={{ background: "rgba(0,0,0,0.48)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)" }}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
+        style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)" }}
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         onClick={onClose}
       />
-
-      {/* Sheet */}
       <motion.div
-        className="fixed bottom-0 left-0 right-0 z-50 bg-card flex flex-col overflow-hidden"
-        style={{ borderRadius: "2.5rem 2.5rem 0 0", maxHeight: "92dvh" }}
-        initial={{ y: "100%" }}
-        animate={{ y: 0 }}
-        exit={{ y: "100%" }}
+        className="fixed bottom-0 left-0 right-0 z-50 flex flex-col overflow-hidden bg-card"
+        style={{ borderRadius: "2rem 2rem 0 0", maxHeight: "92dvh" }}
+        initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
         transition={{ type: "spring", damping: 32, stiffness: 360 }}
       >
-        {/* Handle */}
+        {/* handle */}
         <div className="flex-shrink-0 pt-3 pb-1">
-          <div className="w-12 h-1.5 bg-muted rounded-full mx-auto" />
+          <div className="mx-auto h-1.5 w-12 rounded-full bg-muted" />
         </div>
 
-        {/* Scrollable body */}
+        {/* scrollable body */}
         <div className="flex-1 overflow-y-auto">
-          {/* Hero image */}
-          <div
-            className="mx-4 mt-3 mb-5 overflow-hidden flex items-center justify-center bg-muted"
-            style={{ borderRadius: "1.75rem", aspectRatio: "4/3" }}
+          {/* hero com glow */}
+          <div className="relative mx-4 mt-3 mb-5 overflow-hidden rounded-[1.75rem] bg-gradient-to-b"
+            style={{ aspectRatio: "4/3", background: "linear-gradient(to bottom, hsl(var(--primary) / 0.18), hsl(var(--card)))" }}
           >
+            <div
+              aria-hidden
+              className="animate-glow-pulse absolute left-1/2 top-1/2 h-52 w-52 -translate-x-1/2 -translate-y-1/2 rounded-full"
+              style={{ background: "hsl(var(--primary) / 0.30)", filter: "blur(40px)" }}
+            />
             {product.imageUrl
-              ? <img src={product.imageUrl} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              : <span style={{ fontSize: 90, lineHeight: 1 }}>{product.emoji}</span>
+              ? <img
+                  src={product.imageUrl}
+                  alt={product.name}
+                  className="animate-float relative z-10 h-full w-full object-contain p-6 drop-shadow-[0_20px_40px_rgba(0,0,0,0.55)]"
+                />
+              : <span className="animate-float relative z-10 flex h-full items-center justify-center"
+                  style={{ fontSize: 96, lineHeight: 1 }}>{product.emoji}</span>
             }
           </div>
 
-          {/* Info */}
-          <div className="px-5 pb-6">
-            <h2 className="text-2xl font-extrabold tracking-tight text-foreground leading-tight">
+          {/* info */}
+          <div className="px-6 pb-6 text-center">
+            <h2 className="font-display text-2xl font-extrabold tracking-tight text-foreground">
               {product.name}
             </h2>
-            <p className="text-xl font-bold mt-2 text-primary">
-              {fmt(product.price)}
-            </p>
+            <p className="font-display mt-1 text-xl font-extrabold text-glow">{fmt(product.price)}</p>
           </div>
         </div>
 
-        {/* Sticky footer: qty + CTA */}
+        {/* sticky footer */}
         <div
-          className="flex-shrink-0 flex items-center gap-3 px-5 py-4 bg-card"
-          style={{ borderTop: "1px solid hsl(var(--border) / 0.4)" }}
+          className="flex flex-shrink-0 items-center gap-3 bg-card px-5 py-4"
+          style={{ borderTop: "1px solid hsl(var(--border) / 0.5)" }}
         >
-          {/* Qty stepper pill */}
-          <div className="flex items-center gap-2 rounded-full px-2 py-1.5 bg-muted">
+          {/* qty stepper */}
+          <div className="flex items-center gap-2 rounded-2xl bg-secondary p-1.5">
             <button
               onClick={() => setLocalQty(q => Math.max(1, q - 1))}
-              className="w-9 h-9 rounded-full bg-card shadow-sm flex items-center justify-center text-foreground font-bold text-xl transition-transform active:scale-90"
-            >−</button>
-            <span className="w-7 text-center font-bold text-sm tabular-nums text-foreground select-none">{localQty}</span>
+              className="flex h-9 w-9 items-center justify-center rounded-xl bg-card text-foreground shadow-sm transition-transform active:scale-90"
+            >
+              <Minus className="size-4" strokeWidth={2.5} />
+            </button>
+            <span className="w-7 text-center text-sm font-bold tabular-nums text-foreground select-none">{localQty}</span>
             <button
               onClick={() => setLocalQty(q => q + 1)}
-              className="w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-xl transition-transform active:scale-90"
-            >+</button>
+              className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent text-primary-foreground transition-transform active:scale-90"
+            >
+              <Plus className="size-4" strokeWidth={2.5} />
+            </button>
           </div>
 
-          {/* Add to order */}
+          {/* CTA */}
           <motion.button
             whileTap={{ scale: 0.97 }}
-            className="flex-1 rounded-full py-3.5 bg-primary text-primary-foreground text-sm font-bold tracking-tight"
+            className="glow-primary flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-primary to-accent py-3.5 text-sm font-bold text-primary-foreground"
             onClick={() => { onAddToCart(product, localQty); onClose(); }}
           >
+            <Sparkles className="size-4" />
             Adicionar · {fmt(total)}
           </motion.button>
         </div>
@@ -149,7 +169,9 @@ function ProductSheet({ product, onClose, onAddToCart }: {
 }
 
 // ─── Cart Sheet (Bottom Sheet) ────────────────────────────────────────────────
-function CartSheet({ cart, products, onClose, onAdd, onRemove, onCheckout }: {
+function CartSheet({
+  cart, products, onClose, onAdd, onRemove, onCheckout,
+}: {
   cart: Record<string, number>;
   products: Product[];
   onClose: () => void;
@@ -166,111 +188,113 @@ function CartSheet({ cart, products, onClose, onAdd, onRemove, onCheckout }: {
 
   return (
     <>
-      {/* Backdrop */}
       <motion.div
         className="fixed inset-0 z-50"
-        style={{ background: "rgba(0,0,0,0.48)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)" }}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
+        style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)" }}
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         onClick={onClose}
       />
-
-      {/* Sheet */}
       <motion.div
-        className="fixed bottom-0 left-0 right-0 z-50 bg-card flex flex-col overflow-hidden"
-        style={{ borderRadius: "2.5rem 2.5rem 0 0", maxHeight: "85dvh" }}
-        initial={{ y: "100%" }}
-        animate={{ y: 0 }}
-        exit={{ y: "100%" }}
+        className="fixed bottom-0 left-0 right-0 z-50 flex flex-col overflow-hidden bg-card"
+        style={{ borderRadius: "2rem 2rem 0 0", maxHeight: "85dvh" }}
+        initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
         transition={{ type: "spring", damping: 32, stiffness: 360 }}
       >
-        {/* Header */}
-        <div className="flex-shrink-0 px-5 pt-3 pb-4" style={{ borderBottom: "1px solid hsl(var(--border) / 0.4)" }}>
-          <div className="w-12 h-1.5 bg-muted rounded-full mx-auto mb-4" />
+        {/* header */}
+        <div
+          className="flex-shrink-0 px-6 pt-3 pb-4"
+          style={{ borderBottom: "1px solid hsl(var(--border) / 0.5)" }}
+        >
+          <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-muted" />
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-extrabold tracking-tight text-foreground">Meu Pedido</h2>
-            <span className="text-sm font-medium text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <ShoppingBag className="size-5 text-primary" />
+              <h2 className="font-display text-xl font-extrabold text-foreground">Seu pedido</h2>
+            </div>
+            <span className="text-sm text-muted-foreground">
               {totalItems} {totalItems === 1 ? "item" : "itens"}
             </span>
           </div>
         </div>
 
-        {/* Items list */}
-        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+        {/* items */}
+        <div className="flex-1 overflow-y-auto px-6 py-4">
           {cartItems.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground text-sm font-medium">
-              Seu carrinho está vazio
-            </div>
+            <p className="py-10 text-center text-sm text-muted-foreground">Seu carrinho está vazio.</p>
           ) : (
-            <AnimatePresence initial={false}>
-              {cartItems.map(({ product, qty }) => (
-                <motion.div
-                  key={product.id}
-                  layout
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20, height: 0, marginBottom: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="flex items-center gap-3 rounded-2xl p-3 bg-muted/50"
-                >
-                  {/* Thumbnail */}
-                  <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center bg-muted">
-                    {product.imageUrl
-                      ? <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
-                      : <span className="text-2xl">{product.emoji}</span>
-                    }
-                  </div>
-
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-foreground leading-tight truncate">{product.name}</p>
-                    <p className="text-sm font-bold mt-0.5 text-primary">
-                      {fmt(product.price * qty)}
-                    </p>
-                  </div>
-
-                  {/* Controls */}
-                  <div className="flex items-center gap-1.5 flex-shrink-0">
-                    <button
-                      onClick={() => onRemove(product)}
-                      className="w-7 h-7 rounded-full bg-muted text-foreground flex items-center justify-center font-bold text-base transition-colors active:scale-90"
-                    >
-                      {qty === 1 ? <TrashIcon /> : "−"}
-                    </button>
-                    <span className="w-5 text-center font-bold text-sm tabular-nums text-foreground select-none">{qty}</span>
-                    <button
-                      onClick={() => onAdd(product)}
-                      className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-base transition-colors active:scale-90"
-                    >+</button>
-                  </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
+            <ul className="flex flex-col gap-3">
+              <AnimatePresence initial={false}>
+                {cartItems.map(({ product, qty }) => (
+                  <motion.li
+                    key={product.id}
+                    layout
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20, height: 0, marginBottom: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="flex items-center gap-3 rounded-2xl border border-border/60 bg-secondary p-2 pr-3"
+                  >
+                    <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl bg-muted flex items-center justify-center">
+                      {product.imageUrl
+                        ? <img src={product.imageUrl} alt={product.name} className="h-full w-full object-contain p-1.5" />
+                        : <span className="text-2xl">{product.emoji}</span>
+                      }
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="line-clamp-1 text-sm font-bold text-foreground">{product.name}</p>
+                      <p className="text-sm font-semibold text-primary">{fmt(product.price * qty)}</p>
+                    </div>
+                    <div className="flex items-center gap-1 rounded-xl bg-card/60 p-1">
+                      <button
+                        onClick={() => onRemove(product)}
+                        className="flex h-7 w-7 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-card active:scale-90"
+                      >
+                        <Minus className="size-4" strokeWidth={2.5} />
+                      </button>
+                      <span className="w-5 text-center text-sm font-bold tabular-nums text-foreground select-none">{qty}</span>
+                      <button
+                        onClick={() => onAdd(product)}
+                        className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-accent text-primary-foreground transition-transform active:scale-90"
+                      >
+                        <Plus className="size-4" strokeWidth={2.5} />
+                      </button>
+                    </div>
+                  </motion.li>
+                ))}
+              </AnimatePresence>
+            </ul>
           )}
         </div>
 
-        {/* Footer */}
-        <div className="flex-shrink-0 px-5 py-4 bg-card" style={{ borderTop: "1px solid hsl(var(--border) / 0.4)" }}>
-          <div className="flex justify-between items-center mb-4">
-            <span className="text-muted-foreground font-medium text-sm">Total do pedido</span>
-            <span className="text-xl font-extrabold tracking-tight text-foreground">{fmt(total)}</span>
-          </div>
-          <motion.button
-            whileTap={{ scale: 0.97 }}
-            onClick={() => { onClose(); onCheckout(); }}
-            className="w-full rounded-full py-4 bg-primary text-primary-foreground font-bold text-sm tracking-tight"
+        {/* footer */}
+        {cartItems.length > 0 && (
+          <div
+            className="flex-shrink-0 px-6 py-5"
+            style={{ borderTop: "1px solid hsl(var(--border) / 0.5)" }}
           >
-            Confirmar Pedido →
-          </motion.button>
-        </div>
+            <div className="flex items-center justify-between">
+              <span className="font-display text-lg font-extrabold text-foreground">Total</span>
+              <span className="font-display text-2xl font-extrabold text-glow">{fmt(total)}</span>
+            </div>
+            <motion.button
+              whileTap={{ scale: 0.98 }}
+              onClick={() => { onClose(); onCheckout(); }}
+              className="glow-primary mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-primary to-accent py-4 text-base font-bold text-primary-foreground"
+            >
+              <Sparkles className="size-5" />
+              Confirmar pedido
+            </motion.button>
+          </div>
+        )}
       </motion.div>
     </>
   );
 }
 
 // ─── Product Card ─────────────────────────────────────────────────────────────
-function ProductCard({ product, qty, onOpen, onAdd, onRemove }: {
+function ProductCard({
+  product, qty, onOpen, onAdd, onRemove,
+}: {
   product: Product;
   qty: number;
   onOpen: () => void;
@@ -279,48 +303,84 @@ function ProductCard({ product, qty, onOpen, onAdd, onRemove }: {
 }) {
   return (
     <div
-      className={`rounded-[2rem] overflow-hidden border shadow-sm flex flex-col cursor-pointer bg-card transition-all ${
-        qty > 0 ? "border-primary/60" : "border-border/20"
+      className={`animate-rise group relative flex flex-col overflow-hidden rounded-3xl border bg-card transition-all duration-300 hover:-translate-y-1 ${
+        qty > 0
+          ? "border-primary/50 glow-primary"
+          : "border-border/60 hover:border-primary/50"
       }`}
-      onClick={onOpen}
     >
-      {/* Image — topo do card */}
-      <div
-        className="w-full overflow-hidden flex items-center justify-center bg-muted"
-        style={{ aspectRatio: "1/1" }}
+      {/* image */}
+      <button
+        type="button"
+        onClick={onOpen}
+        aria-label={`Ver ${product.name}`}
+        className="relative aspect-square w-full overflow-hidden"
       >
+        {/* gradient top */}
+        <div
+          aria-hidden
+          className="absolute inset-0"
+          style={{ background: "linear-gradient(to bottom, hsl(var(--primary) / 0.15), transparent 60%, hsl(var(--card)))" }}
+        />
+        {/* radial glow */}
+        <div
+          aria-hidden
+          className="absolute left-1/2 top-1/2 h-32 w-32 -translate-x-1/2 -translate-y-1/2 rounded-full opacity-60 transition-opacity duration-300 group-hover:opacity-100"
+          style={{ background: "hsl(var(--primary) / 0.25)", filter: "blur(24px)" }}
+        />
         {product.imageUrl
-          ? <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
-          : <span style={{ fontSize: 48, lineHeight: 1 }}>{product.emoji}</span>
+          ? <img
+              src={product.imageUrl}
+              alt={product.name}
+              className="relative z-10 h-full w-full object-contain p-4 drop-shadow-[0_10px_25px_rgba(0,0,0,0.45)] transition-transform duration-500 group-hover:scale-110"
+            />
+          : <span
+              className="relative z-10 flex h-full items-center justify-center transition-transform duration-500 group-hover:scale-110"
+              style={{ fontSize: 52, lineHeight: 1 }}
+            >{product.emoji}</span>
         }
-      </div>
+      </button>
 
-      {/* Body */}
-      <div className="p-3 flex flex-col gap-2">
-        <p className="text-[12.5px] font-bold text-foreground leading-snug line-clamp-2 min-h-[2.5em]">
-          {product.name}
-        </p>
-        <div className="flex items-center justify-between gap-1">
-          <span className="text-sm font-extrabold text-primary tabular-nums">
-            R$ {product.price.toFixed(2).replace(".", ",")}
+      {/* body */}
+      <div className="flex flex-1 flex-col p-4 pt-2">
+        <button type="button" onClick={onOpen} className="text-left">
+          <h3 className="font-display line-clamp-1 text-base font-bold leading-tight text-foreground">
+            {product.name}
+          </h3>
+        </button>
+
+        <div className="mt-4 flex items-center justify-between gap-2">
+          <span className="font-display text-lg font-extrabold text-foreground">
+            {fmt(product.price)}
           </span>
-          {qty > 0 ? (
-            <div className="flex items-center gap-0.5" onClick={e => e.stopPropagation()}>
-              <button
-                onClick={onRemove}
-                className="w-6 h-6 rounded-full bg-muted text-foreground flex items-center justify-center font-bold text-sm transition-transform active:scale-90"
-              >−</button>
-              <span className="w-4 text-center font-bold text-xs tabular-nums text-foreground select-none">{qty}</span>
-              <button
-                onClick={onAdd}
-                className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm transition-transform active:scale-90"
-              >+</button>
-            </div>
-          ) : (
+
+          {qty === 0 ? (
             <button
-              onClick={e => { e.stopPropagation(); onOpen(); }}
-              className="px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-bold hover:bg-primary hover:text-primary-foreground transition-colors active:scale-90"
-            >+ Add</button>
+              type="button"
+              onClick={onAdd}
+              aria-label={`Adicionar ${product.name}`}
+              className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent text-primary-foreground transition-transform active:scale-90"
+            >
+              <Plus className="size-5" strokeWidth={2.5} />
+            </button>
+          ) : (
+            <div className="glow-primary flex items-center gap-1 rounded-xl bg-secondary p-1" onClick={e => e.stopPropagation()}>
+              <button
+                type="button"
+                onClick={onRemove}
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-card/60 active:scale-90"
+              >
+                <Minus className="size-4" strokeWidth={2.5} />
+              </button>
+              <span className="w-5 text-center text-sm font-bold tabular-nums text-foreground select-none">{qty}</span>
+              <button
+                type="button"
+                onClick={onAdd}
+                className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-accent text-primary-foreground transition-transform active:scale-90"
+              >
+                <Plus className="size-4" strokeWidth={2.5} />
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -328,65 +388,80 @@ function ProductCard({ product, qty, onOpen, onAdd, onRemove }: {
   );
 }
 
-// ─── Featured Card ────────────────────────────────────────────────────────────
-function FeaturedCard({ product, tag, qty, onOpen, onAdd, onRemove }: {
-  product: Product;
-  tag: string;
-  qty: number;
-  onOpen: () => void;
-  onAdd: () => void;
-  onRemove: () => void;
+// ─── Featured Carousel ────────────────────────────────────────────────────────
+function FeaturedCarousel({
+  featured, cart, onOpenProduct, onAdd,
+}: {
+  featured: Product[];
+  cart: Record<string, number>;
+  onOpenProduct: (p: Product) => void;
+  onAdd: (p: Product) => void;
 }) {
-  return (
-    <div
-      className={`rounded-[2rem] overflow-hidden border shadow-sm flex flex-col cursor-pointer bg-card transition-all ${
-        qty > 0 ? "border-primary/60" : "border-border/20"
-      }`}
-      onClick={onOpen}
-    >
-      {/* Image */}
-      <div
-        className="w-full overflow-hidden flex items-center justify-center bg-muted relative"
-        style={{ aspectRatio: "1/1" }}
-      >
-        {product.imageUrl
-          ? <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
-          : <span style={{ fontSize: 48, lineHeight: 1 }}>{product.emoji}</span>
-        }
-        <span className="absolute top-2 left-2 bg-primary text-primary-foreground text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-full">
-          {tag}
-        </span>
-      </div>
+  if (featured.length === 0) return null;
 
-      {/* Body */}
-      <div className="p-3 flex flex-col gap-2">
-        <p className="text-[12.5px] font-bold text-foreground leading-snug line-clamp-2 min-h-[2.5em]">
-          {product.name}
-        </p>
-        <div className="flex items-center justify-between gap-1">
-          <span className="text-sm font-extrabold text-primary tabular-nums">
-            R$ {product.price.toFixed(2).replace(".", ",")}
-          </span>
-          {qty > 0 ? (
-            <div className="flex items-center gap-0.5" onClick={e => e.stopPropagation()}>
-              <button onClick={onRemove} className="w-6 h-6 rounded-full bg-muted text-foreground flex items-center justify-center font-bold text-sm active:scale-90">−</button>
-              <span className="w-4 text-center font-bold text-xs tabular-nums text-foreground select-none">{qty}</span>
-              <button onClick={onAdd} className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm active:scale-90">+</button>
+  return (
+    <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-3 scrollbar-hide">
+      {featured.map((p, i) => (
+        <article
+          key={p.id}
+          className="animate-rise group relative w-[82%] shrink-0 snap-center overflow-hidden rounded-[1.75rem] border border-border/60 bg-gradient-to-br from-card to-background cursor-pointer"
+          style={{ animationDelay: `${i * 80}ms` }}
+          onClick={() => onOpenProduct(p)}
+        >
+          {/* ambient glow */}
+          <div
+            aria-hidden
+            className="animate-glow-pulse absolute -right-10 -top-10 h-48 w-48 rounded-full"
+            style={{ background: "hsl(var(--primary) / 0.25)", filter: "blur(60px)" }}
+          />
+
+          {/* image */}
+          <div className="relative h-44 w-full overflow-hidden">
+            {p.imageUrl
+              ? <img
+                  src={p.imageUrl}
+                  alt={p.name}
+                  className="animate-float h-full w-full object-contain p-5 drop-shadow-[0_18px_35px_rgba(0,0,0,0.55)] transition-transform duration-500 group-hover:scale-105"
+                />
+              : <span
+                  className="animate-float flex h-full items-center justify-center transition-transform duration-500 group-hover:scale-105"
+                  style={{ fontSize: 96, lineHeight: 1 }}
+                >{p.emoji}</span>
+            }
+          </div>
+
+          {/* info */}
+          <div className="relative px-5 pb-5">
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-primary px-3 py-1 text-[0.65rem] font-bold uppercase tracking-wide text-primary-foreground">
+                {i === 0 ? "Destaque" : "Popular"}
+              </span>
             </div>
-          ) : (
-            <button
-              onClick={e => { e.stopPropagation(); onOpen(); }}
-              className="px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-bold hover:bg-primary hover:text-primary-foreground transition-colors active:scale-90"
-            >+ Add</button>
-          )}
-        </div>
-      </div>
+            <h3 className="font-display mt-3 text-xl font-extrabold leading-tight text-foreground">
+              {p.name}
+            </h3>
+            <div className="mt-4 flex items-center justify-between">
+              <span className="font-display text-2xl font-extrabold text-glow">{fmt(p.price)}</span>
+              <button
+                type="button"
+                onClick={e => { e.stopPropagation(); onAdd(p); }}
+                className="glow-primary flex items-center gap-2 rounded-xl bg-gradient-to-br from-primary to-accent px-4 py-2.5 text-sm font-bold text-primary-foreground transition-transform active:scale-95"
+              >
+                <Plus className="size-4" strokeWidth={2.5} />
+                Adicionar
+              </button>
+            </div>
+          </div>
+        </article>
+      ))}
     </div>
   );
 }
 
 // ─── Floating Cart Bar ────────────────────────────────────────────────────────
-function FloatingCartBar({ cart, products, onOpenCart }: {
+function FloatingCartBar({
+  cart, products, onOpenCart,
+}: {
   cart: Record<string, number>;
   products: Product[];
   onOpenCart: () => void;
@@ -401,42 +476,50 @@ function FloatingCartBar({ cart, products, onOpenCart }: {
     <AnimatePresence>
       {count > 0 && (
         <motion.div
-          className="fixed bottom-6 left-1/2 z-40 w-[90%] max-w-sm"
-          style={{ x: "-50%" }}
-          initial={{ opacity: 0, y: 24, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 24, scale: 0.95 }}
+          className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 pb-5"
+          initial={{ y: 100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: 100, opacity: 0 }}
           transition={{ type: "spring", damping: 28, stiffness: 380 }}
         >
-          <motion.button
-            whileTap={{ scale: 0.97 }}
-            onClick={onOpenCart}
-            aria-label="Ver carrinho"
-            className="w-full flex justify-between items-center px-5 py-3.5 rounded-full text-white"
-            style={{
-              background: "rgba(26,26,26,0.92)",
-              backdropFilter: "blur(20px)",
-              WebkitBackdropFilter: "blur(20px)",
-              boxShadow: "0 20px 48px -8px rgba(0,0,0,0.45)",
-            }}
-          >
-            <div className="flex items-center gap-3">
-              <span
-                className="text-xs font-bold px-2.5 py-1 rounded-full min-w-[28px] text-center tabular-nums"
-                style={{ background: "rgba(255,255,255,0.18)" }}
-              >{count}</span>
-              <span className="text-sm font-semibold tracking-tight">Ver Carrinho</span>
+          <div className="glow-primary glass pointer-events-auto flex w-full max-w-md items-center gap-3 rounded-3xl border border-primary/30 p-2 pl-4">
+            {/* bag + badge */}
+            <div className="relative">
+              <ShoppingBag className="size-7 text-primary" />
+              <span className="absolute -right-2 -top-2 flex min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[0.7rem] font-bold text-primary-foreground">
+                {count}
+              </span>
             </div>
-            <span className="font-bold text-sm tracking-tight tabular-nums">{fmt(total)}</span>
-          </motion.button>
+
+            {/* info */}
+            <div className="flex-1 leading-tight">
+              <p className="text-[0.7rem] font-medium uppercase tracking-wide text-muted-foreground">
+                {count} {count === 1 ? "item" : "itens"}
+              </p>
+              <p className="font-display text-lg font-extrabold text-foreground">{fmt(total)}</p>
+            </div>
+
+            {/* button */}
+            <button
+              type="button"
+              onClick={onOpenCart}
+              className="flex items-center gap-2 rounded-2xl bg-gradient-to-br from-primary to-accent px-5 py-3.5 text-sm font-bold text-primary-foreground transition-transform active:scale-95"
+            >
+              Finalizar
+              <ArrowRight className="size-4" strokeWidth={2.5} />
+            </button>
+          </div>
         </motion.div>
       )}
     </AnimatePresence>
   );
 }
 
-// ─── Products view ────────────────────────────────────────────────────────────
-function ProductsView({ storeName, logoUrl, products, dbCategories, cart, onOpenProduct, onAdd, onRemove, onOpenCart }: {
+// ─── Products View ────────────────────────────────────────────────────────────
+function ProductsView({
+  storeName, logoUrl, products, dbCategories, cart,
+  onOpenProduct, onAdd, onRemove, onOpenCart,
+}: {
   storeName: string;
   logoUrl: string | null;
   products: Product[];
@@ -467,129 +550,152 @@ function ProductsView({ storeName, logoUrl, products, dbCategories, cart, onOpen
     return list;
   }, [products, featured, activeCat, search]);
 
-  const activeCatLabel = visibleCategories.find(c => c.id === activeCat)?.name ?? "Todos";
   const initials = storeName.split(" ").slice(0, 2).map(w => w[0]).join("").toUpperCase();
 
   return (
     <>
-      {/* ── Sticky Glassmorphism Header ── */}
-      <header
-        className="sticky top-0 z-30"
-        style={{
-          background: "hsl(var(--card) / 0.85)",
-          backdropFilter: "blur(24px)",
-          WebkitBackdropFilter: "blur(24px)",
-          borderBottom: "1px solid hsl(var(--border) / 0.4)",
-        }}
-      >
-        {/* Store identity — centralizado */}
-        <div className="flex flex-col items-center gap-2 px-4 pt-5 pb-3 max-w-[480px] mx-auto">
-          {/* Logo */}
-          {logoUrl
-            ? <img src={logoUrl} alt={storeName} className="w-14 h-14 rounded-full object-cover shrink-0" style={{ boxShadow: "0 0 0 2.5px hsl(var(--border) / 0.5)" }} />
-            : <div className="w-14 h-14 rounded-full flex items-center justify-center font-bold text-base bg-muted text-primary shrink-0">{initials}</div>
-          }
-          {/* Nome + status */}
-          <div className="text-center">
-            <div className="font-extrabold text-primary text-xl tracking-tight leading-tight">{storeName}</div>
-            <div className="flex items-center justify-center gap-1.5 mt-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block shrink-0" />
-              <span className="text-xs text-muted-foreground font-medium">Em funcionamento</span>
-            </div>
-          </div>
-        </div>
+      <AmbientGlows />
 
-        {/* Search pill */}
-        <div className="px-4 pb-3 max-w-[480px] mx-auto">
-          <div className="flex items-center gap-2.5 rounded-full px-4 py-2.5 bg-card border border-border/40">
-            <span className="text-muted-foreground shrink-0"><SearchIcon /></span>
-            <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Buscar produto…"
-              aria-label="Buscar produto"
-              className="flex-1 bg-transparent outline-none text-sm text-foreground placeholder:text-muted-foreground font-medium"
-            />
-            {search && (
-              <button onClick={() => setSearch("")} className="text-muted-foreground hover:text-foreground leading-none text-xl shrink-0" aria-label="Limpar">×</button>
+      <div className="mx-auto w-full max-w-lg px-4 pb-36">
+
+        {/* ── Header ── */}
+        <header className="relative flex flex-col items-center pt-10 text-center">
+          {/* ambient halo */}
+          <div
+            aria-hidden
+            className="animate-glow-pulse pointer-events-none absolute -top-10 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full"
+            style={{ background: "hsl(var(--primary) / 0.22)", filter: "blur(60px)" }}
+          />
+
+          {/* Logo */}
+          <div className="relative">
+            {logoUrl ? (
+              <img
+                src={logoUrl}
+                alt={storeName}
+                className="glow-primary animate-float h-20 w-20 rounded-3xl object-cover"
+              />
+            ) : (
+              <div className="glow-primary animate-float grid h-20 w-20 place-items-center rounded-3xl bg-gradient-to-br from-primary to-accent">
+                <Sparkles className="size-9 text-primary-foreground" strokeWidth={2.2} />
+              </div>
             )}
           </div>
+
+          {/* Nome */}
+          <h1 className="font-display mt-5 text-balance text-3xl font-extrabold tracking-tight text-foreground">
+            {storeName}
+          </h1>
+
+          {/* Status bar */}
+          <div className="glass mt-5 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 rounded-full border border-border/60 px-5 py-2.5">
+            <span className="flex items-center gap-2 text-sm font-semibold text-foreground">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400" />
+              </span>
+              Em funcionamento
+            </span>
+          </div>
+        </header>
+
+        {/* ── Search ── */}
+        <div className="group relative mt-7">
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-5">
+            <Search className="size-5 text-muted-foreground transition-colors group-focus-within:text-primary" />
+          </div>
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Buscar produto..."
+            aria-label="Buscar produto"
+            className="glass h-14 w-full rounded-2xl border border-border/60 pl-12 pr-12 text-base text-foreground outline-none placeholder:text-muted-foreground transition-all focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
+            style={{ background: "hsl(var(--card) / 0.55)" }}
+          />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch("")}
+              aria-label="Limpar busca"
+              className="absolute inset-y-0 right-0 flex items-center pr-4 text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <X className="size-5" />
+            </button>
+          )}
         </div>
 
-        {/* Category pills */}
+        {/* ── Categories ── */}
         {visibleCategories.length > 0 && (
-          <div className="flex gap-2 pb-3 px-4 overflow-x-auto scrollbar-hide max-w-[480px] mx-auto">
-            <button
-              onClick={() => setActiveCat("all")}
-              className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-semibold whitespace-nowrap transition-colors ${
-                activeCat === "all"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-card text-foreground border border-border/50"
-              }`}
-            >🛍️ Tudo</button>
-            {visibleCategories.map(cat => (
+          <div className="mt-6">
+            <SectionLabel>Categorias</SectionLabel>
+            <div className="-mx-1 mt-3 flex gap-3 overflow-x-auto px-1 pb-2 scrollbar-hide">
               <button
-                key={cat.id}
-                onClick={() => setActiveCat(cat.id)}
-                className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-semibold whitespace-nowrap transition-colors ${
-                  activeCat === cat.id
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-card text-foreground border border-border/50"
+                onClick={() => setActiveCat("all")}
+                className={`flex shrink-0 items-center gap-2 rounded-2xl border px-5 py-3 text-sm font-semibold whitespace-nowrap transition-all ${
+                  activeCat === "all"
+                    ? "glow-primary border-primary/50 bg-gradient-to-br from-primary to-accent text-primary-foreground"
+                    : "glass border-border/60 text-muted-foreground hover:border-primary/40 hover:text-foreground"
                 }`}
-              >{cat.emoji} {cat.name}</button>
-            ))}
+              >
+                <span className="text-base leading-none">✦</span>
+                Tudo
+              </button>
+              {visibleCategories.map(cat => (
+                <button
+                  key={cat.id}
+                  onClick={() => setActiveCat(cat.id)}
+                  className={`flex shrink-0 items-center gap-2 rounded-2xl border px-5 py-3 text-sm font-semibold whitespace-nowrap transition-all ${
+                    activeCat === cat.id
+                      ? "glow-primary border-primary/50 bg-gradient-to-br from-primary to-accent text-primary-foreground"
+                      : "glass border-border/60 text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                  }`}
+                >
+                  <span className="text-base leading-none">{cat.emoji}</span>
+                  {cat.name}
+                </button>
+              ))}
+            </div>
           </div>
         )}
-      </header>
 
-      {/* ── Products content ── */}
-      <div className="max-w-[480px] mx-auto px-4 pb-32">
-        {/* Featured grid */}
+        {/* ── Featured Carousel ── */}
         {featured.length > 0 && (
-          <section className="pt-5 pb-2">
-            <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-3">✦ Em Destaque</p>
-            <div className="grid grid-cols-2 gap-3">
-              {featured.map((p, i) => (
-                <motion.div
-                  key={p.id}
-                  initial={{ opacity: 0, y: 24 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-40px" }}
-                  transition={{ duration: 0.35, delay: i * 0.07 }}
-                >
-                  <FeaturedCard
-                    product={p}
-                    tag={i === 0 ? "Destaque" : "Popular"}
-                    qty={cart[p.id] ?? 0}
-                    onOpen={() => onOpenProduct(p)}
-                    onAdd={() => onAdd(p)}
-                    onRemove={() => onRemove(p)}
-                  />
-                </motion.div>
-              ))}
+          <section className="mt-7">
+            <SectionLabel>Em destaque</SectionLabel>
+            <div className="mt-3">
+              <FeaturedCarousel
+                featured={featured}
+                cart={cart}
+                onOpenProduct={onOpenProduct}
+                onAdd={onAdd}
+              />
             </div>
           </section>
         )}
 
-        {/* Product grid */}
-        {filtered.length > 0 && (
-          <section className="pt-5">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
-                {activeCat === "all" ? "✦ Todos os Produtos" : `✦ ${activeCatLabel}`}
-              </p>
-              <span className="text-[10px] font-semibold text-muted-foreground px-2.5 py-0.5 rounded-full bg-muted">
-                {filtered.length} itens
-              </span>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
+        {/* ── Product Grid ── */}
+        <section className="mt-7">
+          <SectionLabel>
+            {activeCat === "all" ? "Cardápio" : dbCategories.find(c => c.id === activeCat)?.name ?? "Produtos"}
+            <span className="ml-2 text-xs font-normal text-muted-foreground/70">
+              {filtered.length} {filtered.length === 1 ? "produto" : "produtos"}
+            </span>
+          </SectionLabel>
+
+          {filtered.length === 0 ? (
+            <p className="mt-8 text-center text-sm text-muted-foreground">
+              Nenhum produto encontrado para sua busca.
+            </p>
+          ) : (
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
               {filtered.map((p, i) => (
                 <motion.div
                   key={p.id}
-                  initial={{ opacity: 0, y: 24 }}
+                  initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-40px" }}
-                  transition={{ duration: 0.35, delay: Math.min(i * 0.05, 0.25) }}
+                  viewport={{ once: true, margin: "-30px" }}
+                  transition={{ duration: 0.3, delay: Math.min(i * 0.05, 0.2) }}
                 >
                   <ProductCard
                     product={p}
@@ -601,14 +707,8 @@ function ProductsView({ storeName, logoUrl, products, dbCategories, cart, onOpen
                 </motion.div>
               ))}
             </div>
-          </section>
-        )}
-
-        {filtered.length === 0 && featured.length === 0 && (
-          <div className="text-center py-20 text-muted-foreground text-sm font-medium">
-            Nenhum produto encontrado
-          </div>
-        )}
+          )}
+        </section>
       </div>
 
       <FloatingCartBar cart={cart} products={products} onOpenCart={onOpenCart} />
@@ -616,8 +716,11 @@ function ProductsView({ storeName, logoUrl, products, dbCategories, cart, onOpen
   );
 }
 
-// ─── Checkout view ────────────────────────────────────────────────────────────
-function CheckoutView({ cart, products, storeId, instanceName, storeName, acceptsPickup, acceptsLocal, onBack, onSuccess }: {
+// ─── Checkout View ────────────────────────────────────────────────────────────
+function CheckoutView({
+  cart, products, storeId, instanceName, storeName,
+  acceptsPickup, acceptsLocal, onBack, onSuccess,
+}: {
   cart: Record<string, number>;
   products: Product[];
   storeId: string;
@@ -773,7 +876,7 @@ function CheckoutView({ cart, products, storeId, instanceName, storeName, accept
   );
 }
 
-// ─── Success view ─────────────────────────────────────────────────────────────
+// ─── Success View ─────────────────────────────────────────────────────────────
 function SuccessView({ onBack }: { onBack: () => void }) {
   return (
     <div className="s-success">
@@ -787,8 +890,11 @@ function SuccessView({ onBack }: { onBack: () => void }) {
   );
 }
 
-// ─── Root component ───────────────────────────────────────────────────────────
-export function StoreClient({ storeId, instanceName, storeName, logoUrl, products, categories, acceptsPickup, acceptsLocal, theme }: Props) {
+// ─── Root Component ───────────────────────────────────────────────────────────
+export function StoreClient({
+  storeId, instanceName, storeName, logoUrl,
+  products, categories, acceptsPickup, acceptsLocal, theme,
+}: Props) {
   const [view, setView] = useState<View>("products");
   const [cart, setCart] = useState<Record<string, number>>({});
   const [sheetProduct, setSheetProduct] = useState<Product | null>(null);
@@ -797,11 +903,9 @@ export function StoreClient({ storeId, instanceName, storeName, logoUrl, product
   function addToCart(p: Product) {
     setCart(c => ({ ...c, [p.id]: (c[p.id] ?? 0) + 1 }));
   }
-
   function addQtyToCart(p: Product, qty: number) {
     setCart(c => ({ ...c, [p.id]: (c[p.id] ?? 0) + qty }));
   }
-
   function removeFromCart(p: Product) {
     setCart(c => {
       const next = { ...c };
@@ -811,14 +915,13 @@ export function StoreClient({ storeId, instanceName, storeName, logoUrl, product
       return next;
     });
   }
-
   function resetCart() {
     setCart({});
     setView("products");
   }
 
   return (
-    <div className="store-root" data-theme={theme}>
+    <div className="store-root relative min-h-screen overflow-x-hidden" data-theme={theme}>
       {view === "products" && (
         <ProductsView
           storeName={storeName}
