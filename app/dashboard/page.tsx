@@ -18,17 +18,14 @@ export default async function DashboardPage() {
     prisma.store.findUnique({ where: { id: storeId } }),
   ]);
 
-  let connected = store?.evolutionConnectionState === "open";
-  if (store?.evolutionInstanceName) {
-    const { checkInstanceConnection } = await import("@/actions/evolution");
-    const realConnected = await checkInstanceConnection(store.evolutionInstanceName, connected);
-    if (realConnected !== connected) {
-      connected = realConnected;
-      await prisma.store.update({
-        where: { id: storeId },
-        data: { evolutionConnectionState: realConnected ? "open" : "close" },
-      });
-    }
+  const { checkStoreConnection } = await import("@/actions/store");
+  const connected = await checkStoreConnection(storeId);
+  const wasConnected = store?.evolutionConnectionState === "open";
+  if (connected !== wasConnected) {
+    await prisma.store.update({
+      where: { id: storeId },
+      data: { evolutionConnectionState: connected ? "open" : "close" },
+    });
   }
 
   return (

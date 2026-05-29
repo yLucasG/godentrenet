@@ -93,6 +93,62 @@ export async function getStoreQrCode(storeId: string): Promise<{ qr?: string; co
   }
 }
 
+export async function checkStoreConnection(storeId: string): Promise<boolean> {
+  const store = await prisma.store.findUnique({ where: { id: storeId } });
+  if (!store?.evolutionInstanceName) return false;
+
+  const instanceName = store.evolutionInstanceName;
+
+  const { getWahaSession } = await import("@/actions/waha");
+  const wahaSession = await getWahaSession(instanceName);
+
+  if (wahaSession) {
+    try {
+      const WAHA_URL = process.env.WAHA_API_URL ?? "http://godentrenet-waha:3000";
+      const WAHA_KEY = process.env.WAHA_API_KEY ?? "";
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (WAHA_KEY) headers["X-Api-Key"] = WAHA_KEY;
+
+      const statusRes = await fetch(`${WAHA_URL}/api/sessions/${wahaSession}`, {
+        headers,
+        cache: "no-store",
+        signal: AbortSignal.timeout(4000),
+      });
+      if (!statusRes.ok) return false;
+      const data = (await statusRes.json()) as { status?: string; me?: unknown };
+
+      if (data.status === "WORKING" && data.me) return true;
+
+      // Session is STOPPED but was previously authenticated — start it and wait briefly
+      if (data.status === "STOPPED" && store.evolutionConnectionState === "open") {
+        await fetch(`${WAHA_URL}/api/sessions/${wahaSession}/start`, {
+          method: "POST",
+          headers,
+          signal: AbortSignal.timeout(3000),
+        }).catch(() => {});
+        // Wait for session to restore credentials (usually fast when credentials exist)
+        await new Promise((r) => setTimeout(r, 4000));
+        const recheckRes = await fetch(`${WAHA_URL}/api/sessions/${wahaSession}`, {
+          headers,
+          cache: "no-store",
+          signal: AbortSignal.timeout(4000),
+        }).catch(() => null);
+        if (recheckRes?.ok) {
+          const recheckData = (await recheckRes.json()) as { status?: string; me?: unknown };
+          if (recheckData.status === "WORKING" && recheckData.me) return true;
+        }
+      }
+
+      return false;
+    } catch {
+      return store.evolutionConnectionState === "open";
+    }
+  }
+
+  const { checkInstanceConnection } = await import("@/actions/evolution");
+  return checkInstanceConnection(instanceName, store.evolutionConnectionState === "open");
+}
+
 export async function disconnectWhatsApp(): Promise<{ success: boolean }> {
   const { auth } = await import("@/auth");
   const session = await auth();
