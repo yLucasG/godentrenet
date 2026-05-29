@@ -32,6 +32,7 @@ model Store {
   messages                 BotMessage[]
   orders                   Order[]
   inventoryItems           InventoryItem[]
+  stockExpiries            StockExpiry[]
   suppliers                Supplier[]
   purchases                Purchase[]
   transactions             FinancialTransaction[]
@@ -133,8 +134,23 @@ model InventoryItem {
   ingredients   ProductIngredient[]
   linkedProducts Product[]          @relation("ProductLinkedItem")
   purchaseItems PurchaseItem[]
+  stockExpiries StockExpiry[]
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
+}
+
+model StockExpiry {
+  id              String        @id @default(cuid())
+  storeId         String
+  store           Store         @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  inventoryItemId String
+  inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+  batchName       String?
+  quantity        Float         @default(0)
+  expirationDate  DateTime
+  notes           String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 }
 
 model Supplier {

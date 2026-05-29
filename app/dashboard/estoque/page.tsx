@@ -9,7 +9,7 @@ export default async function EstoquePage() {
 
   const storeId = session.user.storeId;
 
-  const [inventoryItems, products] = await Promise.all([
+  const [inventoryItems, products, stockExpiries] = await Promise.all([
     prisma.inventoryItem.findMany({
       where: { storeId },
       orderBy: { name: "asc" },
@@ -19,7 +19,29 @@ export default async function EstoquePage() {
       orderBy: { name: "asc" },
       select: { id: true, name: true, emoji: true, price: true },
     }),
+    prisma.stockExpiry.findMany({
+      where: { storeId },
+      include: { inventoryItem: { select: { name: true, unit: true } } },
+      orderBy: { expirationDate: "asc" },
+    }),
   ]);
 
-  return <EstoqueClient initialItems={inventoryItems} products={products} />;
+  const expiries = stockExpiries.map((e) => ({
+    id: e.id,
+    inventoryItemId: e.inventoryItemId,
+    inventoryItemName: e.inventoryItem.name,
+    inventoryItemUnit: e.inventoryItem.unit,
+    batchName: e.batchName,
+    quantity: e.quantity,
+    expirationDate: e.expirationDate.toISOString(),
+    notes: e.notes,
+  }));
+
+  return (
+    <EstoqueClient
+      initialItems={inventoryItems}
+      products={products}
+      initialExpiries={expiries}
+    />
+  );
 }

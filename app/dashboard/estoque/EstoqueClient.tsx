@@ -1,7 +1,10 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
-import { Plus, Pencil, Trash2, Save, X, AlertTriangle, PackageSearch } from "lucide-react";
+import { useState, useTransition } from "react";
+import {
+  Plus, Pencil, Trash2, Save, X, AlertTriangle, PackageSearch,
+  CalendarClock, CalendarX, CalendarCheck,
+} from "lucide-react";
 import {
   createInventoryItem,
   updateInventoryItem,
@@ -11,6 +14,12 @@ import {
   type InventoryItemInput,
   type IngredientInput,
 } from "@/actions/inventory";
+import {
+  createStockExpiry,
+  updateStockExpiry,
+  deleteStockExpiry,
+  type StockExpiryInput,
+} from "@/actions/expiry";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type InventoryItem = {
@@ -38,6 +47,19 @@ type Ingredient = {
   costPrice: number;
 };
 
+type StockExpiry = {
+  id: string;
+  inventoryItemId: string;
+  inventoryItemName: string;
+  inventoryItemUnit: string;
+  batchName: string | null;
+  quantity: number;
+  expirationDate: string;
+  notes: string | null;
+};
+
+type ExpiryStatus = "expired" | "critical" | "warning" | "ok";
+
 const UNITS = ["UN", "KG", "G", "L", "ML", "CX", "PC", "DZ"];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -48,6 +70,65 @@ function fmt(n: number) {
 function fmtQty(n: number, unit: string) {
   return `${n % 1 === 0 ? n : n.toFixed(3).replace(/\.?0+$/, "")} ${unit}`;
 }
+
+function toDateInput(isoStr: string) {
+  return isoStr.slice(0, 10);
+}
+
+function fmtDate(isoStr: string) {
+  const d = new Date(isoStr);
+  return d.toLocaleDateString("pt-BR");
+}
+
+function getExpiryStatus(isoStr: string): ExpiryStatus {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const exp = new Date(isoStr);
+  exp.setHours(0, 0, 0, 0);
+  const diffDays = Math.floor((exp.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  if (diffDays < 0) return "expired";
+  if (diffDays <= 7) return "critical";
+  if (diffDays <= 30) return "warning";
+  return "ok";
+}
+
+function getDaysUntilExpiry(isoStr: string): number {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const exp = new Date(isoStr);
+  exp.setHours(0, 0, 0, 0);
+  return Math.floor((exp.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+function statusLabel(status: ExpiryStatus, days: number) {
+  if (status === "expired") return "Vencido";
+  if (status === "critical") return days === 0 ? "Vence hoje" : `${days}d`;
+  if (status === "warning") return `${days}d`;
+  return `${days}d`;
+}
+
+const STATUS_STYLES: Record<ExpiryStatus, { row: string; badge: string; text: string }> = {
+  expired: {
+    row: "bg-red-500/8 hover:bg-red-500/12",
+    badge: "bg-red-500/15 text-red-400 border border-red-500/25",
+    text: "text-red-400",
+  },
+  critical: {
+    row: "bg-orange-500/8 hover:bg-orange-500/12",
+    badge: "bg-orange-500/15 text-orange-400 border border-orange-500/25",
+    text: "text-orange-400",
+  },
+  warning: {
+    row: "bg-yellow-500/6 hover:bg-yellow-500/10",
+    badge: "bg-yellow-500/15 text-yellow-400 border border-yellow-500/25",
+    text: "text-yellow-400",
+  },
+  ok: {
+    row: "hover:bg-gray-800/30",
+    badge: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
+    text: "text-emerald-400",
+  },
+};
 
 // ─── Insumo Modal ─────────────────────────────────────────────────────────────
 function InsumoModal({
@@ -212,7 +293,6 @@ function AbaInsumos({
 
   return (
     <div>
-      {/* Alert banner */}
       {lowStock.length > 0 && (
         <div className="mb-4 flex items-center gap-2.5 bg-red-500/10 border border-red-500/25 rounded-xl px-4 py-3">
           <AlertTriangle size={16} className="text-red-400 flex-shrink-0" />
@@ -224,7 +304,6 @@ function AbaInsumos({
         </div>
       )}
 
-      {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <p className="text-gray-500 text-sm">{items.length} {items.length === 1 ? "insumo" : "insumos"} cadastrados</p>
         <button
@@ -236,7 +315,6 @@ function AbaInsumos({
         </button>
       </div>
 
-      {/* Table */}
       {items.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 gap-3 text-gray-700">
           <PackageSearch size={40} strokeWidth={1.2} />
@@ -317,7 +395,6 @@ function AbaInsumos({
         </div>
       )}
 
-      {/* Modal */}
       {modal !== null && (
         <InsumoModal
           item={modal === "new" ? null : modal}
@@ -420,7 +497,6 @@ function AbaFichas({
 
   return (
     <div>
-      {/* Product selector */}
       <div className="mb-6">
         <label className="text-gray-400 text-xs font-medium block mb-2">Selecione o Produto</label>
         <select
@@ -451,7 +527,6 @@ function AbaFichas({
 
       {selectedProductId && !loading && (
         <>
-          {/* CMV summary */}
           <div className="grid grid-cols-3 gap-3 mb-6">
             <div className="bg-gray-900 rounded-xl border border-gray-800 px-4 py-3">
               <p className="text-gray-500 text-xs mb-1">Preço de Venda</p>
@@ -469,7 +544,6 @@ function AbaFichas({
             </div>
           </div>
 
-          {/* Ingredients header */}
           <div className="flex items-center justify-between mb-3">
             <p className="text-gray-400 text-sm font-medium">
               Ingredientes / Insumos
@@ -496,7 +570,6 @@ function AbaFichas({
             </div>
           )}
 
-          {/* Ingredients list */}
           {ingredients.length === 0 && inventoryItems.length > 0 && (
             <div className="rounded-xl border border-dashed border-gray-800 flex flex-col items-center justify-center py-10 gap-2 text-gray-700">
               <span className="text-3xl opacity-40">🧪</span>
@@ -553,7 +626,6 @@ function AbaFichas({
                       </td>
                     </tr>
                   ))}
-                  {/* Total row */}
                   <tr className="border-t-2 border-gray-700 bg-gray-900/40">
                     <td className="px-4 py-2.5 text-gray-400 text-xs font-bold uppercase tracking-wider" colSpan={2}>
                       CMV Total
@@ -568,7 +640,6 @@ function AbaFichas({
             </div>
           )}
 
-          {/* Save button */}
           <div className="flex justify-end">
             <button
               onClick={handleSave}
@@ -589,35 +660,375 @@ function AbaFichas({
   );
 }
 
+// ─── Expiry Modal ─────────────────────────────────────────────────────────────
+function ExpiryModal({
+  entry,
+  inventoryItems,
+  onClose,
+  onSaved,
+}: {
+  entry: StockExpiry | null;
+  inventoryItems: InventoryItem[];
+  onClose: () => void;
+  onSaved: (entries: StockExpiry[]) => void;
+}) {
+  const isEdit = !!entry;
+  const today = new Date().toISOString().slice(0, 10);
+
+  const [form, setForm] = useState<StockExpiryInput>({
+    inventoryItemId: entry?.inventoryItemId ?? (inventoryItems[0]?.id ?? ""),
+    batchName: entry?.batchName ?? "",
+    quantity: entry?.quantity ?? 0,
+    expirationDate: entry ? toDateInput(entry.expirationDate) : today,
+    notes: entry?.notes ?? "",
+  });
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState("");
+
+  function set<K extends keyof StockExpiryInput>(k: K, v: StockExpiryInput[K]) {
+    setForm(f => ({ ...f, [k]: v }));
+  }
+
+  function handleSubmit() {
+    if (!form.inventoryItemId) { setError("Selecione um insumo."); return; }
+    if (!form.expirationDate) { setError("Data de validade é obrigatória."); return; }
+    setError("");
+    startTransition(async () => {
+      try {
+        if (isEdit) {
+          await updateStockExpiry(entry.id, form);
+        } else {
+          await createStockExpiry(form);
+        }
+        onClose();
+      } catch {
+        setError("Erro ao salvar. Tente novamente.");
+      }
+    });
+  }
+
+  if (inventoryItems.length === 0) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+        <div className="w-full max-w-sm bg-gray-900 rounded-2xl border border-gray-800 p-6 text-center">
+          <p className="text-gray-400 text-sm mb-4">
+            Cadastre insumos na aba <strong className="text-white">Insumos</strong> antes de registrar validades.
+          </p>
+          <button onClick={onClose} className="bg-gray-800 text-gray-300 px-4 py-2 rounded-lg text-sm hover:bg-gray-700 transition-colors">
+            Fechar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+      <div className="w-full max-w-md bg-gray-900 rounded-2xl border border-gray-800 flex flex-col">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800">
+          <h2 className="text-white font-bold">{isEdit ? "Editar Validade" : "Registrar Validade"}</h2>
+          <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors">
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="p-5 space-y-4">
+          <div>
+            <label className="text-gray-400 text-xs font-medium block mb-1.5">Insumo *</label>
+            <select
+              value={form.inventoryItemId}
+              onChange={e => set("inventoryItemId", e.target.value)}
+              className="w-full bg-gray-800 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            >
+              {inventoryItems.map(i => (
+                <option key={i.id} value={i.id}>{i.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-gray-400 text-xs font-medium block mb-1.5">Lote / Identificação</label>
+              <input
+                value={form.batchName ?? ""}
+                onChange={e => set("batchName", e.target.value)}
+                placeholder="Ex: Lote A, NF 1234..."
+                className="w-full bg-gray-800 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 placeholder:text-gray-600"
+              />
+            </div>
+
+            <div>
+              <label className="text-gray-400 text-xs font-medium block mb-1.5">Quantidade</label>
+              <input
+                type="number" min={0} step="0.001"
+                value={form.quantity}
+                onChange={e => set("quantity", parseFloat(e.target.value) || 0)}
+                className="w-full bg-gray-800 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 tabular-nums"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-gray-400 text-xs font-medium block mb-1.5">Data de Validade *</label>
+            <input
+              type="date"
+              value={form.expirationDate}
+              onChange={e => set("expirationDate", e.target.value)}
+              className="w-full bg-gray-800 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 [color-scheme:dark]"
+            />
+          </div>
+
+          <div>
+            <label className="text-gray-400 text-xs font-medium block mb-1.5">Observações</label>
+            <input
+              value={form.notes ?? ""}
+              onChange={e => set("notes", e.target.value)}
+              placeholder="Opcional"
+              className="w-full bg-gray-800 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 placeholder:text-gray-600"
+            />
+          </div>
+
+          {error && <p className="text-red-400 text-xs">{error}</p>}
+        </div>
+
+        <div className="px-5 pb-5 flex gap-2">
+          <button
+            onClick={onClose}
+            className="flex-1 py-2 rounded-lg border border-gray-700 text-gray-400 hover:text-white text-sm transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={isPending}
+            className="flex-1 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition-colors disabled:opacity-50"
+          >
+            {isPending ? "Salvando..." : "Salvar"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Aba Validades ────────────────────────────────────────────────────────────
+function AbaValidades({
+  entries,
+  setEntries,
+  inventoryItems,
+}: {
+  entries: StockExpiry[];
+  setEntries: (entries: StockExpiry[]) => void;
+  inventoryItems: InventoryItem[];
+}) {
+  const [modal, setModal] = useState<"new" | StockExpiry | null>(null);
+  const [filter, setFilter] = useState<"all" | ExpiryStatus>("all");
+  const [, startTransition] = useTransition();
+
+  function handleDelete(id: string) {
+    if (!confirm("Excluir este registro de validade?")) return;
+    startTransition(async () => {
+      await deleteStockExpiry(id);
+      setEntries(entries.filter(e => e.id !== id));
+    });
+  }
+
+  // Summary counts
+  const expiredCount = entries.filter(e => getExpiryStatus(e.expirationDate) === "expired").length;
+  const criticalCount = entries.filter(e => getExpiryStatus(e.expirationDate) === "critical").length;
+  const warningCount = entries.filter(e => getExpiryStatus(e.expirationDate) === "warning").length;
+  const okCount = entries.filter(e => getExpiryStatus(e.expirationDate) === "ok").length;
+
+  const filtered = filter === "all" ? entries : entries.filter(e => getExpiryStatus(e.expirationDate) === filter);
+
+  return (
+    <div>
+      {/* Summary cards */}
+      <div className="grid grid-cols-4 gap-3 mb-5">
+        {([
+          { key: "expired" as ExpiryStatus, label: "Vencidos", count: expiredCount, icon: CalendarX, color: "text-red-400", bg: "bg-red-500/8 border-red-500/20", activeBg: "bg-red-500/20 border-red-500/40" },
+          { key: "critical" as ExpiryStatus, label: "Até 7 dias", count: criticalCount, icon: CalendarClock, color: "text-orange-400", bg: "bg-orange-500/8 border-orange-500/20", activeBg: "bg-orange-500/20 border-orange-500/40" },
+          { key: "warning" as ExpiryStatus, label: "Até 30 dias", count: warningCount, icon: CalendarClock, color: "text-yellow-400", bg: "bg-yellow-500/8 border-yellow-500/20", activeBg: "bg-yellow-500/20 border-yellow-500/40" },
+          { key: "ok" as ExpiryStatus, label: "OK", count: okCount, icon: CalendarCheck, color: "text-emerald-400", bg: "bg-emerald-500/6 border-emerald-500/15", activeBg: "bg-emerald-500/15 border-emerald-500/30" },
+        ]).map(card => {
+          const Icon = card.icon;
+          const isActive = filter === card.key;
+          return (
+            <button
+              key={card.key}
+              onClick={() => setFilter(isActive ? "all" : card.key)}
+              className={`rounded-xl border px-3 py-3 text-left transition-all ${isActive ? card.activeBg : card.bg} hover:opacity-90`}
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <Icon size={14} className={card.color} />
+                <span className="text-gray-500 text-[11px] font-medium">{card.label}</span>
+              </div>
+              <p className={`font-bold text-xl tabular-nums ${card.color}`}>{card.count}</p>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-gray-500 text-sm">
+          {filter === "all" ? `${entries.length} ${entries.length === 1 ? "registro" : "registros"}` : `${filtered.length} filtrado(s)`}
+        </p>
+        <div className="flex items-center gap-2">
+          {filter !== "all" && (
+            <button
+              onClick={() => setFilter("all")}
+              className="text-xs text-gray-500 hover:text-gray-300 border border-gray-700 px-2.5 py-1.5 rounded-lg transition-colors"
+            >
+              Limpar filtro
+            </button>
+          )}
+          <button
+            onClick={() => setModal("new")}
+            className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold px-3 py-2 rounded-lg transition-colors"
+          >
+            <Plus size={15} />
+            Registrar Validade
+          </button>
+        </div>
+      </div>
+
+      {/* Table or empty state */}
+      {entries.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 gap-3 text-gray-700">
+          <CalendarClock size={40} strokeWidth={1.2} />
+          <p className="text-sm">Nenhuma validade registrada ainda.</p>
+          <button
+            onClick={() => setModal("new")}
+            className="text-emerald-500 text-sm hover:text-emerald-400 underline underline-offset-2"
+          >
+            Registrar primeira validade
+          </button>
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 gap-2 text-gray-700">
+          <CalendarCheck size={32} strokeWidth={1.2} />
+          <p className="text-sm">Nenhum item nesta categoria.</p>
+        </div>
+      ) : (
+        <div className="rounded-xl border border-gray-800 overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-800 bg-gray-900/60">
+                <th className="text-left px-4 py-3 text-gray-500 font-medium text-xs uppercase tracking-wider">Insumo</th>
+                <th className="text-left px-4 py-3 text-gray-500 font-medium text-xs uppercase tracking-wider">Lote</th>
+                <th className="text-right px-4 py-3 text-gray-500 font-medium text-xs uppercase tracking-wider">Qtd</th>
+                <th className="text-right px-4 py-3 text-gray-500 font-medium text-xs uppercase tracking-wider">Validade</th>
+                <th className="text-center px-4 py-3 text-gray-500 font-medium text-xs uppercase tracking-wider">Status</th>
+                <th className="px-4 py-3 w-20" />
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((entry, idx) => {
+                const status = getExpiryStatus(entry.expirationDate);
+                const days = getDaysUntilExpiry(entry.expirationDate);
+                const styles = STATUS_STYLES[status];
+                return (
+                  <tr
+                    key={entry.id}
+                    className={`border-b border-gray-800 last:border-0 transition-colors ${styles.row} ${
+                      idx % 2 === 0 && status === "ok" ? "bg-gray-900/20" : ""
+                    }`}
+                  >
+                    <td className="px-4 py-3">
+                      <span className={`font-medium ${status !== "ok" ? styles.text : "text-white"}`}>
+                        {entry.inventoryItemName}
+                      </span>
+                      {entry.notes && (
+                        <p className="text-gray-600 text-xs mt-0.5">{entry.notes}</p>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-gray-500 text-xs font-mono">
+                      {entry.batchName || "—"}
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums text-gray-400">
+                      {fmtQty(entry.quantity, entry.inventoryItemUnit)}
+                    </td>
+                    <td className={`px-4 py-3 text-right tabular-nums font-medium ${styles.text}`}>
+                      {fmtDate(entry.expirationDate)}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${styles.badge}`}>
+                        {status === "expired" ? "Vencido" : statusLabel(status, days)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          onClick={() => setModal(entry)}
+                          className="p-1.5 rounded-lg text-gray-600 hover:text-white hover:bg-gray-700 transition-colors"
+                        >
+                          <Pencil size={14} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(entry.id)}
+                          className="p-1.5 rounded-lg text-gray-600 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {modal !== null && (
+        <ExpiryModal
+          entry={modal === "new" ? null : modal}
+          inventoryItems={inventoryItems}
+          onClose={() => setModal(null)}
+          onSaved={setEntries}
+        />
+      )}
+    </div>
+  );
+}
+
 // ─── Root component ───────────────────────────────────────────────────────────
-type Tab = "insumos" | "fichas";
+type Tab = "insumos" | "fichas" | "validades";
 
 export function EstoqueClient({
   initialItems,
   products,
+  initialExpiries,
 }: {
   initialItems: InventoryItem[];
   products: Product[];
+  initialExpiries: StockExpiry[];
 }) {
   const [tab, setTab] = useState<Tab>("insumos");
   const [items, setItems] = useState<InventoryItem[]>(initialItems);
+  const [expiries, setExpiries] = useState<StockExpiry[]>(initialExpiries);
 
   const lowCount = items.filter(i => i.currentStock <= i.minStock).length;
+  const urgentExpiryCount = expiries.filter(e => {
+    const s = getExpiryStatus(e.expirationDate);
+    return s === "expired" || s === "critical";
+  }).length;
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
-      {/* Page header */}
       <div className="mb-6">
         <h1 className="text-white font-bold text-xl">Estoque</h1>
-        <p className="text-gray-500 text-sm mt-1">Gerencie insumos e fichas técnicas dos seus produtos.</p>
+        <p className="text-gray-500 text-sm mt-1">Gerencie insumos, fichas técnicas e validades dos seus produtos.</p>
       </div>
 
       {/* Tabs */}
       <div className="flex gap-1 bg-gray-900 border border-gray-800 rounded-xl p-1 w-fit mb-6">
         {([
-          { key: "insumos", label: "Insumos", icon: "📦" },
-          { key: "fichas", label: "Fichas Técnicas", icon: "🧪" },
-        ] as { key: Tab; label: string; icon: string }[]).map(t => (
+          { key: "insumos", label: "Insumos", icon: "📦", badge: lowCount },
+          { key: "fichas", label: "Fichas Técnicas", icon: "🧪", badge: 0 },
+          { key: "validades", label: "Validades", icon: "📅", badge: urgentExpiryCount },
+        ] as { key: Tab; label: string; icon: string; badge: number }[]).map(t => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
@@ -629,21 +1040,21 @@ export function EstoqueClient({
           >
             <span>{t.icon}</span>
             <span>{t.label}</span>
-            {t.key === "insumos" && lowCount > 0 && (
-              <span className="bg-red-500 text-white text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center">
-                {lowCount}
+            {t.badge > 0 && (
+              <span className={`text-white text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center ${
+                t.key === "validades" ? "bg-orange-500" : "bg-red-500"
+              }`}>
+                {t.badge}
               </span>
             )}
           </button>
         ))}
       </div>
 
-      {/* Tab content */}
-      {tab === "insumos" && (
-        <AbaInsumos items={items} setItems={setItems} />
-      )}
-      {tab === "fichas" && (
-        <AbaFichas products={products} inventoryItems={items} />
+      {tab === "insumos" && <AbaInsumos items={items} setItems={setItems} />}
+      {tab === "fichas" && <AbaFichas products={products} inventoryItems={items} />}
+      {tab === "validades" && (
+        <AbaValidades entries={expiries} setEntries={setExpiries} inventoryItems={items} />
       )}
     </div>
   );
