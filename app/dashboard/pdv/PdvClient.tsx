@@ -304,7 +304,7 @@ export function PdvClient({ storeName, acceptsPickup, acceptsLocal, products, ca
                 <span className="text-sm">Nenhum produto encontrado</span>
               </div>
             ) : (
-              <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))" }}>
+              <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(7, minmax(0, 1fr))" }}>
                 {filteredProducts.map(product => {
                   const qty = cart[product.id] ?? 0;
                   return (
@@ -335,69 +335,83 @@ export function PdvClient({ storeName, acceptsPickup, acceptsLocal, products, ca
           </div>
         </div>
 
-        {/* ══ RIGHT: Comanda (260px) ═══════════════════════════════════════ */}
-        <div className="w-[260px] flex-shrink-0 flex flex-col overflow-hidden bg-gray-900/30 border-l border-gray-800/60">
+        {/* ══ RIGHT: Comanda (310px) ═══════════════════════════════════════ */}
+        <div className="w-[310px] flex-shrink-0 flex flex-col overflow-hidden bg-[#0d0d14] border-l border-gray-800/60">
 
-          {/* Delivery method */}
-          <div className="flex-shrink-0 px-3 pt-2.5 pb-2 border-b border-gray-800/60">
-            <p className="text-gray-600 text-[9px] font-bold uppercase tracking-widest mb-1.5">Tipo de venda</p>
-            <div className={`grid gap-1 ${deliveryOpts.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
+          {/* ─ Tipo de venda ─────────────────────────────────────────────── */}
+          <div className="flex-shrink-0 px-4 pt-3 pb-3 border-b border-gray-800/60">
+            <p className="text-gray-600 text-[9px] font-bold uppercase tracking-widest mb-2">Tipo de venda</p>
+            <div className={`grid gap-1.5 ${deliveryOpts.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
               {deliveryOpts.map(([method, icon, label]) => (
                 <button key={method} onClick={() => setDeliveryMethod(method)}
-                  className={`flex flex-col items-center gap-0.5 py-2 rounded-lg text-[10px] font-semibold transition-colors ${
+                  className={`flex flex-col items-center gap-1 py-2.5 rounded-xl text-xs font-semibold transition-all ${
                     deliveryMethod === method
-                      ? "bg-emerald-500 text-white"
-                      : "bg-gray-800/60 text-gray-500 hover:text-white border border-gray-800"
+                      ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20"
+                      : "bg-gray-800/50 text-gray-500 hover:text-white hover:bg-gray-800 border border-gray-800"
                   }`}
                 >
-                  <span className="text-lg">{icon}</span>
+                  <span className="text-xl leading-none">{icon}</span>
                   <span>{label}</span>
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Customer fields */}
-          <div className="flex-shrink-0 px-3 py-2 border-b border-gray-800/60 space-y-1.5">
-            <div className="grid grid-cols-2 gap-1.5">
+          {/* ─ Dados do cliente ──────────────────────────────────────────── */}
+          <div className="flex-shrink-0 px-4 py-3 border-b border-gray-800/60 space-y-2">
+            <div className="grid grid-cols-2 gap-2">
               <input value={customerName} onChange={e => setCustomerName(e.target.value)}
                 placeholder="Nome (opcional)"
-                className="bg-gray-800/60 border border-gray-800 text-white text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 placeholder:text-gray-600 w-full" />
+                className="bg-gray-800/50 border border-gray-800 text-white text-xs rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 placeholder:text-gray-600 w-full" />
               <input value={customerPhone} onChange={e => setCustomerPhone(e.target.value.replace(/\D/g, ""))}
-                placeholder="Telefone" inputMode="tel" maxLength={11}
-                className="bg-gray-800/60 border border-gray-800 text-white text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 placeholder:text-gray-600 w-full" />
+                placeholder="Telefone (opcional)" inputMode="tel" maxLength={11}
+                className="bg-gray-800/50 border border-gray-800 text-white text-xs rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 placeholder:text-gray-600 w-full" />
             </div>
             {deliveryMethod === "LOCAL" && (
               <input value={localIdentifier} onChange={e => setLocalIdentifier(e.target.value)}
                 placeholder="Mesa, Comanda, Carro... (opcional)"
-                className="w-full bg-gray-800/60 border border-gray-800 text-white text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 placeholder:text-gray-600" />
+                className="w-full bg-gray-800/50 border border-gray-800 text-white text-xs rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 placeholder:text-gray-600" />
             )}
           </div>
 
-          {/* Cart items */}
+          {/* ─ Itens do carrinho ─────────────────────────────────────────── */}
           <div className="flex-1 overflow-y-auto">
             {cartItems.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full gap-2 text-gray-700">
-                <span className="text-4xl opacity-30">🛒</span>
-                <span className="text-xs text-center px-4">Clique nos produtos<br/>para adicionar à venda</span>
+              <div className="flex flex-col items-center justify-center h-full gap-3 text-gray-700 px-6 text-center">
+                <div className="w-14 h-14 rounded-2xl bg-gray-800/40 border border-gray-800 flex items-center justify-center">
+                  <span className="text-2xl opacity-40">🛒</span>
+                </div>
+                <div>
+                  <p className="text-gray-600 text-xs font-medium">Carrinho vazio</p>
+                  <p className="text-gray-700 text-[10px] mt-0.5">Clique nos produtos para adicionar</p>
+                </div>
               </div>
             ) : (
-              <div className="divide-y divide-gray-800/40">
+              <div className="divide-y divide-gray-800/40 px-1">
                 {cartItems.map(({ product, qty }) => (
-                  <div key={product.id} className="flex items-center gap-2 px-3 py-2">
-                    <span className="text-base flex-shrink-0">{product.emoji}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white text-xs font-medium truncate">{product.name}</p>
-                      <p className="text-gray-600 text-[10px]">{fmt(product.price)} un.</p>
+                  <div key={product.id} className="flex items-center gap-2.5 px-3 py-2.5">
+                    {/* thumb */}
+                    <div className="w-9 h-9 rounded-lg bg-gray-800 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                      {product.imageUrl
+                        ? <img src={product.imageUrl} alt={product.name} className="w-full h-full object-contain p-0.5" />
+                        : <span className="text-lg">{product.emoji}</span>
+                      }
                     </div>
-                    <div className="flex items-center gap-0.5 flex-shrink-0">
+                    {/* info */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white text-xs font-medium leading-tight truncate">{product.name}</p>
+                      <p className="text-gray-600 text-[10px] mt-0.5">{fmt(product.price)} / un.</p>
+                    </div>
+                    {/* qty controls */}
+                    <div className="flex items-center gap-1 flex-shrink-0">
                       <button onClick={() => setQty(product.id, qty - 1)}
-                        className="w-6 h-6 rounded-md bg-gray-800 hover:bg-red-900/40 hover:text-red-400 text-gray-300 text-sm flex items-center justify-center transition-colors">−</button>
+                        className="w-6 h-6 rounded-md bg-gray-800 hover:bg-red-900/40 hover:text-red-400 text-gray-400 flex items-center justify-center text-sm font-bold transition-colors">−</button>
                       <span className="text-white text-xs font-bold w-5 text-center tabular-nums">{qty}</span>
                       <button onClick={() => setQty(product.id, qty + 1)}
-                        className="w-6 h-6 rounded-md bg-gray-800 hover:bg-emerald-900/40 hover:text-emerald-400 text-gray-300 text-sm flex items-center justify-center transition-colors">+</button>
+                        className="w-6 h-6 rounded-md bg-gray-800 hover:bg-emerald-900/40 hover:text-emerald-400 text-gray-400 flex items-center justify-center text-sm font-bold transition-colors">+</button>
                     </div>
-                    <span className="text-emerald-400 text-xs font-bold w-12 text-right flex-shrink-0 tabular-nums">
+                    {/* subtotal */}
+                    <span className="text-emerald-400 text-xs font-bold w-14 text-right flex-shrink-0 tabular-nums">
                       {fmt(product.price * qty)}
                     </span>
                   </div>
@@ -406,42 +420,47 @@ export function PdvClient({ storeName, acceptsPickup, acceptsLocal, products, ca
             )}
           </div>
 
-          {/* ── Footer ──────────────────────────────────────────────────── */}
-          <div className="flex-shrink-0 border-t border-gray-800/60 px-3 pt-2.5 pb-3 space-y-2">
+          {/* ─ Footer: total + pagamento + finalizar ─────────────────────── */}
+          <div className="flex-shrink-0 border-t border-gray-800/60 px-4 pt-3 pb-4 space-y-2.5">
             {/* Total */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between py-1">
               <span className="text-gray-500 text-xs font-semibold uppercase tracking-wider">Total</span>
-              <span className="text-white text-xl font-black tabular-nums">{fmt(total)}</span>
+              <span className="text-white text-2xl font-black tabular-nums">{fmt(total)}</span>
             </div>
 
-            {/* Payment */}
-            <div className="grid grid-cols-2 gap-1">
+            {/* Pagamento */}
+            <div className="grid grid-cols-2 gap-2">
               {(["pix", "dinheiro"] as PayMethod[]).map(m => (
                 <button key={m} onClick={() => setPayMethod(m)}
-                  className={`py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                  className={`py-2 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-1.5 ${
                     payMethod === m
                       ? "bg-gray-700 text-white ring-1 ring-gray-600"
-                      : "bg-gray-800/60 text-gray-500 hover:text-white border border-gray-800"
+                      : "bg-gray-800/50 text-gray-500 hover:text-white hover:bg-gray-800 border border-gray-800"
                   }`}>
-                  {m === "pix" ? "💳 PIX" : "💵 Dinheiro"}
+                  <span>{m === "pix" ? "💳" : "💵"}</span>
+                  <span>{m === "pix" ? "PIX" : "Dinheiro"}</span>
                 </button>
               ))}
             </div>
 
-            {/* Submit */}
+            {/* Finalizar */}
             <button onClick={handleSubmit} disabled={submitting || cartItems.length === 0}
-              className="w-full bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-2.5 rounded-xl text-sm transition-all">
+              className="w-full bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl text-sm transition-all">
               {submitting ? "Registrando..." : cartItems.length === 0 ? "Adicione produtos" : `✓ Finalizar  ${fmt(total)}`}
             </button>
 
             {/* NFC-e */}
             <button onClick={handleNFCe} disabled={loadingNfce || cartItems.length === 0}
-              className="w-full flex items-center justify-center gap-1.5 border border-gray-800 hover:border-gray-700 text-gray-600 hover:text-gray-300 text-xs font-semibold py-2 rounded-xl transition-colors disabled:opacity-40">
-              {loadingNfce ? <><Loader2 size={12} className="animate-spin" /> Gerando...</> : <><FileText size={12} /> Gerar NFC-e (JSON)</>}
+              className="w-full flex items-center justify-center gap-1.5 border border-gray-800/80 hover:border-gray-700 text-gray-600 hover:text-gray-400 text-xs font-medium py-2 rounded-xl transition-colors disabled:opacity-30">
+              {loadingNfce
+                ? <><Loader2 size={12} className="animate-spin" /> Gerando...</>
+                : <><FileText size={12} /> Gerar NFC-e (JSON)</>
+              }
             </button>
 
             {cartItems.length > 0 && (
-              <button onClick={clearCart} className="w-full text-gray-700 hover:text-red-500 text-[10px] py-0.5 transition-colors">
+              <button onClick={clearCart}
+                className="w-full text-gray-700 hover:text-red-500 text-[10px] transition-colors text-center">
                 Limpar carrinho
               </button>
             )}

@@ -3,6 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { QrSection } from "./QrSection";
 import { DisconnectButton } from "./DisconnectButton";
 
+// Força re-render a cada navegação — evita cache stale do status do WhatsApp
+export const dynamic = "force-dynamic";
+
 export default async function DashboardPage() {
   const session = await auth();
   if (!session?.user.storeId) return null;
