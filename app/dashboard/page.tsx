@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { getWhatsAppConnectionStatus } from "@/lib/whatsapp-status";
 import { QrSection } from "./QrSection";
 import { DisconnectButton } from "./DisconnectButton";
 
@@ -12,21 +13,12 @@ export default async function DashboardPage() {
 
   const storeId = session.user.storeId;
 
-  const [totalMessages, uniqueContacts, store] = await Promise.all([
+  const [totalMessages, uniqueContacts] = await Promise.all([
     prisma.botMessage.count({ where: { storeId, direction: "in" } }),
     prisma.botMessage.groupBy({ by: ["fromPhone"], where: { storeId } }).then(r => r.length),
-    prisma.store.findUnique({ where: { id: storeId } }),
   ]);
 
-  const { checkStoreConnection } = await import("@/actions/store");
-  const connected = await checkStoreConnection(storeId);
-  const wasConnected = store?.evolutionConnectionState === "open";
-  if (connected !== wasConnected) {
-    await prisma.store.update({
-      where: { id: storeId },
-      data: { evolutionConnectionState: connected ? "open" : "close" },
-    });
-  }
+  const connected = await getWhatsAppConnectionStatus(storeId);
 
   return (
     <div className="p-6 lg:p-8">
