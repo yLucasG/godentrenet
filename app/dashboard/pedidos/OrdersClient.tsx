@@ -271,7 +271,7 @@ function KanbanColumn({
   busy: boolean;
 }) {
   return (
-    <div className="flex flex-col flex-1 min-w-[280px] max-w-[420px] overflow-hidden rounded-2xl bg-gray-900/40 border border-gray-800">
+    <div className="flex flex-col flex-1 min-w-[280px] max-w-[420px] overflow-hidden rounded-2xl bg-gray-900 border border-gray-800">
       {/* Column header */}
       <div
         className="flex-shrink-0 px-4 py-3 flex items-center justify-between"
