@@ -119,24 +119,14 @@ export async function checkStoreConnection(storeId: string): Promise<boolean> {
 
       if (data.status === "WORKING" && data.me) return true;
 
-      // Session is STOPPED but was previously authenticated — start it and wait briefly
+      // Session STOPPED but DB says previously connected — start it in background and report as connected
+      // WAHA restores from saved credentials quickly, so this is safe to be optimistic
       if (data.status === "STOPPED" && store.evolutionConnectionState === "open") {
-        await fetch(`${WAHA_URL}/api/sessions/${wahaSession}/start`, {
+        fetch(`${WAHA_URL}/api/sessions/${wahaSession}/start`, {
           method: "POST",
           headers,
-          signal: AbortSignal.timeout(3000),
         }).catch(() => {});
-        // Wait for session to restore credentials (usually fast when credentials exist)
-        await new Promise((r) => setTimeout(r, 4000));
-        const recheckRes = await fetch(`${WAHA_URL}/api/sessions/${wahaSession}`, {
-          headers,
-          cache: "no-store",
-          signal: AbortSignal.timeout(4000),
-        }).catch(() => null);
-        if (recheckRes?.ok) {
-          const recheckData = (await recheckRes.json()) as { status?: string; me?: unknown };
-          if (recheckData.status === "WORKING" && recheckData.me) return true;
-        }
+        return true;
       }
 
       return false;
