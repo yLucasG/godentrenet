@@ -464,10 +464,10 @@ function FeaturedCarousel({
   if (featured.length === 0) return null;
 
   return (
-    <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-3 scrollbar-hide">
+    <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-3 scrollbar-hide sm:mx-0 sm:px-0 sm:overflow-visible sm:snap-none">
       {featured.map((p, i) => (
         <article key={p.id}
-          className="animate-rise group relative w-[82%] shrink-0 snap-center overflow-hidden rounded-[1.75rem] border border-border/60 bg-gradient-to-br from-card to-background cursor-pointer"
+          className="animate-rise group relative w-[82%] shrink-0 snap-center overflow-hidden rounded-[1.75rem] border border-border/60 bg-gradient-to-br from-card to-background cursor-pointer sm:w-[calc(50%-8px)] sm:shrink-0"
           style={{ animationDelay: `${i * 80}ms` }}
           onClick={() => onOpenProduct(p)}
         >
@@ -644,7 +644,7 @@ function ProductsView({
         {visibleCategories.length > 0 && (
           <div className="mt-6">
             <SectionLabel>Categorias</SectionLabel>
-            <div className="-mx-1 mt-3 flex gap-3 overflow-x-auto px-1 pb-2 scrollbar-hide">
+            <div className="-mx-1 mt-3 flex flex-nowrap gap-3 overflow-x-auto px-1 pb-2 scrollbar-hide sm:flex-wrap sm:overflow-visible sm:pb-0">
               {[{ id: "all", label: "Tudo", emoji: "✦" }, ...visibleCategories.map(c => ({ id: c.id, label: c.name, emoji: c.emoji }))].map(cat => (
                 <button key={cat.id} onClick={() => setActiveCat(cat.id)}
                   className={`flex shrink-0 items-center gap-2 rounded-2xl border px-5 py-3 text-sm font-semibold whitespace-nowrap transition-all ${
