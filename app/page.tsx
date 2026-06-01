@@ -184,7 +184,7 @@ export default function LandingPage() {
 
         /* ── Nav ── */
         .lp-nav { position:fixed; top:0; left:0; right:0; z-index:100; transition:all .3s ease; padding:20px 0; }
-        .lp-nav.lp-on { margin:12px 16px 0; border-radius:18px; background:rgba(10,10,10,.97); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,.06); box-shadow:0 8px 40px rgba(0,0,0,.7); padding:12px 0; }
+        .lp-nav.lp-on { background:rgba(10,10,10,.97); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); border-bottom:1px solid rgba(255,255,255,.06); padding:12px 0; }
 
         /* ── CTA Button (amber pill) ── */
         .cta-amber {
@@ -274,7 +274,7 @@ export default function LandingPage() {
           .hero-split { flex-direction:column !important; }
           .hero-card-col { display:none !important; }
           .nav-links { display:none !important; }
-          .lp-nav.lp-on { margin:8px 10px 0; }
+          .lp-nav.lp-on { margin:0; border-radius:0; }
           .bento { grid-template-columns:1fr !important; }
           .b-wide,.b-tall { grid-column:auto !important; grid-row:auto !important; }
           .stats-grid { grid-template-columns:1fr 1fr !important; }
@@ -334,7 +334,7 @@ export default function LandingPage() {
               {/* Badge */}
               <div className="h1" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: 100, padding: "8px 18px", marginBottom: 28 }}>
                 <span className="status-dot" />
-                <span style={{ color: "#FCD34D", fontSize: ".7rem", fontWeight: 700, letterSpacing: ".12em", textTransform: "uppercase" }}>Bot WhatsApp para lojistas</span>
+                <span style={{ color: "#FCD34D", fontSize: ".7rem", fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase" }}>sistema completo de gestão, vitrine e robô de whatsapp para comerciantes</span>
               </div>
 
               <h1 className="h2" style={{ fontSize: "clamp(2.6rem,6.5vw,5rem)", fontWeight: 800, lineHeight: 1.04, marginBottom: 24, color: "#fff" }}>
@@ -343,7 +343,7 @@ export default function LandingPage() {
               </h1>
 
               <p className="h3" style={{ color: "#6B7280", fontSize: "clamp(1rem,2vw,1.15rem)", lineHeight: 1.7, maxWidth: 520, marginBottom: 40 }}>
-                Bot inteligente que atende clientes, envia cardápio e gerencia pedidos automaticamente — enquanto você foca no crescimento do negócio.
+                Plataforma completa com gestão de estoque, vitrine digital e robô de WhatsApp que atende seus clientes automaticamente — tudo em um só lugar.
               </p>
 
               <div className="h4 hero-ctas" style={{ display: "flex", flexWrap: "wrap", gap: 14, marginBottom: 56 }}>
@@ -501,7 +501,7 @@ export default function LandingPage() {
             <div className="lp-reveal s2 bc" style={{ gridColumn: "2 / 3", gridRow: 1 }}>
               <div className="ic"><GridIcon /></div>
               <h3 style={{ color: "#fff", fontSize: "1.05rem", fontWeight: 700, marginBottom: 8 }}>Catálogo digital</h3>
-              <p style={{ color: "#6B7280", fontSize: ".87rem", lineHeight: 1.6 }}>Produtos ilimitados com nome, preço e emoji. Organize por categorias.</p>
+              <p style={{ color: "#6B7280", fontSize: ".87rem", lineHeight: 1.6 }}>Produtos ilimitados com nome, preço e imagem do produto. Organize por categorias.</p>
             </div>
 
             {/* Dashboard */}
@@ -647,8 +647,8 @@ export default function LandingPage() {
               <div style={{ position: "absolute", top: "-50px", left: "50%", transform: "translateX(-50%)", width: 400, height: 300, background: "radial-gradient(circle,rgba(245,158,11,0.2) 0%,transparent 70%)", borderRadius: "50%", pointerEvents: "none" }} />
 
               <h2 style={{ position: "relative", fontSize: "clamp(2rem,5vw,3.2rem)", fontWeight: 800, color: "#fff", lineHeight: 1.1, marginBottom: 16 }}>
-                Comece hoje.<br />
-                <span className="amber-text">Venda mais amanhã.</span>
+                Comece agora.<br />
+                <span className="amber-text">Venda mais hoje mesmo!</span>
               </h2>
               <p style={{ position: "relative", color: "#6B7280", maxWidth: 400, margin: "0 auto 40px", lineHeight: 1.65, fontSize: ".95rem" }}>
                 Configure em 5 minutos. Seu bot já pode estar respondendo clientes ainda hoje.
