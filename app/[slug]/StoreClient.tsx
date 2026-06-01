@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createOrder } from "@/actions/order";
 import {
   Sparkles, Search, X, Plus, Minus, ShoppingBag, ArrowRight, Tag,
+  ChevronLeft, ChevronRight,
 } from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -490,11 +491,11 @@ function FeaturedCarousel({
               </span>
             </div>
             <h3 className="font-display mt-3 text-xl font-extrabold leading-tight text-foreground">{p.name}</h3>
-            <div className="mt-4 flex items-center justify-between">
+            <div className="mt-4 flex items-center justify-between sm:flex-col sm:items-start sm:gap-3">
               <span className="font-display text-2xl font-extrabold text-glow">{fmt(p.price)}</span>
               <button type="button"
                 onClick={e => { e.stopPropagation(); onAdd(p); }}
-                className="glow-primary flex items-center gap-2 rounded-xl bg-gradient-to-br from-primary to-accent px-4 py-2.5 text-sm font-bold text-primary-foreground transition-transform active:scale-95">
+                className="glow-primary flex items-center gap-2 rounded-xl bg-gradient-to-br from-primary to-accent px-4 py-2.5 text-sm font-bold text-primary-foreground transition-transform active:scale-95 sm:w-full sm:justify-center">
                 <Plus className="size-4" strokeWidth={2.5} />
                 Adicionar
               </button>
@@ -572,6 +573,10 @@ function ProductsView({
 }) {
   const [search, setSearch] = useState("");
   const [activeCat, setActiveCat] = useState("all");
+  const catScrollRef = useRef<HTMLDivElement>(null);
+  function scrollCats(dir: "left" | "right") {
+    catScrollRef.current?.scrollBy({ left: dir === "right" ? 220 : -220, behavior: "smooth" });
+  }
 
   const visibleCategories = useMemo(() => {
     const usedIds = new Set(products.map(p => p.categoryId).filter(Boolean));
@@ -644,19 +649,39 @@ function ProductsView({
         {visibleCategories.length > 0 && (
           <div className="mt-6">
             <SectionLabel>Categorias</SectionLabel>
-            <div className="-mx-1 mt-3 flex flex-nowrap gap-3 overflow-x-auto px-1 pb-2 scrollbar-hide sm:flex-wrap sm:overflow-visible sm:pb-0">
-              {[{ id: "all", label: "Tudo", emoji: "✦" }, ...visibleCategories.map(c => ({ id: c.id, label: c.name, emoji: c.emoji }))].map(cat => (
-                <button key={cat.id} onClick={() => setActiveCat(cat.id)}
-                  className={`flex shrink-0 items-center gap-2 rounded-2xl border px-5 py-3 text-sm font-semibold whitespace-nowrap transition-all ${
-                    activeCat === cat.id
-                      ? "glow-primary border-primary/50 bg-gradient-to-br from-primary to-accent text-primary-foreground"
-                      : "glass border-border/60 text-muted-foreground hover:border-primary/40 hover:text-foreground"
-                  }`}
-                >
-                  <span className="text-base leading-none">{cat.emoji}</span>
-                  {cat.label}
-                </button>
-              ))}
+            <div className="relative mt-3">
+              {/* Setas desktop */}
+              <button
+                onClick={() => scrollCats("left")}
+                aria-label="Categorias anteriores"
+                className="absolute left-0 top-1/2 z-10 hidden -translate-y-1/2 -translate-x-1 sm:flex h-8 w-8 items-center justify-center rounded-full border border-border/60 bg-card text-muted-foreground shadow-md transition-colors hover:text-foreground"
+              >
+                <ChevronLeft className="size-4" />
+              </button>
+              <div
+                ref={catScrollRef}
+                className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-2 scrollbar-hide sm:px-8"
+              >
+                {[{ id: "all", label: "Tudo", emoji: "✦" }, ...visibleCategories.map(c => ({ id: c.id, label: c.name, emoji: c.emoji }))].map(cat => (
+                  <button key={cat.id} onClick={() => setActiveCat(cat.id)}
+                    className={`flex shrink-0 items-center gap-2 rounded-2xl border px-5 py-3 text-sm font-semibold whitespace-nowrap transition-all ${
+                      activeCat === cat.id
+                        ? "glow-primary border-primary/50 bg-gradient-to-br from-primary to-accent text-primary-foreground"
+                        : "glass border-border/60 text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                    }`}
+                  >
+                    <span className="text-base leading-none">{cat.emoji}</span>
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => scrollCats("right")}
+                aria-label="Próximas categorias"
+                className="absolute right-0 top-1/2 z-10 hidden -translate-y-1/2 translate-x-1 sm:flex h-8 w-8 items-center justify-center rounded-full border border-border/60 bg-card text-muted-foreground shadow-md transition-colors hover:text-foreground"
+              >
+                <ChevronRight className="size-4" />
+              </button>
             </div>
           </div>
         )}
