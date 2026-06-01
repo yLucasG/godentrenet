@@ -240,7 +240,7 @@ export function ImportModal({ onClose, onDone }: { onClose: () => void; onDone: 
                     onDragLeave={() => setDragging(false)}
                     onDrop={handleDrop}
                     className={`flex flex-col items-center justify-center gap-3 border-2 border-dashed rounded-2xl p-8 cursor-pointer transition-all ${
-                      dragging ? "border-emerald-500 bg-emerald-500/10" : "border-gray-700 hover:border-gray-500 hover:bg-gray-800/50"
+                      dragging ? "border-amber-500 bg-amber-500/10" : "border-gray-700 hover:border-gray-500 hover:bg-gray-800/50"
                     }`}
                   >
                     <input
@@ -267,7 +267,7 @@ export function ImportModal({ onClose, onDone }: { onClose: () => void; onDone: 
                       </div>
                     </div>
                     <div className="bg-gray-800/50 rounded-xl p-3 flex items-start gap-2.5">
-                      <FileText size={16} className="text-emerald-400 mt-0.5 flex-shrink-0" />
+                      <FileText size={16} className="text-amber-400 mt-0.5 flex-shrink-0" />
                       <div>
                         <p className="text-white text-xs font-medium">Arquivo de texto</p>
                         <p className="text-gray-500 text-[11px] mt-0.5">TXT ou CSV — uma linha por produto com o preço</p>
@@ -294,7 +294,7 @@ Café;2,00`}</pre>
                   <div className="relative w-16 h-16">
                     <div className="w-16 h-16 rounded-full border-4 border-gray-700" />
                     <div
-                      className="absolute inset-0 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin"
+                      className="absolute inset-0 rounded-full border-4 border-amber-500 border-t-transparent animate-spin"
                       style={{ animationDuration: "0.8s" }}
                     />
                     {ocrProgress > 0 && (
@@ -325,13 +325,13 @@ Café;2,00`}</pre>
                   value={globalCategory}
                   onChange={(e) => setGlobalCategory(e.target.value)}
                   placeholder="Ex: Bebidas, Pães, Salgados..."
-                  className="w-full bg-gray-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 placeholder:text-gray-600"
+                  className="w-full bg-gray-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-amber-500 placeholder:text-gray-600"
                 />
                 <p className="text-gray-600 text-[11px]">Se não existir, criaremos automaticamente para você.</p>
               </div>
 
               <div className="flex items-center justify-between">
-                <button onClick={toggleAll} className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors">
+                <button onClick={toggleAll} className="text-xs text-amber-400 hover:text-amber-300 transition-colors">
                   {items.every((i) => i.selected) ? "Desmarcar todos" : "Selecionar todos"}
                 </button>
                 <span className="text-gray-500 text-xs">{selectedCount} selecionado{selectedCount !== 1 ? "s" : ""}</span>
@@ -345,7 +345,7 @@ Café;2,00`}</pre>
                         type="checkbox"
                         checked={item.selected}
                         onChange={() => toggleItem(i)}
-                        className="w-4 h-4 accent-emerald-500 flex-shrink-0"
+                        className="w-4 h-4 accent-amber-500 flex-shrink-0"
                       />
                       {/* Emoji picker */}
                       <select
@@ -359,7 +359,7 @@ Café;2,00`}</pre>
                       <input
                         value={item.name}
                         onChange={(e) => updateItem(i, "name", e.target.value)}
-                        className="flex-1 bg-gray-700 text-white text-sm rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 min-w-0"
+                        className="flex-1 bg-gray-700 text-white text-sm rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-500 min-w-0"
                       />
                       {/* Price */}
                       <div className="flex items-center gap-1 flex-shrink-0">
@@ -370,7 +370,7 @@ Café;2,00`}</pre>
                           onChange={(e) => updateItem(i, "price", parseFloat(e.target.value) || 0)}
                           step="0.01"
                           min="0"
-                          className="w-20 bg-gray-700 text-white text-sm rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 text-right"
+                          className="w-20 bg-gray-700 text-white text-sm rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-500 text-right"
                         />
                       </div>
                     </div>
@@ -381,7 +381,7 @@ Café;2,00`}</pre>
                         <select
                           value={item.categoryId ?? ""}
                           onChange={(e) => updateItem(i, "categoryId", e.target.value || null)}
-                          className="flex-1 bg-gray-700 text-white text-xs rounded-lg px-2 py-1 border-none focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+                          className="flex-1 bg-gray-700 text-white text-xs rounded-lg px-2 py-1 border-none focus:outline-none focus:ring-1 focus:ring-amber-500 cursor-pointer"
                         >
                           <option value="">— sem categoria —</option>
                           {categories.map((c) => (
@@ -399,7 +399,7 @@ Café;2,00`}</pre>
           {/* ── SAVING STEP ── */}
           {step === "saving" && (
             <div className="flex flex-col items-center justify-center py-12 gap-4">
-              <Loader2 size={40} className="text-emerald-500 animate-spin" />
+              <Loader2 size={40} className="text-amber-500 animate-spin" />
               <div className="text-center">
                 <p className="text-white font-medium">Importando produtos...</p>
                 <p className="text-gray-400 text-sm mt-1">Inserindo {items.filter((i) => i.selected).length} produto{items.filter((i) => i.selected).length !== 1 ? "s" : ""} de uma vez só</p>
@@ -410,7 +410,7 @@ Café;2,00`}</pre>
           {/* ── DONE STEP ── */}
           {step === "done" && (
             <div className="flex flex-col items-center justify-center py-12 gap-4">
-              <div className="w-14 h-14 rounded-full bg-emerald-500 flex items-center justify-center">
+              <div className="w-14 h-14 rounded-full bg-amber-500 flex items-center justify-center">
                 <Check size={28} strokeWidth={3} className="text-white" />
               </div>
               <div className="text-center">
@@ -427,7 +427,7 @@ Café;2,00`}</pre>
             <button
               onClick={handleSave}
               disabled={selectedCount === 0}
-              className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white font-bold py-3 rounded-xl text-sm transition-colors"
+              className="w-full bg-amber-600 hover:bg-amber-500 disabled:opacity-40 text-white font-bold py-3 rounded-xl text-sm transition-colors"
             >
               Importar {selectedCount} produto{selectedCount !== 1 ? "s" : ""}
             </button>

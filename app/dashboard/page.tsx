@@ -31,14 +31,14 @@ export default async function DashboardPage() {
       {/* Bento stat cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
         {/* WhatsApp status */}
-        <div className="bg-gray-900 border border-gray-800/80 rounded-2xl p-6 relative overflow-hidden">
-          <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-emerald-500/0 via-emerald-500/60 to-emerald-500/0" />
-          <p className="text-gray-600 text-[10px] font-bold uppercase tracking-widest mb-4">WhatsApp</p>
+        <div className="rounded-2xl p-6 relative overflow-hidden" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
+          <div className="absolute inset-x-0 top-0 h-0.5" style={{ background: "linear-gradient(to right, rgba(245,158,11,0), rgba(245,158,11,0.5), rgba(245,158,11,0))" }} />
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-4" style={{ color: "rgba(255,255,255,0.3)" }}>WhatsApp</p>
           <div className="flex items-center gap-3">
             <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${
               connected
                 ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"
-                : "bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.6)]"
+                : "bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.6)]"
             }`} />
             <span className={`text-lg font-extrabold tracking-tight ${connected ? "text-emerald-400" : "text-amber-400"}`}>
               {connected ? "Conectado" : "Desconectado"}
@@ -47,27 +47,27 @@ export default async function DashboardPage() {
         </div>
 
         {/* Messages */}
-        <div className="bg-gray-900 border border-gray-800/80 rounded-2xl p-6 relative overflow-hidden">
-          <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-sky-500/0 via-sky-500/60 to-sky-500/0" />
-          <p className="text-gray-600 text-[10px] font-bold uppercase tracking-widest mb-3">Mensagens</p>
-          <p className="text-5xl font-extrabold tracking-tight text-sky-400 leading-none">{totalMessages}</p>
-          <p className="text-gray-600 text-xs font-medium mt-2">recebidas</p>
+        <div className="rounded-2xl p-6 relative overflow-hidden" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
+          <div className="absolute inset-x-0 top-0 h-0.5" style={{ background: "linear-gradient(to right, rgba(245,158,11,0), rgba(245,158,11,0.35), rgba(245,158,11,0))" }} />
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "rgba(255,255,255,0.3)" }}>Mensagens</p>
+          <p className="text-5xl font-extrabold tracking-tight text-amber-400 leading-none">{totalMessages}</p>
+          <p className="text-xs font-medium mt-2" style={{ color: "rgba(255,255,255,0.3)" }}>recebidas</p>
         </div>
 
         {/* Contacts */}
-        <div className="bg-gray-900 border border-gray-800/80 rounded-2xl p-6 relative overflow-hidden">
-          <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-violet-500/0 via-violet-500/60 to-violet-500/0" />
-          <p className="text-gray-600 text-[10px] font-bold uppercase tracking-widest mb-3">Contatos</p>
-          <p className="text-5xl font-extrabold tracking-tight text-violet-400 leading-none">{uniqueContacts}</p>
-          <p className="text-gray-600 text-xs font-medium mt-2">únicos</p>
+        <div className="rounded-2xl p-6 relative overflow-hidden" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
+          <div className="absolute inset-x-0 top-0 h-0.5" style={{ background: "linear-gradient(to right, rgba(245,158,11,0), rgba(245,158,11,0.2), rgba(245,158,11,0))" }} />
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "rgba(255,255,255,0.3)" }}>Contatos</p>
+          <p className="text-5xl font-extrabold tracking-tight text-white leading-none">{uniqueContacts}</p>
+          <p className="text-xs font-medium mt-2" style={{ color: "rgba(255,255,255,0.3)" }}>únicos</p>
         </div>
       </div>
 
       {/* QR connect card */}
       {!connected && (
-        <div className="bg-gray-900 border border-gray-800/80 rounded-2xl p-7">
+        <div className="rounded-2xl p-7" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
           <h2 className="text-white font-extrabold text-lg tracking-tight mb-1">Conectar WhatsApp</h2>
-          <p className="text-gray-500 text-sm mb-6">
+          <p className="text-sm mb-6" style={{ color: "rgba(255,255,255,0.4)" }}>
             Escaneie o QR code abaixo com o WhatsApp do celular para ativar o bot.
           </p>
           <QrSection storeId={storeId} />
@@ -76,12 +76,12 @@ export default async function DashboardPage() {
 
       {/* Connected card */}
       {connected && (
-        <div className="bg-gray-900 border border-emerald-800/30 rounded-2xl p-7 relative overflow-hidden">
-          <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-emerald-500/0 via-emerald-500/50 to-emerald-500/0" />
+        <div className="rounded-2xl p-7 relative overflow-hidden" style={{ background: "rgba(245,158,11,0.04)", border: "1px solid rgba(245,158,11,0.15)" }}>
+          <div className="absolute inset-x-0 top-0 h-0.5" style={{ background: "linear-gradient(to right, rgba(245,158,11,0), rgba(245,158,11,0.5), rgba(245,158,11,0))" }} />
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
               <h2 className="text-white font-extrabold text-lg tracking-tight">WhatsApp ativo</h2>
-              <p className="text-gray-400 text-sm mt-1">
+              <p className="text-sm mt-1" style={{ color: "rgba(255,255,255,0.45)" }}>
                 Sua loja está online. O bot responde automaticamente às mensagens dos clientes.
               </p>
               <div className="flex flex-col gap-2 items-start mt-5">
@@ -89,7 +89,7 @@ export default async function DashboardPage() {
                   <a
                     href={`/${session.user.instanceName}`}
                     target="_blank"
-                    className="inline-flex items-center gap-1 text-emerald-400 text-sm font-semibold hover:text-emerald-300 transition-colors"
+                    className="inline-flex items-center gap-1 text-amber-400 text-sm font-semibold hover:text-amber-300 transition-colors"
                   >
                     Ver página pública da loja →
                   </a>
@@ -97,7 +97,7 @@ export default async function DashboardPage() {
                 <DisconnectButton />
               </div>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-2xl shrink-0">
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0" style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.2)" }}>
               ✅
             </div>
           </div>

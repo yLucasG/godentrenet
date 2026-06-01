@@ -35,7 +35,7 @@ export function BotConfigClient({ initial }: { initial: BotConfig | null }) {
             onChange={e => setWelcomeMessage(e.target.value)}
             rows={4}
             placeholder="Olá! Seja bem-vindo à nossa loja..."
-            className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 resize-none"
+            className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-500 resize-none"
           />
         </div>
 
@@ -47,7 +47,7 @@ export function BotConfigClient({ initial }: { initial: BotConfig | null }) {
             </div>
             <button
               onClick={() => setRequireKeyword(!requireKeyword)}
-              className={`relative w-11 h-6 rounded-full transition-colors ${requireKeyword ? "bg-green-600" : "bg-gray-700"}`}
+              className={`relative w-11 h-6 rounded-full transition-colors ${requireKeyword ? "bg-amber-500" : "bg-gray-700"}`}
             >
               <span
                 className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${requireKeyword ? "translate-x-5" : "translate-x-0"}`}
@@ -62,7 +62,7 @@ export function BotConfigClient({ initial }: { initial: BotConfig | null }) {
                 value={keyword}
                 onChange={e => setKeyword(e.target.value)}
                 placeholder="@hello"
-                className="bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 w-48"
+                className="bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-500 w-48"
               />
             </div>
           )}
@@ -73,11 +73,11 @@ export function BotConfigClient({ initial }: { initial: BotConfig | null }) {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors"
+          className="disabled:opacity-50 text-gray-950 font-bold px-6 py-2.5 rounded-full text-sm transition-all" style={{ background: "#F59E0B" }}
         >
           {saving ? "Salvando..." : "Salvar configurações"}
         </button>
-        {saved && <span className="text-green-400 text-sm">Salvo ✓</span>}
+        {saved && <span className="text-amber-400 text-sm">Salvo ✓</span>}
       </div>
     </div>
   );

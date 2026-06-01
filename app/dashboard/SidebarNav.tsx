@@ -32,14 +32,14 @@ export function SidebarNav({ pendingOrders }: { pendingOrders: number }) {
           <Link
             key={item.href}
             href={item.href}
-            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+            className={`relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
               active
-                ? "bg-emerald-500/10 text-emerald-400"
+                ? "bg-amber-500/10 text-amber-400"
                 : "text-gray-500 hover:text-gray-200 hover:bg-white/5"
             }`}
           >
             {active && (
-              <span className="absolute left-0 w-0.5 h-6 bg-emerald-500 rounded-r-full" />
+              <span className="absolute left-0 w-0.5 h-6 bg-amber-500 rounded-r-full" />
             )}
             <span className="text-base shrink-0">{item.icon}</span>
             <span className="flex-1 truncate">{item.label}</span>
@@ -55,5 +55,4 @@ export function SidebarNav({ pendingOrders }: { pendingOrders: number }) {
   );
 }
 
-// Versão inline para uso no PDV (hamburguer)
 export { navItems };

@@ -83,7 +83,7 @@ function ReviewModal({
               <p className="text-gray-500 text-xs mt-0.5">
                 {data.issueDate ? fmtDate(data.issueDate) : "Data não informada"}
                 {" · "}
-                <span className="text-emerald-400 font-semibold">{fmt(data.totalAmount)}</span>
+                <span className="text-amber-400 font-semibold">{fmt(data.totalAmount)}</span>
               </p>
             </div>
           </div>
@@ -99,9 +99,9 @@ function ReviewModal({
               </div>
             )}
             {newItems.length > 0 && (
-              <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-3 py-2">
-                <CheckCircle2 size={14} className="text-emerald-400" />
-                <span className="text-emerald-400 text-sm font-medium">
+              <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2">
+                <CheckCircle2 size={14} className="text-amber-400" />
+                <span className="text-amber-400 text-sm font-medium">
                   {newItems.length} insumo{newItems.length > 1 ? "s" : ""} novo{newItems.length > 1 ? "s" : ""} a criar
                 </span>
               </div>
@@ -147,7 +147,7 @@ function ReviewModal({
                             + {fmtQty(item.existingStock ?? 0)} → {fmtQty((item.existingStock ?? 0) + item.quantity)} {item.unit}
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/25">
                             ✦ Novo
                           </span>
                         )}
@@ -213,7 +213,8 @@ function ReviewModal({
             <button
               onClick={onConfirm}
               disabled={saving}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-full text-gray-950 font-bold text-sm transition-all disabled:opacity-50"
+              style={{ background: "#F59E0B" }}
             >
               {saving ? (
                 <>
@@ -307,9 +308,9 @@ export function ComprasClient({ initialPurchases }: { initialPurchases: Purchase
           stage === "parsing"
             ? "border-blue-500/40 bg-blue-500/5 cursor-default"
             : stage === "done"
-            ? "border-emerald-500/40 bg-emerald-500/5 cursor-default"
+            ? "border-amber-500/40 bg-amber-500/5 cursor-default"
             : isDragging
-            ? "border-emerald-500 bg-emerald-500/10 scale-[1.01]"
+            ? "border-amber-500 bg-amber-500/10 scale-[1.01]"
             : "border-gray-700 hover:border-gray-500 bg-gray-900/30 hover:bg-gray-900/50"
         }`}
       >
@@ -324,12 +325,12 @@ export function ComprasClient({ initialPurchases }: { initialPurchases: Purchase
         {stage === "idle" && (
           <>
             <div className={`w-16 h-16 rounded-2xl flex items-center justify-center border transition-colors ${
-              isDragging ? "border-emerald-500/40 bg-emerald-500/15" : "border-gray-700 bg-gray-800"
+              isDragging ? "border-amber-500/40 bg-amber-500/15" : "border-gray-700 bg-gray-800"
             }`}>
-              <Upload size={28} className={isDragging ? "text-emerald-400" : "text-gray-500"} />
+              <Upload size={28} className={isDragging ? "text-amber-400" : "text-gray-500"} />
             </div>
             <div className="text-center">
-              <p className={`font-semibold text-base ${isDragging ? "text-emerald-300" : "text-gray-300"}`}>
+              <p className={`font-semibold text-base ${isDragging ? "text-amber-300" : "text-gray-300"}`}>
                 {isDragging ? "Solte o arquivo aqui" : "Arraste o XML da NF-e aqui"}
               </p>
               <p className="text-gray-600 text-sm mt-1">ou clique para selecionar o arquivo</p>
@@ -357,8 +358,8 @@ export function ComprasClient({ initialPurchases }: { initialPurchases: Purchase
 
         {stage === "done" && (
           <>
-            <CheckCircle2 size={48} className="text-emerald-400" />
-            <p className="text-emerald-300 font-semibold text-lg">Compra importada com sucesso!</p>
+            <CheckCircle2 size={48} className="text-amber-400" />
+            <p className="text-amber-300 font-semibold text-lg">Compra importada com sucesso!</p>
             <p className="text-gray-500 text-sm">Recarregando...</p>
           </>
         )}

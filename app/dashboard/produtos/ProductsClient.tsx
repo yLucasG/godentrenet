@@ -100,7 +100,8 @@ export function ProductsClient({
         <div className="flex items-center gap-3">
           <button
             onClick={() => setModal({ open: true })}
-            className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            className="text-gray-950 font-bold px-4 py-2 rounded-full text-sm transition-all"
+            style={{ background: "#F59E0B" }}
           >
             + Novo produto
           </button>
@@ -131,7 +132,7 @@ export function ProductsClient({
             Adicione manualmente ou importe uma lista de uma vez.
           </p>
           <div className="flex items-center justify-center gap-2 mt-4">
-            <button onClick={() => setModal({ open: true })} className="text-emerald-400 hover:text-emerald-300 text-sm transition-colors">+ Adicionar produto</button>
+            <button onClick={() => setModal({ open: true })} className="text-amber-400 hover:text-amber-300 text-sm transition-colors">+ Adicionar produto</button>
             <span className="text-gray-700">·</span>
             <button onClick={() => setShowImport(true)} className="text-gray-400 hover:text-gray-300 text-sm transition-colors">📥 Importar lista</button>
           </div>
@@ -186,7 +187,7 @@ export function ProductsClient({
                       onClick={() => handleToggle(p)}
                       className={`text-xs px-2.5 py-1 rounded-full font-medium transition-colors ${
                         p.active
-                          ? "bg-emerald-900/50 text-emerald-400 hover:bg-emerald-900"
+                          ? "bg-amber-900/30 text-amber-400 hover:bg-amber-900/50"
                           : "bg-gray-800 text-gray-500 hover:bg-gray-700"
                       }`}
                     >

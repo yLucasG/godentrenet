@@ -66,7 +66,7 @@ function CategoryModal({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Ex: Padaria, Bebidas..."
-              className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-500 transition-colors"
+              className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-amber-500 transition-colors"
               autoFocus
             />
           </div>
@@ -79,7 +79,7 @@ function CategoryModal({
                   key={e}
                   onClick={() => setEmoji(e)}
                   className={`text-xl w-9 h-9 rounded-xl transition-colors ${
-                    emoji === e ? "bg-emerald-700 ring-1 ring-emerald-500" : "bg-gray-800 hover:bg-gray-700"
+                    emoji === e ? "bg-amber-700 ring-1 ring-amber-500" : "bg-gray-800 hover:bg-gray-700"
                   }`}
                 >
                   {e}
@@ -98,7 +98,7 @@ function CategoryModal({
             <button
               onClick={handleSave}
               disabled={saving || !name.trim()}
-              className="flex-1 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white rounded-xl py-2.5 text-sm font-medium transition-colors"
+              className="flex-1 disabled:opacity-40 text-gray-950 font-bold rounded-xl py-2.5 text-sm transition-all" style={{ background: "#F59E0B" }}
             >
               {saving ? "Salvando..." : "Salvar"}
             </button>
@@ -170,7 +170,7 @@ export function CategoriesClient({ initialCategories }: { initialCategories: Cat
       <div className="flex items-center justify-between mb-6">
         <button
           onClick={() => setModal({ open: true })}
-          className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+          className="text-gray-950 font-bold px-4 py-2 rounded-full text-sm transition-all" style={{ background: "#F59E0B" }}
         >
           + Nova categoria
         </button>
@@ -195,7 +195,7 @@ export function CategoriesClient({ initialCategories }: { initialCategories: Cat
           </p>
           <button
             onClick={() => setModal({ open: true })}
-            className="text-emerald-400 hover:text-emerald-300 text-sm mt-4 transition-colors"
+            className="text-amber-400 hover:text-amber-300 text-sm mt-4 transition-colors"
           >
             + Criar primeira categoria
           </button>

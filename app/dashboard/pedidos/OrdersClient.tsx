@@ -83,7 +83,7 @@ function DeliveryBadge({ method, identifier }: { method: string; identifier: str
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/25">
       📍 {identifier || "Local"}
     </span>
   );
@@ -102,19 +102,19 @@ function NfceModal({ payload, onClose }: { payload: string; onClose: () => void 
       <div className="w-full max-w-lg bg-gray-950 rounded-2xl border border-gray-800 flex flex-col max-h-[85vh]">
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 flex-shrink-0">
           <div className="flex items-center gap-2">
-            <FileText size={16} className="text-emerald-400" />
+            <FileText size={16} className="text-amber-400" />
             <span className="text-white font-bold text-sm">Payload NFC-e</span>
           </div>
           <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors">
             <X size={18} />
           </button>
         </div>
-        <pre className="flex-1 overflow-y-auto p-4 text-xs text-emerald-300 font-mono leading-relaxed bg-gray-900/50">{payload}</pre>
+        <pre className="flex-1 overflow-y-auto p-4 text-xs text-amber-300 font-mono leading-relaxed bg-gray-900/50">{payload}</pre>
         <div className="px-5 py-3 border-t border-gray-800 flex gap-2 flex-shrink-0">
           <p className="text-gray-600 text-xs flex-1 self-center">Integração com API emissora em breve.</p>
           <button
             onClick={handleCopy}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${copied ? "bg-emerald-700 text-white" : "bg-gray-800 hover:bg-gray-700 text-gray-300"}`}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${copied ? "bg-amber-700 text-white" : "bg-gray-800 hover:bg-gray-700 text-gray-300"}`}
           >
             {copied ? <><CheckCheck size={14} /> Copiado!</> : <><Copy size={14} /> Copiar JSON</>}
           </button>
@@ -228,7 +228,7 @@ function OrderCard({
           </button>
         )}
         {isDone ? (
-          <div className="flex-1 text-center text-emerald-500 text-xs font-semibold py-1.5">
+          <div className="flex-1 text-center text-amber-500 text-xs font-semibold py-1.5">
             ✓ Entregue
           </div>
         ) : (
@@ -245,7 +245,7 @@ function OrderCard({
           onClick={handleNFCe}
           disabled={loadingNfce || busy}
           title="Gerar NFC-e"
-          className="px-2 py-1.5 rounded-lg border border-gray-700 text-gray-500 hover:text-emerald-400 hover:border-emerald-800 text-xs transition-colors disabled:opacity-40"
+          className="px-2 py-1.5 rounded-lg border border-gray-700 text-gray-500 hover:text-amber-400 hover:border-amber-800 text-xs transition-colors disabled:opacity-40"
         >
           {loadingNfce ? <Loader2 size={13} className="animate-spin" /> : <FileText size={13} />}
         </button>

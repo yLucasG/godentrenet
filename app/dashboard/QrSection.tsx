@@ -32,11 +32,11 @@ export function QrSection({ storeId }: { storeId: string }) {
   if (connected) {
     return (
       <div className="flex flex-col gap-2">
-        <p className="text-green-400 font-medium">WhatsApp conectado com sucesso ✅</p>
+        <p className="text-amber-400 font-medium">WhatsApp conectado com sucesso ✅</p>
         <p className="text-gray-400 text-sm">Recarregue a página para atualizar o status.</p>
         <button
           onClick={() => window.location.reload()}
-          className="mt-1 text-green-500 text-sm hover:underline w-fit"
+          className="mt-1 text-amber-500 text-sm hover:underline w-fit"
         >
           Recarregar
         </button>
@@ -47,13 +47,15 @@ export function QrSection({ storeId }: { storeId: string }) {
   if (qr) {
     return (
       <div className="flex flex-col items-start gap-3">
-        <div className="border-4 border-green-500 rounded-xl overflow-hidden inline-block shadow-lg shadow-green-900/30">
+        <div className="border-2 border-amber-500 rounded-xl overflow-hidden inline-block shadow-lg"
+          style={{ boxShadow: "0 0 20px rgba(245,158,11,0.2)" }}
+        >
           <Image src={qr} alt="QR Code WhatsApp" width={220} height={220} />
         </div>
         <p className="text-gray-400 text-xs">QR expira em 60 segundos. Após escanear, recarregue a página.</p>
         <button
           onClick={loadQr}
-          className="text-green-500 text-sm hover:underline"
+          className="text-amber-500 text-sm hover:underline"
         >
           Gerar novo QR
         </button>
@@ -66,7 +68,10 @@ export function QrSection({ storeId }: { storeId: string }) {
       <button
         onClick={loadQr}
         disabled={loading}
-        className="bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white px-5 py-2 rounded-lg text-sm font-medium transition-colors w-fit"
+        className="disabled:opacity-50 text-gray-950 font-bold px-5 py-2.5 rounded-full text-sm transition-all w-fit"
+        style={{ background: "#F59E0B" }}
+        onMouseEnter={e => !loading && ((e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 20px rgba(245,158,11,0.5)")}
+        onMouseLeave={e => ((e.currentTarget as HTMLButtonElement).style.boxShadow = "none")}
       >
         {loading ? "Verificando..." : "Gerar QR Code"}
       </button>

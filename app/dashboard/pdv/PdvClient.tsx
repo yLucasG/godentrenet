@@ -180,7 +180,7 @@ export function PdvClient({ storeName, acceptsPickup, acceptsLocal, products, ca
                   onClick={() => setNavOpen(false)}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
                     item.href === "/dashboard/pdv"
-                      ? "bg-emerald-500/10 text-emerald-400"
+                      ? "bg-amber-500/10 text-amber-400"
                       : "text-gray-500 hover:text-gray-200 hover:bg-white/5"
                   }`}
                 >
@@ -199,14 +199,14 @@ export function PdvClient({ storeName, acceptsPickup, acceptsLocal, products, ca
           <div className="w-full max-w-lg bg-gray-950 rounded-2xl border border-gray-800 flex flex-col max-h-[85vh]">
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 flex-shrink-0">
               <div className="flex items-center gap-2">
-                <FileText size={16} className="text-emerald-400" />
+                <FileText size={16} className="text-amber-400" />
                 <span className="text-white font-bold text-sm">Payload NFC-e (Focus NFe)</span>
               </div>
               <button onClick={() => setNfcePayload(null)} className="text-gray-500 hover:text-white transition-colors">
                 <X size={18} />
               </button>
             </div>
-            <pre className="flex-1 overflow-y-auto p-4 text-xs text-emerald-300 font-mono leading-relaxed bg-gray-900/50">
+            <pre className="flex-1 overflow-y-auto p-4 text-xs text-amber-300 font-mono leading-relaxed bg-gray-900/50">
               {nfcePayload}
             </pre>
             <div className="px-5 py-3 border-t border-gray-800 flex gap-2 flex-shrink-0">
@@ -214,7 +214,7 @@ export function PdvClient({ storeName, acceptsPickup, acceptsLocal, products, ca
               <button
                 onClick={handleCopy}
                 className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
-                  copied ? "bg-emerald-700 text-white" : "bg-gray-800 hover:bg-gray-700 text-gray-300"
+                  copied ? "bg-amber-600 text-gray-950" : "bg-gray-800 hover:bg-gray-700 text-gray-300"
                 }`}
               >
                 {copied ? <><CheckCheck size={14} /> Copiado!</> : <><Copy size={14} /> Copiar JSON</>}
@@ -227,7 +227,7 @@ export function PdvClient({ storeName, acceptsPickup, acceptsLocal, products, ca
       {/* Success flash */}
       {flash && (
         <div className="absolute inset-0 z-[60] flex items-center justify-center pointer-events-none">
-          <div className="bg-emerald-500 text-white font-black text-2xl px-12 py-7 rounded-2xl shadow-2xl scale-110">
+          <div className="bg-amber-500 text-gray-950 font-black text-2xl px-12 py-7 rounded-2xl shadow-2xl scale-110">
             ✓ Venda registrada!
           </div>
         </div>
@@ -245,7 +245,7 @@ export function PdvClient({ storeName, acceptsPickup, acceptsLocal, products, ca
         <div className="w-px h-4 bg-gray-800" />
         <span className="text-white font-semibold text-sm truncate">🖥️ PDV — {storeName}</span>
         {cartCount > 0 && (
-          <span className="ml-auto bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 text-xs font-bold px-2.5 py-0.5 rounded-full shrink-0">
+          <span className="ml-auto bg-amber-500/15 text-amber-400 border border-amber-500/25 text-xs font-bold px-2.5 py-0.5 rounded-full shrink-0">
             {cartCount} {cartCount === 1 ? "item" : "itens"}
           </span>
         )}
@@ -267,7 +267,7 @@ export function PdvClient({ storeName, acceptsPickup, acceptsLocal, products, ca
                 value={search}
                 onChange={e => { setSearch(e.target.value); setActiveCat("all"); }}
                 placeholder="Busca rápida pelo nome..."
-                className="w-full bg-gray-900 text-white pl-8 pr-8 py-2 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 placeholder:text-gray-600 border border-gray-800"
+                className="w-full bg-gray-900 text-white pl-8 pr-8 py-2 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-amber-500 placeholder:text-gray-600 border border-gray-800"
               />
               {search && (
                 <button onClick={() => setSearch("")}
@@ -281,14 +281,14 @@ export function PdvClient({ storeName, acceptsPickup, acceptsLocal, products, ca
             <div className="flex-shrink-0 flex gap-1.5 px-3 py-2 overflow-x-auto border-b border-gray-800/60 scrollbar-hide">
               <button onClick={() => setActiveCat("all")}
                 className={`flex-shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                  activeCat === "all" ? "bg-emerald-500 text-white" : "bg-gray-800/60 text-gray-500 hover:text-white border border-gray-800"
+                  activeCat === "all" ? "bg-amber-500 text-gray-950 font-bold" : "bg-gray-800/60 text-gray-500 hover:text-white border border-gray-800"
                 }`}>
                 🛍️ Tudo
               </button>
               {visibleCategories.map(cat => (
                 <button key={cat.id} onClick={() => setActiveCat(cat.id)}
                   className={`flex-shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                    activeCat === cat.id ? "bg-emerald-500 text-white" : "bg-gray-800/60 text-gray-500 hover:text-white border border-gray-800"
+                    activeCat === cat.id ? "bg-amber-500 text-gray-950 font-bold" : "bg-gray-800/60 text-gray-500 hover:text-white border border-gray-800"
                   }`}>
                   {cat.emoji} {cat.name}
                 </button>
@@ -311,12 +311,12 @@ export function PdvClient({ storeName, acceptsPickup, acceptsLocal, products, ca
                     <button key={product.id} onClick={() => addToCart(product.id)}
                       className={`relative flex flex-col items-center justify-center gap-1 p-2.5 rounded-xl border transition-all text-center min-h-[88px] active:scale-95 ${
                         qty > 0
-                          ? "border-emerald-500/60 bg-emerald-500/8 shadow-sm shadow-emerald-500/15"
+                          ? "border-amber-500/60 bg-amber-500/8 shadow-sm shadow-amber-500/15"
                           : "border-gray-800 bg-gray-900/50 hover:border-gray-700 hover:bg-gray-900"
                       }`}
                     >
                       {qty > 0 && (
-                        <span className="absolute top-1 right-1 bg-emerald-500 text-white text-[9px] font-black rounded-full w-4 h-4 flex items-center justify-center leading-none">
+                        <span className="absolute top-1 right-1 bg-amber-500 text-gray-950 text-[9px] font-black rounded-full w-4 h-4 flex items-center justify-center leading-none">
                           {qty}
                         </span>
                       )}
@@ -326,7 +326,7 @@ export function PdvClient({ storeName, acceptsPickup, acceptsLocal, products, ca
                         <span className="text-2xl">{product.emoji}</span>
                       )}
                       <span className="text-white text-[10px] font-medium leading-tight line-clamp-2 w-full">{product.name}</span>
-                      <span className="text-emerald-400 text-[10px] font-bold">{fmt(product.price)}</span>
+                      <span className="text-amber-400 text-[10px] font-bold">{fmt(product.price)}</span>
                     </button>
                   );
                 })}
@@ -346,7 +346,7 @@ export function PdvClient({ storeName, acceptsPickup, acceptsLocal, products, ca
                 <button key={method} onClick={() => setDeliveryMethod(method)}
                   className={`flex flex-col items-center gap-1 py-2.5 rounded-xl text-xs font-semibold transition-all ${
                     deliveryMethod === method
-                      ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20"
+                      ? "bg-amber-500 text-gray-950 shadow-lg shadow-amber-500/20"
                       : "bg-gray-800/50 text-gray-500 hover:text-white hover:bg-gray-800 border border-gray-800"
                   }`}
                 >
@@ -362,15 +362,15 @@ export function PdvClient({ storeName, acceptsPickup, acceptsLocal, products, ca
             <div className="grid grid-cols-2 gap-2">
               <input value={customerName} onChange={e => setCustomerName(e.target.value)}
                 placeholder="Nome (opcional)"
-                className="bg-gray-800/50 border border-gray-800 text-white text-xs rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 placeholder:text-gray-600 w-full" />
+                className="bg-gray-800/50 border border-gray-800 text-white text-xs rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-amber-500 placeholder:text-gray-600 w-full" />
               <input value={customerPhone} onChange={e => setCustomerPhone(e.target.value.replace(/\D/g, ""))}
                 placeholder="Telefone (opcional)" inputMode="tel" maxLength={11}
-                className="bg-gray-800/50 border border-gray-800 text-white text-xs rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 placeholder:text-gray-600 w-full" />
+                className="bg-gray-800/50 border border-gray-800 text-white text-xs rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-amber-500 placeholder:text-gray-600 w-full" />
             </div>
             {deliveryMethod === "LOCAL" && (
               <input value={localIdentifier} onChange={e => setLocalIdentifier(e.target.value)}
                 placeholder="Mesa, Comanda, Carro... (opcional)"
-                className="w-full bg-gray-800/50 border border-gray-800 text-white text-xs rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 placeholder:text-gray-600" />
+                className="w-full bg-gray-800/50 border border-gray-800 text-white text-xs rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-amber-500 placeholder:text-gray-600" />
             )}
           </div>
 
@@ -408,10 +408,10 @@ export function PdvClient({ storeName, acceptsPickup, acceptsLocal, products, ca
                         className="w-6 h-6 rounded-md bg-gray-800 hover:bg-red-900/40 hover:text-red-400 text-gray-400 flex items-center justify-center text-sm font-bold transition-colors">−</button>
                       <span className="text-white text-xs font-bold w-5 text-center tabular-nums">{qty}</span>
                       <button onClick={() => setQty(product.id, qty + 1)}
-                        className="w-6 h-6 rounded-md bg-gray-800 hover:bg-emerald-900/40 hover:text-emerald-400 text-gray-400 flex items-center justify-center text-sm font-bold transition-colors">+</button>
+                        className="w-6 h-6 rounded-md bg-gray-800 hover:bg-amber-900/30 hover:text-amber-400 text-gray-400 flex items-center justify-center text-sm font-bold transition-colors">+</button>
                     </div>
                     {/* subtotal */}
-                    <span className="text-emerald-400 text-xs font-bold w-14 text-right flex-shrink-0 tabular-nums">
+                    <span className="text-amber-400 text-xs font-bold w-14 text-right flex-shrink-0 tabular-nums">
                       {fmt(product.price * qty)}
                     </span>
                   </div>
@@ -445,7 +445,8 @@ export function PdvClient({ storeName, acceptsPickup, acceptsLocal, products, ca
 
             {/* Finalizar */}
             <button onClick={handleSubmit} disabled={submitting || cartItems.length === 0}
-              className="w-full bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl text-sm transition-all">
+              className="w-full active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed text-gray-950 font-bold py-3 rounded-full text-sm transition-all"
+              style={{ background: "#F59E0B" }}>
               {submitting ? "Registrando..." : cartItems.length === 0 ? "Adicione produtos" : `✓ Finalizar  ${fmt(total)}`}
             </button>
 

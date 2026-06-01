@@ -134,7 +134,7 @@ export function ConfigClient({ store }: { store: Store & { logoUrl?: string | nu
             }}
             className={`flex flex-col items-center justify-center gap-2 w-full h-32 rounded-2xl border-2 border-dashed cursor-pointer transition-all ${
               dragOver
-                ? "border-emerald-500 bg-emerald-500/10"
+                ? "border-amber-500 bg-amber-500/10"
                 : "border-gray-700 hover:border-gray-500 hover:bg-gray-800/50"
             }`}
           >
@@ -160,7 +160,7 @@ export function ConfigClient({ store }: { store: Store & { logoUrl?: string | nu
           <input
             value={name}
             onChange={e => setName(e.target.value)}
-            className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+            className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-500"
           />
         </div>
 
@@ -171,7 +171,7 @@ export function ConfigClient({ store }: { store: Store & { logoUrl?: string | nu
             value={phoneNumber}
             onChange={e => setPhoneNumber(e.target.value)}
             placeholder="5587988444564"
-            className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+            className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-500"
           />
         </div>
 
@@ -186,7 +186,7 @@ export function ConfigClient({ store }: { store: Store & { logoUrl?: string | nu
             <a
               href={publicUrl}
               target="_blank"
-              className="text-green-500 text-sm hover:underline whitespace-nowrap"
+              className="text-amber-500 text-sm hover:underline whitespace-nowrap"
             >
               Abrir →
             </a>
@@ -250,7 +250,7 @@ export function ConfigClient({ store }: { store: Store & { logoUrl?: string | nu
         <button
           onClick={handleSave}
           disabled={saving || !name}
-          className="bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
+          className="disabled:opacity-50 text-gray-950 font-bold px-6 py-2.5 rounded-full text-sm transition-all flex items-center gap-1.5" style={{ background: "#F59E0B" }}
         >
           {uploading ? (
             <><Upload size={13} className="animate-bounce" /> Enviando...</>
@@ -260,7 +260,7 @@ export function ConfigClient({ store }: { store: Store & { logoUrl?: string | nu
             "Salvar"
           )}
         </button>
-        {saved && <span className="text-green-400 text-sm">Salvo ✓</span>}
+        {saved && <span className="text-amber-400 text-sm">Salvo ✓</span>}
       </div>
     </div>
   );

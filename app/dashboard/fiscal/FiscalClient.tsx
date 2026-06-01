@@ -65,15 +65,15 @@ export function FiscalClient({ initial }: Props) {
       {/* Status card */}
       <div className={`rounded-xl border px-4 py-3 mb-6 flex items-center gap-3 ${
         isComplete
-          ? "bg-emerald-500/10 border-emerald-500/25"
+          ? "bg-amber-500/10 border-amber-500/25"
           : "bg-yellow-500/10 border-yellow-500/25"
       }`}>
         {isComplete ? (
-          <ShieldCheck size={18} className="text-emerald-400 flex-shrink-0" />
+          <ShieldCheck size={18} className="text-amber-400 flex-shrink-0" />
         ) : (
           <Info size={18} className="text-yellow-400 flex-shrink-0" />
         )}
-        <p className={`text-sm ${isComplete ? "text-emerald-300" : "text-yellow-300"}`}>
+        <p className={`text-sm ${isComplete ? "text-amber-300" : "text-yellow-300"}`}>
           {isComplete
             ? "Configuração fiscal completa. Pronto para emitir NFC-e."
             : "Preencha CNPJ e Inscrição Estadual para habilitar a emissão de NFC-e."}
@@ -106,7 +106,7 @@ export function FiscalClient({ initial }: Props) {
                 onChange={(e) => setCnpj(e.target.value.replace(/\D/g, ""))}
                 placeholder="00.000.000/0000-00"
                 maxLength={18}
-                className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-3 py-2.5 text-sm font-mono focus:outline-none focus:border-emerald-500 transition-colors"
+                className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-3 py-2.5 text-sm font-mono focus:outline-none focus:border-amber-500 transition-colors"
               />
             </div>
 
@@ -116,7 +116,7 @@ export function FiscalClient({ initial }: Props) {
                 value={stateReg}
                 onChange={(e) => setStateReg(e.target.value)}
                 placeholder="Ex: 123.456.789.112"
-                className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-3 py-2.5 text-sm font-mono focus:outline-none focus:border-emerald-500 transition-colors"
+                className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-3 py-2.5 text-sm font-mono focus:outline-none focus:border-amber-500 transition-colors"
               />
             </div>
           </div>
@@ -136,12 +136,12 @@ export function FiscalClient({ initial }: Props) {
                 onClick={() => setTaxRegime(regime)}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-sm text-left transition-all ${
                   taxRegime === regime
-                    ? "border-emerald-500 bg-emerald-500/10 text-white"
+                    ? "border-amber-500 bg-amber-500/10 text-white"
                     : "border-gray-700 bg-gray-800/40 text-gray-400 hover:border-gray-600 hover:text-gray-300"
                 }`}
               >
                 <div className={`w-3.5 h-3.5 rounded-full border-2 flex-shrink-0 ${
-                  taxRegime === regime ? "border-emerald-500 bg-emerald-500" : "border-gray-600"
+                  taxRegime === regime ? "border-amber-500 bg-amber-500" : "border-gray-600"
                 }`} />
                 {regime}
               </button>
@@ -174,11 +174,8 @@ export function FiscalClient({ initial }: Props) {
         <button
           onClick={handleSave}
           disabled={isPending}
-          className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm transition-all ${
-            saved
-              ? "bg-emerald-700 text-white"
-              : "bg-emerald-600 hover:bg-emerald-500 text-white"
-          } disabled:opacity-50`}
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-full font-bold text-sm transition-all text-gray-950 disabled:opacity-50"
+          style={{ background: "#F59E0B" }}
         >
           {isPending ? (
             <><Save size={16} className="animate-pulse" /> Salvando...</>

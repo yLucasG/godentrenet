@@ -125,8 +125,8 @@ const STATUS_STYLES: Record<ExpiryStatus, { row: string; badge: string; text: st
   },
   ok: {
     row: "hover:bg-gray-800/30",
-    badge: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
-    text: "text-emerald-400",
+    badge: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
+    text: "text-amber-400",
   },
 };
 
@@ -191,7 +191,7 @@ function InsumoModal({
                 value={form.name}
                 onChange={e => set("name", e.target.value)}
                 placeholder="Ex: Carne moída, Pão brioche..."
-                className="w-full bg-gray-800 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 placeholder:text-gray-600"
+                className="w-full bg-gray-800 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-amber-500 placeholder:text-gray-600"
               />
             </div>
 
@@ -201,7 +201,7 @@ function InsumoModal({
                 value={form.sku ?? ""}
                 onChange={e => set("sku", e.target.value)}
                 placeholder="Opcional"
-                className="w-full bg-gray-800 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 placeholder:text-gray-600"
+                className="w-full bg-gray-800 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-amber-500 placeholder:text-gray-600"
               />
             </div>
 
@@ -210,7 +210,7 @@ function InsumoModal({
               <select
                 value={form.unit}
                 onChange={e => set("unit", e.target.value)}
-                className="w-full bg-gray-800 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="w-full bg-gray-800 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-amber-500"
               >
                 {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
               </select>
@@ -222,7 +222,7 @@ function InsumoModal({
                 type="number" min={0} step="0.001"
                 value={form.currentStock}
                 onChange={e => set("currentStock", parseFloat(e.target.value) || 0)}
-                className="w-full bg-gray-800 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="w-full bg-gray-800 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-amber-500"
               />
             </div>
 
@@ -232,7 +232,7 @@ function InsumoModal({
                 type="number" min={0} step="0.001"
                 value={form.minStock}
                 onChange={e => set("minStock", parseFloat(e.target.value) || 0)}
-                className="w-full bg-gray-800 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="w-full bg-gray-800 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-amber-500"
               />
             </div>
 
@@ -242,7 +242,7 @@ function InsumoModal({
                 type="number" min={0} step="0.01"
                 value={form.costPrice}
                 onChange={e => set("costPrice", parseFloat(e.target.value) || 0)}
-                className="w-full bg-gray-800 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="w-full bg-gray-800 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-amber-500"
               />
             </div>
           </div>
@@ -260,7 +260,7 @@ function InsumoModal({
           <button
             onClick={handleSubmit}
             disabled={isPending}
-            className="flex-1 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition-colors disabled:opacity-50"
+            className="flex-1 py-2 rounded-lg text-gray-950 font-bold text-sm transition-all disabled:opacity-50" style={{ background: "#F59E0B" }}
           >
             {isPending ? "Salvando..." : "Salvar"}
           </button>
@@ -308,7 +308,7 @@ function AbaInsumos({
         <p className="text-gray-500 text-sm">{items.length} {items.length === 1 ? "insumo" : "insumos"} cadastrados</p>
         <button
           onClick={() => setModal("new")}
-          className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold px-3 py-2 rounded-lg transition-colors"
+          className="flex items-center gap-1.5 text-gray-950 font-bold text-sm px-3 py-2 rounded-full transition-all" style={{ background: "#F59E0B" }}
         >
           <Plus size={15} />
           Novo Insumo
@@ -321,7 +321,7 @@ function AbaInsumos({
           <p className="text-sm">Nenhum insumo cadastrado ainda.</p>
           <button
             onClick={() => setModal("new")}
-            className="text-emerald-500 text-sm hover:text-emerald-400 underline underline-offset-2"
+            className="text-amber-500 text-sm hover:text-amber-400 underline underline-offset-2"
           >
             Criar primeiro insumo
           </button>
@@ -502,7 +502,7 @@ function AbaFichas({
         <select
           value={selectedProductId}
           onChange={e => handleProductChange(e.target.value)}
-          className="w-full max-w-sm bg-gray-800 text-white text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+          className="w-full max-w-sm bg-gray-800 text-white text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-1 focus:ring-amber-500"
         >
           <option value="">— escolha um produto —</option>
           {products.map(p => (
@@ -520,7 +520,7 @@ function AbaFichas({
 
       {selectedProductId && loading && (
         <div className="flex items-center justify-center py-16 text-gray-600 text-sm gap-2">
-          <div className="w-4 h-4 border-2 border-gray-700 border-t-emerald-500 rounded-full animate-spin" />
+          <div className="w-4 h-4 border-2 border-gray-700 border-t-amber-500 rounded-full animate-spin" />
           Carregando...
         </div>
       )}
@@ -534,7 +534,7 @@ function AbaFichas({
             </div>
             <div className="bg-gray-900 rounded-xl border border-gray-800 px-4 py-3">
               <p className="text-gray-500 text-xs mb-1">CMV (Custo)</p>
-              <p className="text-emerald-400 font-bold text-lg tabular-nums">{fmt(cmv)}</p>
+              <p className="text-amber-400 font-bold text-lg tabular-nums">{fmt(cmv)}</p>
             </div>
             <div className="bg-gray-900 rounded-xl border border-gray-800 px-4 py-3">
               <p className="text-gray-500 text-xs mb-1">Margem Bruta</p>
@@ -554,7 +554,7 @@ function AbaFichas({
             {inventoryItems.length > 0 && (
               <button
                 onClick={addIngredient}
-                className="flex items-center gap-1.5 text-sm text-emerald-500 hover:text-emerald-400 border border-emerald-800/50 hover:border-emerald-600/50 px-3 py-1.5 rounded-lg transition-colors"
+                className="flex items-center gap-1.5 text-sm text-amber-500 hover:text-amber-400 border border-amber-800/50 hover:border-amber-600/50 px-3 py-1.5 rounded-lg transition-colors"
               >
                 <Plus size={14} />
                 Adicionar Insumo
@@ -595,7 +595,7 @@ function AbaFichas({
                         <select
                           value={ing.inventoryItemId}
                           onChange={e => updateIngredient(idx, "inventoryItemId", e.target.value)}
-                          className="bg-gray-800 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 w-full max-w-xs"
+                          className="bg-gray-800 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-amber-500 w-full max-w-xs"
                         >
                           {inventoryItems.map(item => (
                             <option key={item.id} value={item.id}>{item.name}</option>
@@ -608,7 +608,7 @@ function AbaFichas({
                             type="number" min={0} step="0.001"
                             value={ing.quantity}
                             onChange={e => updateIngredient(idx, "quantity", e.target.value)}
-                            className="w-24 bg-gray-800 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 text-right tabular-nums"
+                            className="w-24 bg-gray-800 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-amber-500 text-right tabular-nums"
                           />
                           <span className="text-gray-500 text-xs font-mono w-8">{ing.unit}</span>
                         </div>
@@ -630,7 +630,7 @@ function AbaFichas({
                     <td className="px-4 py-2.5 text-gray-400 text-xs font-bold uppercase tracking-wider" colSpan={2}>
                       CMV Total
                     </td>
-                    <td className="px-4 py-2.5 text-right tabular-nums text-emerald-400 font-bold">
+                    <td className="px-4 py-2.5 text-right tabular-nums text-amber-400 font-bold">
                       {fmt(cmv)}
                     </td>
                     <td />
@@ -644,11 +644,8 @@ function AbaFichas({
             <button
               onClick={handleSave}
               disabled={saving}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all ${
-                saved
-                  ? "bg-emerald-700 text-white"
-                  : "bg-emerald-600 hover:bg-emerald-500 text-white"
-              } disabled:opacity-50`}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-full font-bold text-sm transition-all text-gray-950 disabled:opacity-50"
+              style={{ background: "#F59E0B" }}
             >
               <Save size={15} />
               {saving ? "Salvando..." : saved ? "✓ Salvo!" : "Salvar Ficha Técnica"}
@@ -738,7 +735,7 @@ function ExpiryModal({
             <select
               value={form.inventoryItemId}
               onChange={e => set("inventoryItemId", e.target.value)}
-              className="w-full bg-gray-800 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              className="w-full bg-gray-800 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-amber-500"
             >
               {inventoryItems.map(i => (
                 <option key={i.id} value={i.id}>{i.name}</option>
@@ -753,7 +750,7 @@ function ExpiryModal({
                 value={form.batchName ?? ""}
                 onChange={e => set("batchName", e.target.value)}
                 placeholder="Ex: Lote A, NF 1234..."
-                className="w-full bg-gray-800 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 placeholder:text-gray-600"
+                className="w-full bg-gray-800 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-amber-500 placeholder:text-gray-600"
               />
             </div>
 
@@ -763,7 +760,7 @@ function ExpiryModal({
                 type="number" min={0} step="0.001"
                 value={form.quantity}
                 onChange={e => set("quantity", parseFloat(e.target.value) || 0)}
-                className="w-full bg-gray-800 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 tabular-nums"
+                className="w-full bg-gray-800 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-amber-500 tabular-nums"
               />
             </div>
           </div>
@@ -774,7 +771,7 @@ function ExpiryModal({
               type="date"
               value={form.expirationDate}
               onChange={e => set("expirationDate", e.target.value)}
-              className="w-full bg-gray-800 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 [color-scheme:dark]"
+              className="w-full bg-gray-800 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-amber-500 [color-scheme:dark]"
             />
           </div>
 
@@ -784,7 +781,7 @@ function ExpiryModal({
               value={form.notes ?? ""}
               onChange={e => set("notes", e.target.value)}
               placeholder="Opcional"
-              className="w-full bg-gray-800 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 placeholder:text-gray-600"
+              className="w-full bg-gray-800 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-amber-500 placeholder:text-gray-600"
             />
           </div>
 
@@ -801,7 +798,7 @@ function ExpiryModal({
           <button
             onClick={handleSubmit}
             disabled={isPending}
-            className="flex-1 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition-colors disabled:opacity-50"
+            className="flex-1 py-2 rounded-lg text-gray-950 font-bold text-sm transition-all disabled:opacity-50" style={{ background: "#F59E0B" }}
           >
             {isPending ? "Salvando..." : "Salvar"}
           </button>
@@ -849,7 +846,7 @@ function AbaValidades({
           { key: "expired" as ExpiryStatus, label: "Vencidos", count: expiredCount, icon: CalendarX, color: "text-red-400", bg: "bg-red-500/8 border-red-500/20", activeBg: "bg-red-500/20 border-red-500/40" },
           { key: "critical" as ExpiryStatus, label: "Até 7 dias", count: criticalCount, icon: CalendarClock, color: "text-orange-400", bg: "bg-orange-500/8 border-orange-500/20", activeBg: "bg-orange-500/20 border-orange-500/40" },
           { key: "warning" as ExpiryStatus, label: "Até 30 dias", count: warningCount, icon: CalendarClock, color: "text-yellow-400", bg: "bg-yellow-500/8 border-yellow-500/20", activeBg: "bg-yellow-500/20 border-yellow-500/40" },
-          { key: "ok" as ExpiryStatus, label: "OK", count: okCount, icon: CalendarCheck, color: "text-emerald-400", bg: "bg-emerald-500/6 border-emerald-500/15", activeBg: "bg-emerald-500/15 border-emerald-500/30" },
+          { key: "ok" as ExpiryStatus, label: "OK", count: okCount, icon: CalendarCheck, color: "text-amber-400", bg: "bg-amber-500/6 border-amber-500/15", activeBg: "bg-amber-500/15 border-amber-500/30" },
         ]).map(card => {
           const Icon = card.icon;
           const isActive = filter === card.key;
@@ -885,7 +882,7 @@ function AbaValidades({
           )}
           <button
             onClick={() => setModal("new")}
-            className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold px-3 py-2 rounded-lg transition-colors"
+            className="flex items-center gap-1.5 text-gray-950 font-bold text-sm px-3 py-2 rounded-full transition-all" style={{ background: "#F59E0B" }}
           >
             <Plus size={15} />
             Registrar Validade
@@ -900,7 +897,7 @@ function AbaValidades({
           <p className="text-sm">Nenhuma validade registrada ainda.</p>
           <button
             onClick={() => setModal("new")}
-            className="text-emerald-500 text-sm hover:text-emerald-400 underline underline-offset-2"
+            className="text-amber-500 text-sm hover:text-amber-400 underline underline-offset-2"
           >
             Registrar primeira validade
           </button>

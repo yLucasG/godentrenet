@@ -161,7 +161,7 @@ export function ProductModal({ onClose, onSave, initial, categories }: Props) {
             >
               {t.label}
               {t.badge && (
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
               )}
             </button>
           ))}
@@ -191,7 +191,7 @@ export function ProductModal({ onClose, onSave, initial, categories }: Props) {
                     onDragLeave={() => setDragOver(false)}
                     onDrop={handleDrop}
                     className={`flex flex-col items-center justify-center gap-2 h-28 rounded-2xl border-2 border-dashed cursor-pointer transition-all ${
-                      dragOver ? "border-emerald-500 bg-emerald-500/10" : "border-gray-700 hover:border-gray-500 hover:bg-gray-800/50"
+                      dragOver ? "border-amber-500 bg-amber-500/10" : "border-gray-700 hover:border-gray-500 hover:bg-gray-800/50"
                     }`}
                   >
                     <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileSelect(f); }} />
@@ -209,7 +209,7 @@ export function ProductModal({ onClose, onSave, initial, categories }: Props) {
                   <label className="text-gray-400 text-xs font-medium block mb-2">Emoji (se não tiver imagem)</label>
                   <div className="flex flex-wrap gap-1.5">
                     {EMOJIS.map((e) => (
-                      <button key={e} onClick={() => setEmoji(e)} className={`text-xl w-9 h-9 rounded-xl transition-colors ${emoji === e ? "bg-emerald-700 ring-1 ring-emerald-500" : "bg-gray-800 hover:bg-gray-700"}`}>
+                      <button key={e} onClick={() => setEmoji(e)} className={`text-xl w-9 h-9 rounded-xl transition-colors ${emoji === e ? "bg-amber-700 ring-1 ring-amber-500" : "bg-gray-800 hover:bg-gray-700"}`}>
                         {e}
                       </button>
                     ))}
@@ -219,23 +219,23 @@ export function ProductModal({ onClose, onSave, initial, categories }: Props) {
 
               <div>
                 <label className="text-gray-400 text-xs font-medium block mb-1.5">Nome do produto *</label>
-                <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Pão Francês" className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-500 transition-colors" />
+                <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Pão Francês" className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-amber-500 transition-colors" />
               </div>
 
               <div>
                 <label className="text-gray-400 text-xs font-medium block mb-1.5">Preço (R$) *</label>
-                <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0,00" step="0.01" min="0" className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-500 transition-colors" />
+                <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0,00" step="0.01" min="0" className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-amber-500 transition-colors" />
               </div>
 
               {categories.length > 0 && (
                 <div>
                   <label className="text-gray-400 text-xs font-medium block mb-1.5">Categoria</label>
                   <div className="flex flex-wrap gap-1.5">
-                    <button onClick={() => setCategoryId(null)} className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors ${!categoryId ? "bg-emerald-700 text-white ring-1 ring-emerald-500" : "bg-gray-800 text-gray-400 hover:bg-gray-700"}`}>
+                    <button onClick={() => setCategoryId(null)} className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors ${!categoryId ? "bg-amber-700 text-white ring-1 ring-amber-500" : "bg-gray-800 text-gray-400 hover:bg-gray-700"}`}>
                       Sem categoria
                     </button>
                     {categories.map((cat) => (
-                      <button key={cat.id} onClick={() => setCategoryId(cat.id)} className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors flex items-center gap-1 ${categoryId === cat.id ? "bg-emerald-700 text-white ring-1 ring-emerald-500" : "bg-gray-800 text-gray-400 hover:bg-gray-700"}`}>
+                      <button key={cat.id} onClick={() => setCategoryId(cat.id)} className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors flex items-center gap-1 ${categoryId === cat.id ? "bg-amber-700 text-white ring-1 ring-amber-500" : "bg-gray-800 text-gray-400 hover:bg-gray-700"}`}>
                         <span>{cat.emoji}</span>
                         <span>{cat.name}</span>
                       </button>
@@ -284,7 +284,7 @@ export function ProductModal({ onClose, onSave, initial, categories }: Props) {
                       onChange={(e) => setNcm(e.target.value.replace(/\D/g, "").slice(0, 8))}
                       placeholder="00000000"
                       maxLength={8}
-                      className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-3 py-2.5 text-sm font-mono focus:outline-none focus:border-emerald-500 transition-colors"
+                      className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-3 py-2.5 text-sm font-mono focus:outline-none focus:border-amber-500 transition-colors"
                     />
                   </div>
                   <div>
@@ -296,7 +296,7 @@ export function ProductModal({ onClose, onSave, initial, categories }: Props) {
                       onChange={(e) => setCfop(e.target.value.replace(/\D/g, "").slice(0, 4))}
                       placeholder="5102"
                       maxLength={4}
-                      className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-3 py-2.5 text-sm font-mono focus:outline-none focus:border-emerald-500 transition-colors"
+                      className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-3 py-2.5 text-sm font-mono focus:outline-none focus:border-amber-500 transition-colors"
                     />
                   </div>
                 </div>
@@ -311,7 +311,7 @@ export function ProductModal({ onClose, onSave, initial, categories }: Props) {
                       onChange={(e) => setCest(e.target.value.replace(/\D/g, "").slice(0, 7))}
                       placeholder="Opcional"
                       maxLength={7}
-                      className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-3 py-2.5 text-sm font-mono focus:outline-none focus:border-emerald-500 transition-colors"
+                      className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-3 py-2.5 text-sm font-mono focus:outline-none focus:border-amber-500 transition-colors"
                     />
                   </div>
                   <div>
@@ -326,7 +326,7 @@ export function ProductModal({ onClose, onSave, initial, categories }: Props) {
                       min={0}
                       max={100}
                       step={0.01}
-                      className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-500 transition-colors"
+                      className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-amber-500 transition-colors"
                     />
                   </div>
                 </div>
@@ -343,7 +343,7 @@ export function ProductModal({ onClose, onSave, initial, categories }: Props) {
                   <button
                     key={code}
                     onClick={() => setCfop(code)}
-                    className={`w-full text-left text-xs px-2 py-1 rounded-lg transition-colors ${cfop === code ? "bg-emerald-700/40 text-emerald-300" : "text-gray-500 hover:text-gray-300 hover:bg-gray-700/50"}`}
+                    className={`w-full text-left text-xs px-2 py-1 rounded-lg transition-colors ${cfop === code ? "bg-amber-700/40 text-amber-300" : "text-gray-500 hover:text-gray-300 hover:bg-gray-700/50"}`}
                   >
                     <span className="font-mono text-white">{code}</span> — {desc}
                   </button>
@@ -361,7 +361,7 @@ export function ProductModal({ onClose, onSave, initial, categories }: Props) {
           <button
             onClick={handleSave}
             disabled={saving || !canSave}
-            className="flex-1 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white rounded-xl py-2.5 text-sm font-medium transition-colors flex items-center justify-center gap-1.5"
+            className="flex-1 bg-amber-600 hover:bg-amber-500 disabled:opacity-40 text-white rounded-xl py-2.5 text-sm font-medium transition-colors flex items-center justify-center gap-1.5"
           >
             {uploading ? (
               <><Upload size={14} className="animate-bounce" /> Enviando...</>
