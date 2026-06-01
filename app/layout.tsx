@@ -3,8 +3,9 @@ import "./globals.css";
 import { SessionProvider } from "next-auth/react";
 
 export const metadata: Metadata = {
-  title: "GODENTRENET",
-  description: "Plataforma de gestão WhatsApp",
+  title: "Entrenet — Gestão de loja e robô WhatsApp",
+  description: "Plataforma completa com gestão de estoque, vitrine digital e robô de WhatsApp para comerciantes.",
+  icons: { icon: "/icon.svg" },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
