@@ -217,9 +217,20 @@ export default function LandingPage() {
         .glass { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); }
 
         /* ── Bento grid ── */
+        .bento-desktop { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
         .bento { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
         .b-wide { grid-column:span 2; }
         .b-tall { grid-row:span 2; }
+
+        /* ── Bento mobile list (hidden on desktop) ── */
+        .bento-mobile { display:none; flex-direction:column; }
+        .bm-featured { background:rgba(245,158,11,.05); border:1px solid rgba(245,158,11,.18); border-radius:20px; padding:20px 18px; margin-bottom:10px; }
+        .bm-row { display:flex; align-items:flex-start; gap:14px; padding:14px 0; border-bottom:1px solid rgba(255,255,255,.05); }
+        .bm-row:last-child { border-bottom:none; padding-bottom:0; }
+        .bm-ic { width:42px; height:42px; border-radius:50%; background:rgba(245,158,11,.1); color:#F59E0B; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+        .bm-ic-green { background:rgba(34,197,94,.1); color:#22C55E; }
+        .bm-title { color:#fff; font-size:.95rem; font-weight:700; margin:0 0 4px; font-family:'Plus Jakarta Sans',sans-serif; }
+        .bm-desc  { color:#6B7280; font-size:.82rem; line-height:1.5; margin:0; }
 
         /* ── Bento card ── */
         .bc { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:24px; padding:28px; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); transition:background .25s,border-color .25s,box-shadow .25s; cursor:default; }
@@ -275,8 +286,9 @@ export default function LandingPage() {
           .hero-card-col { display:none !important; }
           .nav-links { display:none !important; }
           .lp-nav.lp-on { margin:0; border-radius:0; }
-          .bento { grid-template-columns:1fr !important; }
-          .b-wide,.b-tall { grid-column:auto !important; grid-row:auto !important; }
+          /* Bento: hide desktop grid, show mobile list */
+          .bento-desktop { display:none !important; }
+          .bento-mobile  { display:flex !important; }
           .stats-grid { grid-template-columns:1fr 1fr !important; }
           .steps-grid { grid-template-columns:1fr !important; }
           .sec-pad { padding-top:64px !important; padding-bottom:64px !important; }
@@ -468,7 +480,7 @@ export default function LandingPage() {
             Row 2:                                        | [Dashboard 1col]
             Row 3: [Loja 1col] | [Config 1col]           | [WhatsApp 1col]
           */}
-          <div className="bento" style={{ position: "relative" }}>
+          <div className="bento bento-desktop" style={{ position: "relative" }}>
 
             {/* Bot 24h — tall + wide hero card */}
             <div className="lp-reveal s1 bc b-tall" style={{ gridColumn: 1, gridRow: "1 / 3", display: "flex", flexDirection: "column" }}>
@@ -536,6 +548,46 @@ export default function LandingPage() {
               </div>
             </div>
           </div>
+
+          {/* ── Mobile-only feature list (hidden on desktop) ────────── */}
+          <div className="bento-mobile lp-reveal">
+
+            {/* Bot 24h — featured card */}
+            <div className="bm-featured">
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 14, marginBottom: 14 }}>
+                <div className="bm-ic" style={{ borderRadius: 14, width: 48, height: 48, flexShrink: 0 }}><BotIcon /></div>
+                <div>
+                  <p className="bm-title">Bot automático 24h</p>
+                  <p className="bm-desc">Seu WhatsApp responde sozinho a qualquer hora. Nunca mais um cliente sem resposta.</p>
+                </div>
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {["Cardápio automático", "Link da loja", "Sem limite"].map((t) => (
+                  <span key={t} style={{ fontSize: ".68rem", fontWeight: 600, color: "#F59E0B", background: "rgba(245,158,11,.1)", border: "1px solid rgba(245,158,11,.2)", borderRadius: 100, padding: "3px 10px" }}>{t}</span>
+                ))}
+              </div>
+            </div>
+
+            {/* Remaining features — clean horizontal rows */}
+            <div style={{ background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.07)", borderRadius: 20, padding: "4px 18px" }}>
+              {[
+                { icon: <GridIcon />, title: "Catálogo digital", desc: "Produtos ilimitados com nome, preço e imagem. Organize por categorias." },
+                { icon: <ChartIcon />, title: "Dashboard completo", desc: "Status do bot, conversas recentes e controle de estoque." },
+                { icon: <LinkIcon />, title: "Loja pública", desc: "URL única com seu catálogo para divulgar onde quiser." },
+                { icon: <GearIcon />, title: "Configuração simples", desc: "Mude mensagens, produtos e ajustes a qualquer momento." },
+                { icon: <WhatsAppIcon />, title: "Seu número, sem mudar nada", desc: "Use o mesmo número que seus clientes já conhecem.", green: true },
+              ].map((f, i) => (
+                <div key={i} className="bm-row">
+                  <div className={`bm-ic ${f.green ? "bm-ic-green" : ""}`}>{f.icon}</div>
+                  <div>
+                    <p className="bm-title">{f.title}</p>
+                    <p className="bm-desc">{f.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
         </section>
 
         {/* ─────────────────── CAROUSEL ─────────────────────────────── */}
