@@ -4,11 +4,9 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
-/* ─── SVG Icons ─────────────────────────────────────────────────────────── */
+/* ─── Icons (same SVGs kept) ────────────────────────────────────────────── */
 const CheckIcon = () => (
-  <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="20 6 9 17 4 12" />
-  </svg>
+  <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
 );
 const WhatsAppIcon = ({ size = 5 }: { size?: number }) => (
   <svg className={`w-${size} h-${size}`} viewBox="0 0 24 24" fill="currentColor">
@@ -63,14 +61,10 @@ const ChevronDown = ({ open }: { open: boolean }) => (
   </svg>
 );
 const ChevronLeft = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="15 18 9 12 15 6" />
-  </svg>
+  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
 );
 const ChevronRightIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="9 18 15 12 9 6" />
-  </svg>
+  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
 );
 
 /* ─── Scroll Reveal ──────────────────────────────────────────────────────── */
@@ -78,14 +72,14 @@ function useScrollReveal() {
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => entries.forEach((e) => { if (e.isIntersecting) e.target.classList.add("lp-visible"); }),
-      { threshold: 0.08, rootMargin: "0px 0px -40px 0px" }
+      { threshold: 0.07, rootMargin: "0px 0px -40px 0px" }
     );
     document.querySelectorAll(".lp-reveal").forEach((el) => observer.observe(el));
     return () => observer.disconnect();
   }, []);
 }
 
-/* ─── Page Component ─────────────────────────────────────────────────────── */
+/* ─── Page ───────────────────────────────────────────────────────────────── */
 export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
@@ -95,9 +89,9 @@ export default function LandingPage() {
   useScrollReveal();
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 30);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    const fn = () => setScrolled(window.scrollY > 30);
+    window.addEventListener("scroll", fn, { passive: true });
+    return () => window.removeEventListener("scroll", fn);
   }, []);
 
   const slides = [
@@ -125,678 +119,542 @@ export default function LandingPage() {
     { q: "Como é o suporte?", a: "Via WhatsApp, de segunda a sábado. Respondemos em até 2 horas durante o horário comercial." },
   ];
 
+  /* ── Inline styles helpers ── */
+  const glass = {
+    background: "rgba(255,255,255,0.04)",
+    border: "1px solid rgba(255,255,255,0.08)",
+    backdropFilter: "blur(12px)",
+    WebkitBackdropFilter: "blur(12px)",
+  } as const;
+
+  const amberGlow = { color: "#F59E0B" };
+
   return (
     <>
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+      <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 
       <style>{`
-        .lp-root {
-          background: #04070F;
-          min-height: 100vh;
-          font-family: 'DM Sans', system-ui, sans-serif;
-          color: #F1F5F9;
-          overflow-x: hidden;
-        }
-        .lp-root * { box-sizing: border-box; }
-        .lp-root h1, .lp-root h2, .lp-root h3 {
-          font-family: 'Space Grotesk', system-ui, sans-serif;
-          letter-spacing: -0.02em;
-        }
+        /* ── Root & Font ── */
+        .lp { background: #0A0A0A; min-height: 100vh; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; color: #fff; overflow-x: hidden; }
+        .lp * { box-sizing: border-box; }
+        .lp h1,.lp h2,.lp h3 { font-family: 'Plus Jakarta Sans', sans-serif; letter-spacing: -0.03em; }
 
         /* ── Keyframes ── */
-        @keyframes lp-orb1 {
-          0%,100% { transform: translate(0,0) scale(1); }
-          40% { transform: translate(50px,-40px) scale(1.06); }
-          70% { transform: translate(-30px,30px) scale(0.96); }
-        }
-        @keyframes lp-orb2 {
-          0%,100% { transform: translate(0,0) scale(1); }
-          35% { transform: translate(-40px,50px) scale(1.04); }
-          65% { transform: translate(30px,-25px) scale(0.97); }
-        }
-        @keyframes lp-gradient {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
-        @keyframes lp-fade-up {
-          from { opacity: 0; transform: translateY(36px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes lp-cta-glow {
-          0%,100% { box-shadow: 0 0 20px rgba(99,102,241,0.2), 0 4px 24px rgba(0,0,0,0.5); }
-          50%      { box-shadow: 0 0 40px rgba(99,102,241,0.45), 0 4px 24px rgba(0,0,0,0.5); }
-        }
-        @keyframes lp-dot-blink {
-          0%,100% { opacity: 1; } 50% { opacity: 0.3; }
-        }
-        @keyframes lp-slide-in {
-          from { opacity: 0; transform: scale(0.98); }
-          to   { opacity: 1; transform: scale(1); }
+        @keyframes lp-float  { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
+        @keyframes lp-fadeup { from{opacity:0;transform:translateY(32px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes lp-amber  { 0%{background-position:0% 50%} 100%{background-position:100% 50%} }
+        @keyframes lp-blink  { 0%,100%{opacity:1} 50%{opacity:0.3} }
+        @keyframes lp-slide  { from{opacity:0;transform:scale(0.985)} to{opacity:1;transform:scale(1)} }
+        @keyframes lp-pulse-ring {
+          0% { box-shadow: 0 0 0 0 rgba(245,158,11,0.4); }
+          70% { box-shadow: 0 0 0 12px rgba(245,158,11,0); }
+          100% { box-shadow: 0 0 0 0 rgba(245,158,11,0); }
         }
 
-        /* ── Scroll reveal ── */
-        .lp-reveal {
-          opacity: 0;
-          transform: translateY(28px);
-          transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1), transform 0.7s cubic-bezier(0.16,1,0.3,1);
-        }
-        .lp-reveal.lp-visible { opacity: 1; transform: translateY(0); }
-        .lp-d1 { transition-delay: 0.07s; }
-        .lp-d2 { transition-delay: 0.14s; }
-        .lp-d3 { transition-delay: 0.21s; }
-        .lp-d4 { transition-delay: 0.28s; }
-        .lp-d5 { transition-delay: 0.35s; }
-        .lp-d6 { transition-delay: 0.42s; }
+        /* ── Scroll reveal + stagger ── */
+        .lp-reveal { opacity:0; transform:translateY(24px); transition:opacity .6s cubic-bezier(.16,1,.3,1),transform .6s cubic-bezier(.16,1,.3,1); }
+        .lp-reveal.lp-visible { opacity:1; transform:translateY(0); }
+        .s1{transition-delay:.05s} .s2{transition-delay:.10s} .s3{transition-delay:.16s}
+        .s4{transition-delay:.22s} .s5{transition-delay:.28s} .s6{transition-delay:.34s}
 
-        /* ── Gradient text ── */
-        .lp-gt {
-          background: linear-gradient(135deg, #818CF8 0%, #34D399 45%, #818CF8 100%);
-          background-size: 200% 200%;
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-          animation: lp-gradient 5s ease infinite;
+        /* ── Hero animated items ── */
+        .h1{animation:lp-fadeup .7s cubic-bezier(.16,1,.3,1) .08s both}
+        .h2{animation:lp-fadeup .7s cubic-bezier(.16,1,.3,1) .20s both}
+        .h3{animation:lp-fadeup .7s cubic-bezier(.16,1,.3,1) .32s both}
+        .h4{animation:lp-fadeup .7s cubic-bezier(.16,1,.3,1) .44s both}
+        .h5{animation:lp-fadeup .7s cubic-bezier(.16,1,.3,1) .56s both}
+        .h6{animation:lp-fadeup .75s cubic-bezier(.16,1,.3,1) .38s both}
+
+        /* ── Amber gradient text ── */
+        .amber-text {
+          background: linear-gradient(90deg,#F59E0B,#FCD34D,#F59E0B);
+          background-size: 200% auto;
+          -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+          background-clip:text;
+          animation:lp-amber 3s linear infinite;
         }
 
-        /* ── Orbs ── */
-        .lp-orb-1 {
-          position: absolute; pointer-events: none;
-          width: 700px; height: 700px; border-radius: 50%;
-          background: radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%);
-          top: -220px; left: -180px;
-          animation: lp-orb1 14s ease-in-out infinite;
-        }
-        .lp-orb-2 {
-          position: absolute; pointer-events: none;
-          width: 560px; height: 560px; border-radius: 50%;
-          background: radial-gradient(circle, rgba(52,211,153,0.1) 0%, transparent 70%);
-          bottom: -120px; right: -120px;
-          animation: lp-orb2 11s ease-in-out infinite;
-        }
-        .lp-dots {
-          background-image: radial-gradient(circle, rgba(129,140,248,0.12) 1px, transparent 1px);
-          background-size: 30px 30px;
+        /* ── Glow blobs ── */
+        .glow-blob {
+          position:absolute; border-radius:50%; pointer-events:none;
+          filter:blur(120px); mix-blend-mode:screen;
         }
 
         /* ── Nav ── */
-        .lp-nav {
-          position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-          transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
-          padding: 20px 0;
-        }
-        .lp-nav.lp-scrolled {
-          margin: 12px 16px 0;
-          border-radius: 18px;
-          /* Fully opaque — content behind is completely hidden */
-          background: rgba(4,7,15,0.98);
-          backdrop-filter: blur(24px);
-          -webkit-backdrop-filter: blur(24px);
-          border: 1px solid rgba(255,255,255,0.06);
-          box-shadow: 0 8px 40px rgba(0,0,0,0.6);
-          padding: 12px 0;
-        }
+        .lp-nav { position:fixed; top:0; left:0; right:0; z-index:100; transition:all .3s ease; padding:20px 0; }
+        .lp-nav.lp-on { margin:12px 16px 0; border-radius:18px; background:rgba(10,10,10,.97); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,.06); box-shadow:0 8px 40px rgba(0,0,0,.7); padding:12px 0; }
 
-        /* ── Hero ── */
-        .lp-hero-badge { animation: lp-fade-up 0.65s cubic-bezier(0.16,1,0.3,1) 0.05s both; }
-        .lp-hero-h1    { animation: lp-fade-up 0.7s  cubic-bezier(0.16,1,0.3,1) 0.18s both; }
-        .lp-hero-sub   { animation: lp-fade-up 0.7s  cubic-bezier(0.16,1,0.3,1) 0.32s both; }
-        .lp-hero-ctas  { animation: lp-fade-up 0.7s  cubic-bezier(0.16,1,0.3,1) 0.44s both; }
-        .lp-hero-stats { animation: lp-fade-up 0.7s  cubic-bezier(0.16,1,0.3,1) 0.56s both; }
-        .lp-live-dot   { animation: lp-dot-blink 2s ease-in-out infinite; }
+        /* ── CTA Button (amber pill) ── */
+        .cta-amber {
+          display:inline-flex; align-items:center; gap:8px;
+          background:#F59E0B; color:#0A0A0A;
+          font-weight:800; font-family:'Plus Jakarta Sans',sans-serif;
+          border-radius:9999px; padding:15px 36px; font-size:.95rem;
+          border:none; cursor:pointer; text-decoration:none;
+          transition:box-shadow .3s ease,transform .2s ease,filter .2s ease;
+          white-space:nowrap;
+        }
+        .cta-amber:hover { box-shadow:0 0 30px rgba(245,158,11,.55),0 0 60px rgba(245,158,11,.2); transform:translateY(-2px); filter:brightness(1.06); }
+        .cta-amber-outline {
+          display:inline-flex; align-items:center; gap:8px;
+          border:1px solid rgba(245,158,11,.35); color:#F59E0B;
+          border-radius:9999px; padding:14px 28px; font-size:.9rem; font-weight:600;
+          cursor:pointer; text-decoration:none; transition:all .2s ease; white-space:nowrap;
+        }
+        .cta-amber-outline:hover { background:rgba(245,158,11,.08); border-color:rgba(245,158,11,.6); }
 
-        /* ── Buttons ── */
-        .lp-btn-primary {
-          display: inline-flex; align-items: center; gap: 8px;
-          background: linear-gradient(135deg, #5A5CF8, #818CF8);
-          color: #fff; font-weight: 700;
-          font-family: 'Space Grotesk', sans-serif;
-          border-radius: 12px; padding: 14px 26px; font-size: 0.9rem;
-          border: none; cursor: pointer; text-decoration: none;
-          transition: transform 0.2s ease, filter 0.2s ease;
-          animation: lp-cta-glow 3s ease-in-out infinite;
-          white-space: nowrap;
+        /* ── Ghost button nav ── */
+        .nav-cta {
+          background:#F59E0B; color:#0A0A0A; font-weight:700; border-radius:9999px;
+          padding:9px 20px; font-size:.82rem; border:none; cursor:pointer; text-decoration:none;
+          transition:box-shadow .25s,filter .2s;
         }
-        .lp-btn-primary:hover {
-          transform: translateY(-2px); filter: brightness(1.12);
-          animation: none;
-          box-shadow: 0 10px 40px rgba(99,102,241,0.55);
-        }
+        .nav-cta:hover { box-shadow:0 0 16px rgba(245,158,11,.5); filter:brightness(1.06); }
 
-        /* ── Feature cards ── */
-        .lp-card {
-          background: rgba(255,255,255,0.028);
-          border: 1px solid rgba(129,140,248,0.1);
-          border-radius: 18px; padding: 28px;
-          transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
-        }
-        .lp-card:hover {
-          transform: translateY(-4px);
-          border-color: rgba(129,140,248,0.25);
-          box-shadow: 0 12px 40px rgba(99,102,241,0.08);
-        }
-        .lp-icon {
-          width: 48px; height: 48px; border-radius: 14px;
-          display: flex; align-items: center; justify-content: center;
-          margin-bottom: 20px;
-          transition: transform 0.2s ease;
-        }
-        .lp-card:hover .lp-icon { transform: scale(1.08); }
+        /* ── Glass card (base) ── */
+        .glass { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); }
 
         /* ── Bento grid ── */
-        .lp-bento {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 20px;
-        }
-        .lp-bento-wide { grid-column: 1 / 3; }
-        .lp-bento-full { grid-column: 1 / 4; }
+        .bento { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+        .b-wide { grid-column:span 2; }
+        .b-tall { grid-row:span 2; }
+
+        /* ── Bento card ── */
+        .bc { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:24px; padding:28px; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); transition:background .25s,border-color .25s,box-shadow .25s; cursor:default; }
+        .bc:hover { background:rgba(255,255,255,.07); border-color:rgba(245,158,11,.25); box-shadow:0 0 40px rgba(245,158,11,.07); }
+
+        /* ── Icon circle ── */
+        .ic { width:48px; height:48px; border-radius:50%; background:rgba(245,158,11,.1); color:#F59E0B; display:flex; align-items:center; justify-content:center; margin-bottom:18px; transition:background .2s,box-shadow .2s; flex-shrink:0; }
+        .bc:hover .ic { background:rgba(245,158,11,.18); box-shadow:0 0 16px rgba(245,158,11,.2); }
 
         /* ── Stats ── */
-        .lp-stats-grid {
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 14px;
-          max-width: 680px;
-          width: 100%;
-        }
-        .lp-stat-card {
-          background: rgba(255,255,255,0.025);
-          border: 1px solid rgba(255,255,255,0.06);
-          border-radius: 18px; padding: 22px 16px; text-align: center;
-        }
+        .stat-card { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.07); border-radius:18px; padding:24px 20px; text-align:center; transition:border-color .2s,background .2s; }
+        .stat-card:hover { border-color:rgba(245,158,11,.2); background:rgba(255,255,255,.06); }
+
+        /* ── Steps ── */
+        .step-num { width:34px; height:34px; border-radius:50%; background:rgba(245,158,11,.1); border:1px solid rgba(245,158,11,.25); color:#F59E0B; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:.78rem; flex-shrink:0; }
 
         /* ── Section label ── */
-        .lp-label {
-          font-size: 0.7rem; font-weight: 600;
-          letter-spacing: 0.15em; text-transform: uppercase;
-          color: #818CF8; margin-bottom: 12px; display: block;
-        }
+        .sec-label { font-size:.7rem; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:#F59E0B; margin-bottom:12px; display:block; }
 
         /* ── Pricing ── */
-        .lp-pricing {
-          background: rgba(99,102,241,0.05);
-          border: 1px solid rgba(129,140,248,0.22);
-          border-radius: 28px;
-          position: relative; overflow: hidden;
-          box-shadow: 0 0 80px rgba(99,102,241,0.1);
-        }
-        .lp-pricing::before {
-          content: ''; position: absolute; top: 0; left: 10%; right: 10%; height: 1px;
-          background: linear-gradient(90deg, transparent, rgba(129,140,248,0.7), transparent);
-        }
-
-        /* ── Screenshot carousel ── */
-        .lp-carousel {
-          background: rgba(255,255,255,0.025);
-          border: 1px solid rgba(255,255,255,0.07);
-          border-radius: 20px; overflow: hidden;
-          box-shadow: 0 40px 90px rgba(0,0,0,0.65);
-        }
-        .lp-carousel-bar {
-          background: rgba(255,255,255,0.04);
-          padding: 14px 20px;
-          display: flex; align-items: center; gap: 8px;
-          border-bottom: 1px solid rgba(255,255,255,0.05);
-          flex-shrink: 0;
-        }
-        .lp-carousel-dot-win { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
-        .lp-carousel-img {
-          display: block; width: 100%; height: auto;
-          animation: lp-slide-in 0.4s ease both;
-        }
-        .lp-carousel-btn {
-          position: absolute; top: 50%; transform: translateY(-50%);
-          width: 36px; height: 36px; border-radius: 50%;
-          background: rgba(4,7,15,0.8);
-          border: 1px solid rgba(255,255,255,0.12);
-          color: #94A3B8; cursor: pointer;
-          display: flex; align-items: center; justify-content: center;
-          transition: background 0.2s, color 0.2s, border-color 0.2s;
-          z-index: 10;
-        }
-        .lp-carousel-btn:hover { background: rgba(99,102,241,0.3); color: #fff; border-color: rgba(129,140,248,0.4); }
-        .lp-carousel-indicator {
-          width: 6px; height: 6px; border-radius: 50%;
-          transition: all 0.3s ease; cursor: pointer;
-          border: none; padding: 0;
-        }
-        .lp-carousel-label {
-          font-size: 0.78rem; color: #475569; text-align: center;
-          margin-top: 14px; font-weight: 500;
-        }
-
-        /* ── Step connector ── */
-        .lp-connector {
-          position: absolute; top: 34px;
-          left: calc(16.67% + 20px); right: calc(16.67% + 20px); height: 1px;
-          background: linear-gradient(90deg, rgba(99,102,241,0.35), rgba(52,211,153,0.25), transparent);
-          pointer-events: none;
-        }
+        .pricing-card { background:rgba(245,158,11,.05); border:1px solid rgba(245,158,11,.2); border-radius:28px; position:relative; overflow:hidden; }
+        .pricing-card::before { content:''; position:absolute; top:0; left:10%; right:10%; height:1px; background:linear-gradient(90deg,transparent,rgba(245,158,11,.7),transparent); }
 
         /* ── FAQ ── */
-        .lp-faq-item {
-          border: 1px solid rgba(129,140,248,0.09);
-          border-radius: 14px; overflow: hidden;
-          transition: border-color 0.2s ease;
-        }
-        .lp-faq-item:hover { border-color: rgba(129,140,248,0.22); }
-        .lp-faq-answer {
-          overflow: hidden;
-          transition: max-height 0.38s cubic-bezier(0.16,1,0.3,1), opacity 0.3s ease;
-        }
+        .faq-item { border:1px solid rgba(255,255,255,.07); border-radius:14px; overflow:hidden; transition:border-color .2s; }
+        .faq-item:hover { border-color:rgba(245,158,11,.2); }
+        .faq-ans { overflow:hidden; transition:max-height .38s cubic-bezier(.16,1,.3,1),opacity .3s; }
+
+        /* ── Carousel ── */
+        .carousel-wrap { background:rgba(255,255,255,.025); border:1px solid rgba(255,255,255,.07); border-radius:20px; overflow:hidden; box-shadow:0 40px 90px rgba(0,0,0,.7); }
+        .carousel-bar { background:rgba(255,255,255,.04); padding:14px 20px; display:flex; align-items:center; gap:8px; border-bottom:1px solid rgba(255,255,255,.05); }
+        .c-btn { position:absolute; top:50%; transform:translateY(-50%); width:36px; height:36px; border-radius:50%; background:rgba(10,10,10,.8); border:1px solid rgba(255,255,255,.1); color:#9CA3AF; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .2s,color .2s,border-color .2s; z-index:10; }
+        .c-btn:hover { background:rgba(245,158,11,.2); color:#F59E0B; border-color:rgba(245,158,11,.4); }
 
         /* ── CTA section ── */
-        .lp-cta-bg {
-          background: linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(52,211,153,0.07) 100%);
-          border: 1px solid rgba(129,140,248,0.18);
-          border-radius: 32px; position: relative; overflow: hidden;
+        .cta-section { background:linear-gradient(135deg,rgba(245,158,11,.08) 0%,rgba(251,191,36,.04) 100%); border:1px solid rgba(245,158,11,.14); border-radius:32px; position:relative; overflow:hidden; }
+        .cta-section::before { content:''; position:absolute; top:0; left:10%; right:10%; height:1px; background:linear-gradient(90deg,transparent,rgba(245,158,11,.6),transparent); }
+
+        /* ── Hero floating card ── */
+        .hero-card { animation:lp-float 7s ease-in-out infinite; }
+        .msg-bubble { border-radius:12px; padding:10px 14px; font-size:.82rem; line-height:1.5; max-width:220px; }
+        .msg-in { background:rgba(255,255,255,.08); color:#E5E7EB; border-bottom-left-radius:4px; }
+        .msg-out { background:rgba(245,158,11,.2); color:#FDE68A; border-bottom-right-radius:4px; margin-left:auto; }
+        .status-dot { width:8px; height:8px; border-radius:50%; background:#22C55E; animation:lp-blink 2s ease-in-out infinite; display:inline-block; }
+
+        /* ── Responsive ── */
+        @media (max-width:1024px) {
+          .bento { grid-template-columns:1fr 1fr; }
+          .b-wide { grid-column:1/3; }
         }
-
-        /* ── Tag pill ── */
-        .lp-tag {
-          font-size: 0.7rem; font-weight: 600;
-          padding: 4px 12px; border-radius: 100px;
-          border: 1px solid; display: inline-block;
+        @media (max-width:768px) {
+          .hero-split { flex-direction:column !important; }
+          .hero-card-col { display:none !important; }
+          .nav-links { display:none !important; }
+          .lp-nav.lp-on { margin:8px 10px 0; }
+          .bento { grid-template-columns:1fr !important; }
+          .b-wide,.b-tall { grid-column:auto !important; grid-row:auto !important; }
+          .stats-grid { grid-template-columns:1fr 1fr !important; }
+          .steps-grid { grid-template-columns:1fr !important; }
+          .sec-pad { padding-top:64px !important; padding-bottom:64px !important; }
+          .hero-pad { padding:100px 20px 60px !important; }
+          .cta-inner { padding:40px 24px !important; }
+          .footer-inner { flex-direction:column !important; text-align:center; gap:18px !important; }
+          .footer-links { justify-content:center !important; }
+          .hero-ctas { flex-direction:column !important; align-items:stretch !important; }
+          .hero-ctas .cta-amber,.hero-ctas .cta-amber-outline { justify-content:center; width:100%; }
         }
-
-        /* ════════════════════════════════════════
-           RESPONSIVE — TABLET (≤1024px)
-        ════════════════════════════════════════ */
-        @media (max-width: 1024px) {
-          .lp-bento { grid-template-columns: 1fr 1fr; }
-          .lp-bento-wide { grid-column: 1 / 3; }
-          .lp-bento-full { grid-column: 1 / 3; }
+        @media (max-width:480px) {
+          .nav-login { display:none !important; }
+          .stats-grid { gap:10px !important; }
         }
-
-        /* ════════════════════════════════════════
-           RESPONSIVE — MOBILE (≤768px)
-        ════════════════════════════════════════ */
-        @media (max-width: 768px) {
-          /* Nav: logo + CTA only, no links */
-          .lp-nav-links { display: none !important; }
-          .lp-nav.lp-scrolled { margin: 8px 10px 0; }
-
-          /* Hero: compact */
-          .lp-hero { padding: 100px 20px 60px !important; }
-          .lp-hero-badge { margin-bottom: 20px !important; }
-          .lp-hero-ctas { flex-direction: column !important; align-items: stretch !important; }
-          .lp-hero-ctas .lp-btn-primary { justify-content: center; width: 100%; }
-
-          /* Stats: 2x2 */
-          .lp-stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
-
-          /* Steps: vertical */
-          .lp-steps-grid { grid-template-columns: 1fr !important; }
-          .lp-connector { display: none !important; }
-
-          /* Features: 1 column */
-          .lp-bento { grid-template-columns: 1fr !important; }
-          .lp-bento-wide, .lp-bento-full { grid-column: 1 / 2 !important; }
-
-          /* Carousel: smaller padding */
-          .lp-carousel-bar { padding: 10px 14px !important; }
-
-          /* Pricing: full width */
-          .lp-pricing-wrap { padding: 0 !important; }
-
-          /* Sections: less vertical padding */
-          .lp-section { padding-top: 64px !important; padding-bottom: 64px !important; }
-          .lp-section-sm { padding-top: 48px !important; padding-bottom: 48px !important; }
-
-          /* CTA final: compact */
-          .lp-cta-inner { padding: 40px 24px !important; }
-          .lp-cta-inner h2 { font-size: clamp(1.8rem, 7vw, 2.4rem) !important; }
-          .lp-cta-btns { flex-direction: column !important; align-items: stretch !important; }
-          .lp-cta-btns .lp-btn-primary { justify-content: center; width: 100%; }
-
-          /* Footer */
-          .lp-footer-inner { flex-direction: column !important; text-align: center; gap: 20px !important; }
-          .lp-footer-links { justify-content: center !important; }
-
-          /* Orbs: smaller on mobile */
-          .lp-orb-1 { width: 300px !important; height: 300px !important; top: -80px !important; left: -80px !important; }
-          .lp-orb-2 { width: 250px !important; height: 250px !important; bottom: -60px !important; right: -60px !important; }
-        }
-
-        /* ════════════════════════════════════════
-           RESPONSIVE — SMALL MOBILE (≤480px)
-        ════════════════════════════════════════ */
-        @media (max-width: 480px) {
-          .lp-stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
-          .lp-stat-card { padding: 16px 10px !important; }
-          .lp-pricing-card-inner { padding: 28px 20px !important; }
-          /* Hide "nav" login link too on very small */
-          .lp-nav-login { display: none !important; }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          .lp-root *, .lp-reveal, .lp-btn-primary, .lp-orb-1, .lp-orb-2 {
-            animation-duration: 0.01ms !important;
-            animation-iteration-count: 1 !important;
-            transition-duration: 0.01ms !important;
-          }
-          .lp-reveal { opacity: 1; transform: none; }
+        @media (prefers-reduced-motion:reduce) {
+          *,*::before,*::after { animation-duration:.01ms !important; transition-duration:.01ms !important; }
+          .lp-reveal { opacity:1; transform:none; }
         }
       `}</style>
 
-      <div className="lp-root">
+      <div className="lp">
 
-        {/* ── Navigation ─────────────────────────────────────────────── */}
-        <header className={`lp-nav ${scrolled ? "lp-scrolled" : ""}`}>
+        {/* ─────────────────── NAV ─────────────────────────────────── */}
+        <header className={`lp-nav ${scrolled ? "lp-on" : ""}`}>
           <div style={{ maxWidth: 1152, margin: "0 auto", padding: "0 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: "1.2rem", letterSpacing: "-0.02em" }}>
-              Entre<span className="lp-gt">net</span>
+            <span style={{ fontFamily: "'Plus Jakarta Sans'", fontWeight: 800, fontSize: "1.2rem", letterSpacing: "-0.03em" }}>
+              Entre<span className="amber-text">net</span>
             </span>
-            <nav className="lp-nav-links" style={{ display: "flex", gap: 32 }}>
+            <nav className="nav-links" style={{ display: "flex", gap: 32 }}>
               {[["Como funciona", "#como-funciona"], ["Funcionalidades", "#funcionalidades"], ["Preços", "#precos"]].map(([l, h]) => (
-                <a key={l} href={h} style={{ color: "#94A3B8", fontSize: "0.875rem", fontWeight: 500, textDecoration: "none", transition: "color 0.2s" }}
-                  onMouseEnter={e => (e.currentTarget.style.color = "#F1F5F9")}
-                  onMouseLeave={e => (e.currentTarget.style.color = "#94A3B8")}>{l}</a>
+                <a key={l} href={h} style={{ color: "#6B7280", fontSize: ".875rem", fontWeight: 500, textDecoration: "none", transition: "color .2s" }}
+                  onMouseEnter={e => (e.currentTarget.style.color = "#fff")}
+                  onMouseLeave={e => (e.currentTarget.style.color = "#6B7280")}>{l}</a>
               ))}
             </nav>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <Link href="/login" className="lp-nav-login" style={{ color: "#94A3B8", fontSize: "0.875rem", fontWeight: 500, textDecoration: "none", transition: "color 0.2s" }}
-                onMouseEnter={e => (e.currentTarget.style.color = "#F1F5F9")}
-                onMouseLeave={e => (e.currentTarget.style.color = "#94A3B8")}>Entrar</Link>
-              <Link href="/cadastro" className="lp-btn-primary" style={{ padding: "10px 20px", fontSize: "0.82rem", animation: "none" }}>
-                Começar grátis
-              </Link>
+              <Link href="/login" className="nav-login" style={{ color: "#6B7280", fontSize: ".875rem", fontWeight: 500, textDecoration: "none", transition: "color .2s" }}
+                onMouseEnter={e => (e.currentTarget.style.color = "#fff")}
+                onMouseLeave={e => (e.currentTarget.style.color = "#6B7280")}>Entrar</Link>
+              <Link href="/cadastro" className="nav-cta">Começar grátis</Link>
             </div>
           </div>
         </header>
 
-        {/* ── Hero ───────────────────────────────────────────────────── */}
-        <section className="lp-hero lp-dots" style={{ position: "relative", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "120px 24px 80px", overflow: "hidden", textAlign: "center" }}>
-          <div className="lp-orb-1" />
-          <div className="lp-orb-2" />
+        {/* ─────────────────── HERO ────────────────────────────────── */}
+        <section className="hero-pad" style={{ position: "relative", minHeight: "100vh", display: "flex", alignItems: "center", padding: "120px 24px 80px", overflow: "hidden" }}>
+          {/* Glow blobs */}
+          <div className="glow-blob" style={{ width: 700, height: 700, background: "rgba(245,158,11,0.12)", top: -200, left: -200 }} />
+          <div className="glow-blob" style={{ width: 500, height: 500, background: "rgba(251,191,36,0.07)", bottom: -100, right: -100 }} />
 
-          <div className="lp-hero-badge" style={{ marginBottom: 28 }}>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(52,211,153,0.08)", border: "1px solid rgba(52,211,153,0.2)", borderRadius: 100, padding: "8px 18px" }}>
-              <span className="lp-live-dot" style={{ width: 7, height: 7, borderRadius: "50%", background: "#34D399", display: "inline-block" }} />
-              <span style={{ color: "#6EE7B7", fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" }}>Bot WhatsApp para lojistas brasileiros</span>
-            </div>
-          </div>
+          <div className="hero-split" style={{ maxWidth: 1152, margin: "0 auto", width: "100%", display: "flex", alignItems: "center", gap: 64 }}>
 
-          <h1 className="lp-hero-h1" style={{ margin: "0 0 24px", fontWeight: 800, lineHeight: 1.08, maxWidth: 820, fontSize: "clamp(2.4rem, 6.5vw, 4.6rem)", color: "#F8FAFC" }}>
-            Transforme seu WhatsApp em uma{" "}
-            <span className="lp-gt">máquina de vendas</span>
-          </h1>
-
-          <p className="lp-hero-sub" style={{ color: "#64748B", marginBottom: 44, maxWidth: 580, fontSize: "clamp(0.95rem, 2vw, 1.1rem)", lineHeight: 1.7 }}>
-            Bot inteligente que atende seus clientes 24h, envia cardápio, responde dúvidas e gerencia seu negócio — enquanto você faz o que realmente importa.
-          </p>
-
-          <div className="lp-hero-ctas" style={{ display: "flex", flexWrap: "wrap", gap: 14, justifyContent: "center", marginBottom: 64 }}>
-            <Link href="/cadastro" className="lp-btn-primary" style={{ fontSize: "0.95rem", padding: "15px 30px" }}>
-              Começar agora — é grátis <ArrowRight />
-            </Link>
-          </div>
-
-          <div className="lp-hero-stats lp-stats-grid">
-            {[
-              { val: "24h", label: "Atendimento sem parar" },
-              { val: "5 min", label: "Para configurar" },
-              { val: "R$0", label: "Por mensagem enviada" },
-              { val: "∞", label: "Produtos no catálogo" },
-            ].map((s, i) => (
-              <div key={i} className="lp-stat-card">
-                <p className="lp-gt" style={{ fontSize: "clamp(1.5rem, 3.5vw, 2rem)", fontWeight: 800, marginBottom: 4, backgroundSize: "200%", animationDelay: `${i * 0.4}s` }}>{s.val}</p>
-                <p style={{ color: "#475569", fontSize: "0.76rem", fontWeight: 500 }}>{s.label}</p>
+            {/* LEFT — text */}
+            <div style={{ flex: 1, maxWidth: 680 }}>
+              {/* Badge */}
+              <div className="h1" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: 100, padding: "8px 18px", marginBottom: 28 }}>
+                <span className="status-dot" />
+                <span style={{ color: "#FCD34D", fontSize: ".7rem", fontWeight: 700, letterSpacing: ".12em", textTransform: "uppercase" }}>Bot WhatsApp para lojistas</span>
               </div>
-            ))}
+
+              <h1 className="h2" style={{ fontSize: "clamp(2.6rem,6.5vw,5rem)", fontWeight: 800, lineHeight: 1.04, marginBottom: 24, color: "#fff" }}>
+                Seu WhatsApp.<br />
+                <span className="amber-text">Vendendo 24h.</span>
+              </h1>
+
+              <p className="h3" style={{ color: "#6B7280", fontSize: "clamp(1rem,2vw,1.15rem)", lineHeight: 1.7, maxWidth: 520, marginBottom: 40 }}>
+                Bot inteligente que atende clientes, envia cardápio e gerencia pedidos automaticamente — enquanto você foca no crescimento do negócio.
+              </p>
+
+              <div className="h4 hero-ctas" style={{ display: "flex", flexWrap: "wrap", gap: 14, marginBottom: 56 }}>
+                <Link href="/cadastro" className="cta-amber">
+                  Criar conta grátis <ArrowRight />
+                </Link>
+              </div>
+
+              {/* Mini stats row */}
+              <div className="h5" style={{ display: "flex", flexWrap: "wrap", gap: 28 }}>
+                {[["24h", "Atendimento"], ["5 min", "Setup"], ["R$0", "Por mensagem"], ["∞", "Produtos"]].map(([v, l]) => (
+                  <div key={v}>
+                    <p style={{ fontSize: "1.4rem", fontWeight: 800, color: "#F59E0B", lineHeight: 1 }}>{v}</p>
+                    <p style={{ fontSize: ".75rem", color: "#4B5563", marginTop: 3 }}>{l}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* RIGHT — floating glass chat card */}
+            <div className="hero-card-col h6" style={{ flexShrink: 0, width: 300 }}>
+              <div className="hero-card glass" style={{ borderRadius: 24, padding: 22, position: "relative" }}>
+                {/* Glow accent */}
+                <div style={{ position: "absolute", top: -40, right: -40, width: 180, height: 180, background: "rgba(245,158,11,0.12)", borderRadius: "50%", filter: "blur(60px)", pointerEvents: "none" }} />
+
+                {/* WhatsApp header */}
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18, paddingBottom: 14, borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+                  <div style={{ width: 38, height: 38, borderRadius: "50%", background: "#25D366", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <WhatsAppIcon size={4} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ color: "#fff", fontSize: ".85rem", fontWeight: 700, marginBottom: 1 }}>Pizzaria do João</p>
+                    <p style={{ fontSize: ".7rem", color: "#4ADE80", display: "flex", alignItems: "center", gap: 4 }}>
+                      <span className="status-dot" style={{ width: 6, height: 6, flexShrink: 0 }} /> Bot ativo
+                    </p>
+                  </div>
+                  <div style={{ background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 8, padding: "3px 8px", fontSize: ".65rem", color: "#F59E0B", fontWeight: 700 }}>AO VIVO</div>
+                </div>
+
+                {/* Chat messages */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
+                  <div>
+                    <p style={{ fontSize: ".65rem", color: "#4B5563", marginBottom: 4 }}>Cliente</p>
+                    <div className="msg-bubble msg-in">Oi! Quero ver o cardápio 🍕</div>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+                    <p style={{ fontSize: ".65rem", color: "#4B5563", marginBottom: 4 }}>Bot</p>
+                    <div className="msg-bubble msg-out">Olá! Veja nosso cardápio completo 👇</div>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+                    <div style={{ background: "rgba(245,158,11,0.15)", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 10, padding: "8px 14px", fontSize: ".78rem", color: "#FDE68A", fontWeight: 600 }}>
+                      🔗 ver.loja/pizzaria-joao
+                    </div>
+                  </div>
+                </div>
+
+                {/* Stats strip */}
+                <div style={{ display: "flex", gap: 8, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+                  {[["247", "msgs hoje"], ["98%", "respondidas"], ["4.8", "avaliação"]].map(([v, l]) => (
+                    <div key={v} style={{ flex: 1, textAlign: "center" }}>
+                      <p style={{ fontSize: ".95rem", fontWeight: 800, color: "#F59E0B" }}>{v}</p>
+                      <p style={{ fontSize: ".6rem", color: "#4B5563", marginTop: 1 }}>{l}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
-        {/* ── Como funciona ───────────────────────────────────────────── */}
-        <section id="como-funciona" className="lp-section" style={{ maxWidth: 1024, margin: "0 auto", padding: "96px 24px" }}>
-          <div className="lp-reveal" style={{ textAlign: "center", marginBottom: 52 }}>
-            <span className="lp-label">Como funciona</span>
-            <h2 style={{ fontSize: "clamp(1.9rem, 4vw, 2.7rem)", fontWeight: 800, color: "#F8FAFC", margin: "0 0 14px" }}>
-              Três passos. <span className="lp-gt">Pronto.</span>
+        {/* ─────────────────── COMO FUNCIONA ───────────────────────── */}
+        <section id="como-funciona" className="sec-pad" style={{ maxWidth: 1024, margin: "0 auto", padding: "96px 24px", position: "relative" }}>
+          {/* Section glow */}
+          <div className="glow-blob" style={{ width: 400, height: 400, background: "rgba(245,158,11,0.07)", top: "50%", left: "50%", transform: "translate(-50%,-50%)" }} />
+
+          <div className="lp-reveal" style={{ textAlign: "center", marginBottom: 56, position: "relative" }}>
+            <span className="sec-label">Como funciona</span>
+            <h2 style={{ fontSize: "clamp(1.9rem,4vw,2.8rem)", fontWeight: 800, color: "#fff", margin: "0 0 14px" }}>
+              Três passos. <span className="amber-text">Pronto.</span>
             </h2>
-            <p style={{ color: "#64748B", maxWidth: 420, margin: "0 auto", lineHeight: 1.65, fontSize: "0.95rem" }}>
-              Configure em minutos. O bot começa a trabalhar imediatamente.
+            <p style={{ color: "#6B7280", maxWidth: 400, margin: "0 auto", lineHeight: 1.65, fontSize: ".95rem" }}>
+              Configure em minutos e comece a vender automaticamente.
             </p>
           </div>
 
-          <div className="lp-steps-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24, position: "relative" }}>
-            <div className="lp-connector" />
+          <div className="steps-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 20, position: "relative" }}>
             {[
-              { n: "01", icon: <StoreIcon />, title: "Cadastre sua loja", desc: "Crie sua conta em segundos. Adicione o nome, os produtos, os preços e configure a mensagem do bot.", color: "#818CF8", bg: "rgba(99,102,241,0.12)" },
-              { n: "02", icon: <WhatsAppIcon />, title: "Conecte o WhatsApp", desc: "Escaneie o QR Code dentro da plataforma. Seu número fica ativo sem nenhuma troca ou configuração extra.", color: "#34D399", bg: "rgba(52,211,153,0.1)" },
-              { n: "03", icon: <BotIcon />, title: "Bot atende sozinho", desc: "Seu cliente envia uma mensagem e recebe o cardápio e o link da loja automaticamente, na hora.", color: "#F59E0B", bg: "rgba(245,158,11,0.1)" },
+              { n: "01", icon: <StoreIcon />, t: "Cadastre sua loja", d: "Crie sua conta e adicione o nome, produtos, preços e configure a mensagem do bot." },
+              { n: "02", icon: <WhatsAppIcon />, t: "Conecte o WhatsApp", d: "Escaneie o QR Code. Seu número fica ativo sem qualquer troca ou configuração extra." },
+              { n: "03", icon: <BotIcon />, t: "Bot atende sozinho", d: "O cliente envia uma mensagem e recebe o cardápio e o link da loja na hora." },
             ].map((step, i) => (
-              <div key={i} className={`lp-reveal lp-card lp-d${i + 1}`}>
+              <div key={i} className={`lp-reveal bc s${i + 1}`}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18 }}>
-                  <div className="lp-icon" style={{ background: step.bg, color: step.color }}>{step.icon}</div>
-                  <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "0.75rem", fontWeight: 700, color: "#334155", letterSpacing: "0.05em" }}>{step.n}</span>
+                  <div className="ic">{step.icon}</div>
+                  <div className="step-num">{step.n}</div>
                 </div>
-                <h3 style={{ color: "#F1F5F9", fontSize: "1.05rem", fontWeight: 700, marginBottom: 8 }}>{step.title}</h3>
-                <p style={{ color: "#64748B", fontSize: "0.87rem", lineHeight: 1.65 }}>{step.desc}</p>
+                <h3 style={{ color: "#fff", fontSize: "1.05rem", fontWeight: 700, marginBottom: 8 }}>{step.t}</h3>
+                <p style={{ color: "#6B7280", fontSize: ".87rem", lineHeight: 1.65 }}>{step.d}</p>
               </div>
             ))}
           </div>
         </section>
 
-        {/* ── Features Bento ──────────────────────────────────────────── */}
-        <section id="funcionalidades" className="lp-section" style={{ maxWidth: 1100, margin: "0 auto", padding: "20px 24px 96px" }}>
-          <div className="lp-reveal" style={{ textAlign: "center", marginBottom: 52 }}>
-            <span className="lp-label">Funcionalidades</span>
-            <h2 style={{ fontSize: "clamp(1.9rem, 4vw, 2.7rem)", fontWeight: 800, color: "#F8FAFC", margin: "0 0 14px" }}>
+        {/* ─────────────────── BENTO FEATURES ─────────────────────── */}
+        <section id="funcionalidades" className="sec-pad" style={{ maxWidth: 1100, margin: "0 auto", padding: "16px 24px 96px", position: "relative" }}>
+          {/* Glow */}
+          <div className="glow-blob" style={{ width: 500, height: 500, background: "rgba(245,158,11,0.08)", top: "30%", right: -100 }} />
+
+          <div className="lp-reveal" style={{ textAlign: "center", marginBottom: 52, position: "relative" }}>
+            <span className="sec-label">Funcionalidades</span>
+            <h2 style={{ fontSize: "clamp(1.9rem,4vw,2.8rem)", fontWeight: 800, color: "#fff", margin: "0 0 14px" }}>
               Tudo que sua loja precisa
             </h2>
-            <p style={{ color: "#64748B", maxWidth: 440, margin: "0 auto", lineHeight: 1.65, fontSize: "0.95rem" }}>
+            <p style={{ color: "#6B7280", maxWidth: 420, margin: "0 auto", lineHeight: 1.65, fontSize: ".95rem" }}>
               Plataforma completa para automatizar vendas e atendimento no WhatsApp.
             </p>
           </div>
 
-          {/* Grid: Bot(2) + Catálogo / Dashboard + Loja + Config / WhatsApp(full) */}
-          <div className="lp-bento">
-            {/* Row 1 */}
-            <div className="lp-reveal lp-d1 lp-card lp-bento-wide">
-              <div className="lp-icon" style={{ background: "rgba(99,102,241,0.15)", color: "#818CF8" }}><BotIcon /></div>
-              <h3 style={{ color: "#F1F5F9", fontSize: "1.25rem", fontWeight: 800, marginBottom: 10 }}>Bot automático 24h</h3>
-              <p style={{ color: "#64748B", fontSize: "0.9rem", lineHeight: 1.7, maxWidth: 420 }}>
-                Seu WhatsApp responde sozinho a qualquer hora. Nunca mais um cliente sem resposta — mesmo quando você está descansando.
+          {/*
+            Bento layout (3 cols):
+            Row 1: [Bot 24h - b-wide 2col + b-tall 2row] | [Catálogo 1col]
+            Row 2:                                        | [Dashboard 1col]
+            Row 3: [Loja 1col] | [Config 1col]           | [WhatsApp 1col]
+          */}
+          <div className="bento" style={{ position: "relative" }}>
+
+            {/* Bot 24h — tall + wide hero card */}
+            <div className="lp-reveal s1 bc b-tall" style={{ gridColumn: 1, gridRow: "1 / 3", display: "flex", flexDirection: "column" }}>
+              <div className="ic" style={{ width: 56, height: 56, borderRadius: 16 }}><BotIcon /></div>
+              <h3 style={{ color: "#fff", fontSize: "1.3rem", fontWeight: 800, marginBottom: 10 }}>Bot automático 24h</h3>
+              <p style={{ color: "#6B7280", fontSize: ".9rem", lineHeight: 1.7, marginBottom: 20 }}>
+                Seu WhatsApp responde sozinho a qualquer hora do dia. Nunca mais um cliente sem resposta.
               </p>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 16 }}>
-                {["Cardápio automático", "Link da loja", "Resposta instantânea", "Sem limite de msgs"].map((t) => (
-                  <span key={t} className="lp-tag" style={{ color: "#818CF8", borderColor: "rgba(129,140,248,0.25)", background: "rgba(99,102,241,0.08)", fontSize: "0.7rem" }}>{t}</span>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: "auto" }}>
+                {["Cardápio automático", "Link da loja", "Resposta instantânea", "Sem limite"].map((t) => (
+                  <span key={t} style={{ fontSize: ".7rem", fontWeight: 600, color: "#F59E0B", background: "rgba(245,158,11,.1)", border: "1px solid rgba(245,158,11,.2)", borderRadius: 100, padding: "4px 12px" }}>{t}</span>
                 ))}
+              </div>
+              {/* Mini chat preview inside card */}
+              <div style={{ marginTop: 24, background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.06)", borderRadius: 16, padding: "14px 16px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                  <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#25D366", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <WhatsAppIcon size={3} />
+                  </div>
+                  <span style={{ fontSize: ".78rem", color: "#E5E7EB", fontWeight: 600 }}>Bot respondendo…</span>
+                  <span className="status-dot" style={{ marginLeft: "auto" }} />
+                </div>
+                <div style={{ background: "rgba(245,158,11,.12)", borderRadius: 10, padding: "8px 12px", fontSize: ".75rem", color: "#FDE68A" }}>
+                  "Olá! Veja nosso cardápio 👉 loja.entrenet.tech/pizzaria"
+                </div>
               </div>
             </div>
 
-            <div className="lp-reveal lp-d2 lp-card">
-              <div className="lp-icon" style={{ background: "rgba(52,211,153,0.12)", color: "#34D399" }}><GridIcon /></div>
-              <h3 style={{ color: "#F1F5F9", fontSize: "1.05rem", fontWeight: 700, marginBottom: 8 }}>Catálogo digital</h3>
-              <p style={{ color: "#64748B", fontSize: "0.87rem", lineHeight: 1.6 }}>Produtos ilimitados com nome, preço, emoji e descrição. Organize por categorias.</p>
+            {/* Catálogo */}
+            <div className="lp-reveal s2 bc" style={{ gridColumn: "2 / 3", gridRow: 1 }}>
+              <div className="ic"><GridIcon /></div>
+              <h3 style={{ color: "#fff", fontSize: "1.05rem", fontWeight: 700, marginBottom: 8 }}>Catálogo digital</h3>
+              <p style={{ color: "#6B7280", fontSize: ".87rem", lineHeight: 1.6 }}>Produtos ilimitados com nome, preço e emoji. Organize por categorias.</p>
             </div>
 
-            {/* Row 2 — 3 cards, fills 3 cols cleanly */}
-            <div className="lp-reveal lp-d3 lp-card">
-              <div className="lp-icon" style={{ background: "rgba(139,92,246,0.14)", color: "#A78BFA" }}><ChartIcon /></div>
-              <h3 style={{ color: "#F1F5F9", fontSize: "1.05rem", fontWeight: 700, marginBottom: 8 }}>Dashboard completo</h3>
-              <p style={{ color: "#64748B", fontSize: "0.87rem", lineHeight: 1.6 }}>Status do bot em tempo real, conversas recentes e controle de estoque.</p>
+            {/* Dashboard */}
+            <div className="lp-reveal s3 bc" style={{ gridColumn: "3 / 4", gridRow: 1 }}>
+              <div className="ic"><ChartIcon /></div>
+              <h3 style={{ color: "#fff", fontSize: "1.05rem", fontWeight: 700, marginBottom: 8 }}>Dashboard completo</h3>
+              <p style={{ color: "#6B7280", fontSize: ".87rem", lineHeight: 1.6 }}>Status do bot, conversas recentes e controle de estoque em tempo real.</p>
             </div>
 
-            <div className="lp-reveal lp-d4 lp-card">
-              <div className="lp-icon" style={{ background: "rgba(6,182,212,0.12)", color: "#22D3EE" }}><LinkIcon /></div>
-              <h3 style={{ color: "#F1F5F9", fontSize: "1.05rem", fontWeight: 700, marginBottom: 8 }}>Loja pública</h3>
-              <p style={{ color: "#64748B", fontSize: "0.87rem", lineHeight: 1.6 }}>URL única com seu catálogo. Divulgue no Instagram, TikTok ou onde quiser.</p>
+            {/* Loja */}
+            <div className="lp-reveal s4 bc" style={{ gridColumn: "2 / 3", gridRow: 2 }}>
+              <div className="ic"><LinkIcon /></div>
+              <h3 style={{ color: "#fff", fontSize: "1.05rem", fontWeight: 700, marginBottom: 8 }}>Loja pública</h3>
+              <p style={{ color: "#6B7280", fontSize: ".87rem", lineHeight: 1.6 }}>URL única com seu catálogo para divulgar onde quiser.</p>
             </div>
 
-            <div className="lp-reveal lp-d5 lp-card">
-              <div className="lp-icon" style={{ background: "rgba(245,158,11,0.12)", color: "#FCD34D" }}><GearIcon /></div>
-              <h3 style={{ color: "#F1F5F9", fontSize: "1.05rem", fontWeight: 700, marginBottom: 8 }}>Configuração simples</h3>
-              <p style={{ color: "#64748B", fontSize: "0.87rem", lineHeight: 1.6 }}>Mude a mensagem do bot, os produtos e as configurações a qualquer momento.</p>
+            {/* Config */}
+            <div className="lp-reveal s5 bc" style={{ gridColumn: "3 / 4", gridRow: 2 }}>
+              <div className="ic"><GearIcon /></div>
+              <h3 style={{ color: "#fff", fontSize: "1.05rem", fontWeight: 700, marginBottom: 8 }}>Configuração simples</h3>
+              <p style={{ color: "#6B7280", fontSize: ".87rem", lineHeight: 1.6 }}>Mude mensagens, produtos e ajustes a qualquer momento.</p>
             </div>
 
-            {/* Row 3 — WhatsApp full width */}
-            <div className="lp-reveal lp-d6 lp-card lp-bento-full">
-              <div style={{ display: "flex", gap: 20, alignItems: "center", flexWrap: "wrap" }}>
-                <div className="lp-icon" style={{ background: "rgba(52,211,153,0.12)", color: "#34D399", flexShrink: 0, marginBottom: 0 }}><WhatsAppIcon /></div>
+            {/* WhatsApp — full width bottom */}
+            <div className="lp-reveal s6 bc b-wide" style={{ gridColumn: "1 / 4", gridRow: 3 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
+                <div className="ic" style={{ marginBottom: 0, flexShrink: 0, background: "rgba(34,197,94,.12)", color: "#22C55E", borderRadius: 16, width: 52, height: 52 }}><WhatsAppIcon /></div>
                 <div>
-                  <h3 style={{ color: "#F1F5F9", fontSize: "1.05rem", fontWeight: 700, marginBottom: 6 }}>Seu número, sem mudar nada</h3>
-                  <p style={{ color: "#64748B", fontSize: "0.87rem", lineHeight: 1.6, maxWidth: 500 }}>Use o mesmo número de WhatsApp que seus clientes já conhecem. Zero troca, zero burocracia, zero migrações.</p>
+                  <h3 style={{ color: "#fff", fontSize: "1.05rem", fontWeight: 700, marginBottom: 6 }}>Seu número, sem mudar nada</h3>
+                  <p style={{ color: "#6B7280", fontSize: ".87rem", lineHeight: 1.6, maxWidth: 500 }}>Use o mesmo número de WhatsApp que seus clientes já conhecem. Zero troca, zero burocracia.</p>
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* ── Screenshot Carousel ─────────────────────────────────────── */}
-        <section className="lp-section" style={{ maxWidth: 960, margin: "0 auto", padding: "0 24px 96px" }}>
-          <div className="lp-reveal" style={{ textAlign: "center", marginBottom: 48 }}>
-            <span className="lp-label">Plataforma</span>
-            <h2 style={{ fontSize: "clamp(1.9rem, 4vw, 2.7rem)", fontWeight: 800, color: "#F8FAFC", margin: "0 0 14px" }}>
+        {/* ─────────────────── CAROUSEL ─────────────────────────────── */}
+        <section className="sec-pad" style={{ maxWidth: 960, margin: "0 auto", padding: "0 24px 96px", position: "relative" }}>
+          <div className="glow-blob" style={{ width: 400, height: 400, background: "rgba(245,158,11,0.06)", bottom: 0, left: "50%", transform: "translateX(-50%)" }} />
+
+          <div className="lp-reveal" style={{ textAlign: "center", marginBottom: 44, position: "relative" }}>
+            <span className="sec-label">Plataforma</span>
+            <h2 style={{ fontSize: "clamp(1.9rem,4vw,2.8rem)", fontWeight: 800, color: "#fff", margin: "0 0 14px" }}>
               Controle tudo em um só lugar
             </h2>
-            <p style={{ color: "#64748B", maxWidth: 420, margin: "0 auto", lineHeight: 1.65, fontSize: "0.95rem" }}>
-              Dashboard intuitivo para gerenciar produtos, pedidos, estoque e acompanhar o bot.
+            <p style={{ color: "#6B7280", maxWidth: 400, margin: "0 auto", lineHeight: 1.65, fontSize: ".95rem" }}>
+              Dashboard intuitivo com PDV, pedidos, estoque e bot integrados.
             </p>
           </div>
 
-          <div className="lp-reveal lp-d1">
-            <div
-              className="lp-carousel"
-              onMouseEnter={() => setIsPaused(true)}
-              onMouseLeave={() => setIsPaused(false)}
-            >
-              {/* Browser bar */}
-              <div className="lp-carousel-bar">
-                <div className="lp-carousel-dot-win" style={{ background: "rgba(239,68,68,0.7)" }} />
-                <div className="lp-carousel-dot-win" style={{ background: "rgba(234,179,8,0.7)" }} />
-                <div className="lp-carousel-dot-win" style={{ background: "rgba(34,197,94,0.7)" }} />
-                <div style={{ flex: 1, marginLeft: 12, background: "rgba(255,255,255,0.04)", borderRadius: 8, height: 24, maxWidth: 200 }} />
+          <div className="lp-reveal s1">
+            <div className="carousel-wrap" onMouseEnter={() => setIsPaused(true)} onMouseLeave={() => setIsPaused(false)}>
+              <div className="carousel-bar">
+                <div style={{ width: 11, height: 11, borderRadius: "50%", background: "rgba(239,68,68,.7)" }} />
+                <div style={{ width: 11, height: 11, borderRadius: "50%", background: "rgba(234,179,8,.7)" }} />
+                <div style={{ width: 11, height: 11, borderRadius: "50%", background: "rgba(34,197,94,.7)" }} />
+                <div style={{ flex: 1, marginLeft: 12, background: "rgba(255,255,255,.04)", borderRadius: 8, height: 24, maxWidth: 200 }} />
               </div>
-
-              {/* Image */}
-              <div style={{ position: "relative", overflow: "hidden", background: "#0B1121" }}>
-                <Image
-                  key={activeSlide}
-                  src={slides[activeSlide].src}
-                  alt={slides[activeSlide].label}
-                  width={960}
-                  height={540}
-                  className="lp-carousel-img"
-                  style={{ objectFit: "cover", display: "block" }}
-                  priority={activeSlide === 0}
-                />
-
-                {/* Arrow buttons */}
-                <button className="lp-carousel-btn" onClick={prevSlide} style={{ left: 12 }} aria-label="Anterior">
-                  <ChevronLeft />
-                </button>
-                <button className="lp-carousel-btn" onClick={nextSlide} style={{ right: 12 }} aria-label="Próximo">
-                  <ChevronRightIcon />
-                </button>
+              <div style={{ position: "relative", background: "#0B1121", overflow: "hidden" }}>
+                <Image key={activeSlide} src={slides[activeSlide].src} alt={slides[activeSlide].label} width={960} height={540} style={{ display: "block", width: "100%", height: "auto", animation: "lp-slide .4s ease both" }} priority={activeSlide === 0} />
+                <button className="c-btn" onClick={prevSlide} style={{ left: 12 }} aria-label="Anterior"><ChevronLeft /></button>
+                <button className="c-btn" onClick={nextSlide} style={{ right: 12 }} aria-label="Próximo"><ChevronRightIcon /></button>
               </div>
             </div>
-
-            {/* Dots + label */}
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, marginTop: 16 }}>
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                 {slides.map((_, i) => (
-                  <button
-                    key={i}
-                    className="lp-carousel-indicator"
-                    onClick={() => setActiveSlide(i)}
-                    style={{
-                      width: i === activeSlide ? 20 : 6,
-                      height: 6,
-                      borderRadius: i === activeSlide ? 3 : "50%",
-                      background: i === activeSlide ? "#818CF8" : "rgba(129,140,248,0.25)",
-                      cursor: "pointer",
-                    }}
-                    aria-label={`Slide ${i + 1}`}
-                  />
+                  <button key={i} onClick={() => setActiveSlide(i)} style={{ width: i === activeSlide ? 20 : 6, height: 6, borderRadius: i === activeSlide ? 3 : "50%", background: i === activeSlide ? "#F59E0B" : "rgba(245,158,11,.2)", border: "none", cursor: "pointer", transition: "all .3s ease", padding: 0 }} aria-label={`Slide ${i + 1}`} />
                 ))}
               </div>
-              <p className="lp-carousel-label">{slides[activeSlide].label}</p>
+              <p style={{ fontSize: ".78rem", color: "#4B5563", fontWeight: 500 }}>{slides[activeSlide].label}</p>
             </div>
           </div>
         </section>
 
-        {/* ── Pricing ─────────────────────────────────────────────────── */}
-        <section id="precos" className="lp-pricing-wrap" style={{ maxWidth: 500, margin: "0 auto", padding: "0 24px 96px" }}>
-          <div className="lp-reveal" style={{ textAlign: "center", marginBottom: 44 }}>
-            <span className="lp-label">Preços</span>
-            <h2 style={{ fontSize: "clamp(1.9rem, 4vw, 2.7rem)", fontWeight: 800, color: "#F8FAFC", margin: "0 0 12px" }}>
+        {/* ─────────────────── PRICING ──────────────────────────────── */}
+        <section id="precos" style={{ maxWidth: 500, margin: "0 auto", padding: "0 24px 96px", position: "relative" }}>
+          <div className="glow-blob" style={{ width: 450, height: 450, background: "rgba(245,158,11,0.1)", top: "50%", left: "50%", transform: "translate(-50%,-50%)" }} />
+
+          <div className="lp-reveal" style={{ textAlign: "center", marginBottom: 44, position: "relative" }}>
+            <span className="sec-label">Preços</span>
+            <h2 style={{ fontSize: "clamp(1.9rem,4vw,2.8rem)", fontWeight: 800, color: "#fff", margin: "0 0 12px" }}>
               Plano único, sem surpresas
             </h2>
-            <p style={{ color: "#64748B", lineHeight: 1.6, fontSize: "0.95rem" }}>Tudo incluso. Sem limite de mensagens. Sem contrato.</p>
+            <p style={{ color: "#6B7280", lineHeight: 1.6, fontSize: ".95rem" }}>Tudo incluso. Sem limite de mensagens. Sem contrato.</p>
           </div>
 
-          <div className="lp-reveal lp-d1 lp-pricing">
-            <div className="lp-pricing-card-inner" style={{ padding: "40px 36px" }}>
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(99,102,241,0.12)", border: "1px solid rgba(129,140,248,0.2)", borderRadius: 100, padding: "6px 16px", marginBottom: 24 }}>
-                <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#818CF8", display: "inline-block" }} />
-                <span style={{ color: "#A5B4FC", fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" }}>Plano Completo</span>
+          <div className="lp-reveal s1 pricing-card" style={{ position: "relative" }}>
+            <div style={{ padding: "40px 36px" }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(245,158,11,.1)", border: "1px solid rgba(245,158,11,.2)", borderRadius: 100, padding: "6px 16px", marginBottom: 24 }}>
+                <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#F59E0B", display: "inline-block" }} />
+                <span style={{ color: "#FCD34D", fontSize: ".7rem", fontWeight: 700, letterSpacing: ".12em", textTransform: "uppercase" }}>Plano Completo</span>
               </div>
               <div style={{ marginBottom: 6 }}>
-                <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "clamp(2.8rem, 8vw, 3.8rem)", fontWeight: 800, color: "#F8FAFC", lineHeight: 1 }}>R$25</span>
-                <span style={{ color: "#64748B", fontSize: "1.05rem", marginLeft: 4 }}>/mês</span>
+                <span style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: "clamp(2.8rem,8vw,3.8rem)", fontWeight: 800, color: "#F59E0B", lineHeight: 1 }}>R$25</span>
+                <span style={{ color: "#6B7280", fontSize: "1.05rem", marginLeft: 4 }}>/mês</span>
               </div>
-              <p style={{ color: "#475569", fontSize: "0.85rem", marginBottom: 28 }}>ou r$300 anuais · cancele quando quiser</p>
-              <div style={{ height: 1, background: "rgba(129,140,248,0.1)", marginBottom: 28 }} />
-              <ul style={{ listStyle: "none", padding: 0, margin: "0 0 32px", display: "flex", flexDirection: "column", gap: 15 }}>
+              <p style={{ color: "#4B5563", fontSize: ".85rem", marginBottom: 28 }}>ou r$300 anuais · cancele quando quiser</p>
+              <div style={{ height: 1, background: "rgba(245,158,11,.12)", marginBottom: 28 }} />
+              <ul style={{ listStyle: "none", padding: 0, margin: "0 0 32px", display: "flex", flexDirection: "column", gap: 14 }}>
                 {["Bot automático no WhatsApp", "Produtos ilimitados no catálogo", "Dashboard com status em tempo real", "Loja pública com URL própria", "Gestão de estoque e validades", "Configuração de mensagens do bot", "Suporte via WhatsApp"].map((item) => (
-                  <li key={item} style={{ display: "flex", alignItems: "center", gap: 12, color: "#CBD5E1", fontSize: "0.9rem" }}>
-                    <span style={{ color: "#34D399", flexShrink: 0 }}><CheckIcon /></span>
-                    {item}
+                  <li key={item} style={{ display: "flex", alignItems: "center", gap: 12, color: "#D1D5DB", fontSize: ".9rem" }}>
+                    <span style={{ color: "#F59E0B", flexShrink: 0 }}><CheckIcon /></span>{item}
                   </li>
                 ))}
               </ul>
-              <Link href="/cadastro" className="lp-btn-primary" style={{ display: "flex", justifyContent: "center", width: "100%", fontSize: "1rem", padding: "16px 24px" }}>
+              <Link href="/cadastro" className="cta-amber" style={{ display: "flex", justifyContent: "center", width: "100%", fontSize: "1rem", padding: "16px 24px" }}>
                 Criar conta grátis <ArrowRight />
               </Link>
-              <p style={{ textAlign: "center", color: "#334155", fontSize: "0.75rem", marginTop: 14 }}>Sem cartão de crédito para começar</p>
+              <p style={{ textAlign: "center", color: "#374151", fontSize: ".75rem", marginTop: 14 }}>Sem cartão de crédito para começar</p>
             </div>
           </div>
         </section>
 
-        {/* ── FAQ ──────────────────────────────────────────────────────── */}
-        <section className="lp-section-sm" style={{ maxWidth: 660, margin: "0 auto", padding: "0 24px 96px" }}>
+        {/* ─────────────────── FAQ ──────────────────────────────────── */}
+        <section style={{ maxWidth: 660, margin: "0 auto", padding: "0 24px 96px" }}>
           <div className="lp-reveal" style={{ textAlign: "center", marginBottom: 44 }}>
-            <span className="lp-label">Dúvidas</span>
-            <h2 style={{ fontSize: "clamp(1.8rem, 4vw, 2.4rem)", fontWeight: 800, color: "#F8FAFC", margin: 0 }}>Perguntas frequentes</h2>
+            <span className="sec-label">Dúvidas</span>
+            <h2 style={{ fontSize: "clamp(1.8rem,4vw,2.4rem)", fontWeight: 800, color: "#fff", margin: 0 }}>Perguntas frequentes</h2>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {faqs.map((faq, i) => (
-              <div key={i} className={`lp-reveal lp-d${Math.min(i + 1, 5)} lp-faq-item`}>
-                <button
-                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
+              <div key={i} className={`lp-reveal s${Math.min(i + 1, 5)} faq-item`}>
+                <button onClick={() => setOpenFaq(openFaq === i ? null : i)}
                   style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, padding: "20px 22px", background: "none", border: "none", cursor: "pointer", textAlign: "left" }}
-                  aria-expanded={openFaq === i}
-                >
-                  <span style={{ color: "#E2E8F0", fontWeight: 600, fontSize: "0.9rem", fontFamily: "'Space Grotesk', sans-serif" }}>{faq.q}</span>
-                  <span style={{ color: "#64748B", flexShrink: 0 }}><ChevronDown open={openFaq === i} /></span>
+                  aria-expanded={openFaq === i}>
+                  <span style={{ color: "#E5E7EB", fontWeight: 600, fontSize: ".9rem", fontFamily: "'Plus Jakarta Sans'" }}>{faq.q}</span>
+                  <span style={{ color: "#4B5563", flexShrink: 0 }}><ChevronDown open={openFaq === i} /></span>
                 </button>
-                <div className="lp-faq-answer" style={{ maxHeight: openFaq === i ? "180px" : "0", opacity: openFaq === i ? 1 : 0 }}>
-                  <p style={{ padding: "0 22px 20px", color: "#64748B", fontSize: "0.875rem", lineHeight: 1.7 }}>{faq.a}</p>
+                <div className="faq-ans" style={{ maxHeight: openFaq === i ? "180px" : "0", opacity: openFaq === i ? 1 : 0 }}>
+                  <p style={{ padding: "0 22px 20px", color: "#6B7280", fontSize: ".875rem", lineHeight: 1.7 }}>{faq.a}</p>
                 </div>
               </div>
             ))}
           </div>
         </section>
 
-        {/* ── Final CTA ───────────────────────────────────────────────── */}
+        {/* ─────────────────── FINAL CTA ────────────────────────────── */}
         <section style={{ maxWidth: 960, margin: "0 auto", padding: "0 24px 96px" }}>
-          <div className="lp-reveal lp-cta-bg">
-            <div className="lp-cta-inner" style={{ padding: "72px 60px", textAlign: "center" }}>
-              <div style={{ position: "absolute", top: "-60px", left: "50%", transform: "translateX(-50%)", width: 380, height: 280, background: "radial-gradient(circle, rgba(99,102,241,0.2) 0%, transparent 70%)", borderRadius: "50%", pointerEvents: "none" }} />
-              <h2 style={{ position: "relative", fontSize: "clamp(2rem, 5vw, 3.2rem)", fontWeight: 800, color: "#F8FAFC", lineHeight: 1.1, marginBottom: 16 }}>
+          <div className="lp-reveal cta-section">
+            <div className="cta-inner" style={{ padding: "72px 60px", textAlign: "center", position: "relative" }}>
+              {/* Glow */}
+              <div style={{ position: "absolute", top: "-50px", left: "50%", transform: "translateX(-50%)", width: 400, height: 300, background: "radial-gradient(circle,rgba(245,158,11,0.2) 0%,transparent 70%)", borderRadius: "50%", pointerEvents: "none" }} />
+
+              <h2 style={{ position: "relative", fontSize: "clamp(2rem,5vw,3.2rem)", fontWeight: 800, color: "#fff", lineHeight: 1.1, marginBottom: 16 }}>
                 Comece hoje.<br />
-                <span className="lp-gt">Venda mais amanhã.</span>
+                <span className="amber-text">Venda mais amanhã.</span>
               </h2>
-              <p style={{ position: "relative", color: "#64748B", maxWidth: 420, margin: "0 auto 40px", lineHeight: 1.65, fontSize: "0.95rem" }}>
+              <p style={{ position: "relative", color: "#6B7280", maxWidth: 400, margin: "0 auto 40px", lineHeight: 1.65, fontSize: ".95rem" }}>
                 Configure em 5 minutos. Seu bot já pode estar respondendo clientes ainda hoje.
               </p>
-              <div className="lp-cta-btns" style={{ position: "relative", display: "flex", flexWrap: "wrap", gap: 14, justifyContent: "center" }}>
-                <Link href="/cadastro" className="lp-btn-primary" style={{ fontSize: "0.95rem", padding: "15px 32px" }}>
+              <div style={{ position: "relative", display: "flex", justifyContent: "center" }}>
+                <Link href="/cadastro" className="cta-amber" style={{ fontSize: "1rem", padding: "16px 40px" }}>
                   Criar conta grátis <ArrowRight />
                 </Link>
               </div>
@@ -804,23 +662,23 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* ── Footer ──────────────────────────────────────────────────── */}
+        {/* ─────────────────── FOOTER ───────────────────────────────── */}
         <footer style={{ borderTop: "1px solid rgba(255,255,255,0.05)", padding: "32px 24px" }}>
-          <div className="lp-footer-inner" style={{ maxWidth: 1152, margin: "0 auto", display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 14 }}>
-            <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: "1.05rem" }}>
-              Entre<span className="lp-gt">net</span>
+          <div className="footer-inner" style={{ maxWidth: 1152, margin: "0 auto", display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 14 }}>
+            <span style={{ fontFamily: "'Plus Jakarta Sans'", fontWeight: 800, fontSize: "1.1rem" }}>
+              Entre<span className="amber-text">net</span>
             </span>
-            <div className="lp-footer-links" style={{ display: "flex", flexWrap: "wrap", gap: 22, alignItems: "center" }}>
+            <div className="footer-links" style={{ display: "flex", flexWrap: "wrap", gap: 22, alignItems: "center" }}>
               {[["Como funciona", "#como-funciona"], ["Funcionalidades", "#funcionalidades"], ["Preços", "#precos"]].map(([l, h]) => (
-                <a key={l} href={h} style={{ color: "#475569", fontSize: "0.82rem", textDecoration: "none", transition: "color 0.2s" }}
-                  onMouseEnter={e => (e.currentTarget.style.color = "#94A3B8")}
-                  onMouseLeave={e => (e.currentTarget.style.color = "#475569")}>{l}</a>
+                <a key={l} href={h} style={{ color: "#374151", fontSize: ".82rem", textDecoration: "none", transition: "color .2s" }}
+                  onMouseEnter={e => (e.currentTarget.style.color = "#9CA3AF")}
+                  onMouseLeave={e => (e.currentTarget.style.color = "#374151")}>{l}</a>
               ))}
-              <Link href="/login" style={{ color: "#475569", fontSize: "0.82rem", textDecoration: "none", transition: "color 0.2s" }}
-                onMouseEnter={e => (e.currentTarget.style.color = "#94A3B8")}
-                onMouseLeave={e => (e.currentTarget.style.color = "#475569")}>Entrar</Link>
+              <Link href="/login" style={{ color: "#374151", fontSize: ".82rem", textDecoration: "none", transition: "color .2s" }}
+                onMouseEnter={e => (e.currentTarget.style.color = "#9CA3AF")}
+                onMouseLeave={e => (e.currentTarget.style.color = "#374151")}>Entrar</Link>
             </div>
-            <p style={{ color: "#1E293B", fontSize: "0.75rem" }}>© {new Date().getFullYear()} Entrenet. Todos os direitos reservados.</p>
+            <p style={{ color: "#1F2937", fontSize: ".75rem" }}>© {new Date().getFullYear()} Entrenet. Todos os direitos reservados.</p>
           </div>
         </footer>
 
