@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 /* ─── SVG Icons ─────────────────────────────────────────────────────────── */
 const CheckIcon = () => (
@@ -9,35 +10,29 @@ const CheckIcon = () => (
     <polyline points="20 6 9 17 4 12" />
   </svg>
 );
-
 const WhatsAppIcon = ({ size = 5 }: { size?: number }) => (
   <svg className={`w-${size} h-${size}`} viewBox="0 0 24 24" fill="currentColor">
     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
   </svg>
 );
-
 const BotIcon = () => (
   <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-    <rect x="3" y="11" width="18" height="10" rx="2" />
-    <circle cx="12" cy="5" r="2" />
+    <rect x="3" y="11" width="18" height="10" rx="2" /><circle cx="12" cy="5" r="2" />
     <path d="M12 7v4M8 15v2M16 15v2" />
   </svg>
 );
-
 const GridIcon = () => (
   <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
     <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" />
     <rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" />
   </svg>
 );
-
 const ChartIcon = () => (
   <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
     <line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" />
     <line x1="6" y1="20" x2="6" y2="14" /><line x1="2" y1="20" x2="22" y2="20" />
   </svg>
 );
-
 const StoreIcon = () => (
   <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
     <path d="M3 9l1-6h16l1 6" />
@@ -45,111 +40,44 @@ const StoreIcon = () => (
     <path d="M5 20h14V11M9 20v-6h6v6" />
   </svg>
 );
-
 const GearIcon = () => (
   <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="12" r="3" />
     <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
   </svg>
 );
-
 const LinkIcon = () => (
   <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
     <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" />
     <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" />
   </svg>
 );
-
 const ArrowRight = () => (
   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
     <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
   </svg>
 );
-
 const ChevronDown = ({ open }: { open: boolean }) => (
   <svg className={`w-5 h-5 transition-transform duration-300 ${open ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
     <polyline points="6 9 12 15 18 9" />
   </svg>
 );
-
-/* ─── Dashboard Mockup SVG ─────────────────────────────────────────────── */
-const DashboardMockup = () => (
-  <svg viewBox="0 0 900 520" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto">
-    {/* Background */}
-    <rect width="900" height="520" rx="12" fill="#0B1121" />
-    {/* Sidebar */}
-    <rect width="200" height="520" rx="12" fill="#0D1525" />
-    <rect x="16" y="20" width="168" height="36" rx="8" fill="#1a2540" />
-    <text x="32" y="44" fill="#818CF8" fontSize="14" fontWeight="700" fontFamily="system-ui">Entrenet</text>
-    {["Dashboard","Produtos","Estoque","Pedidos","Configurações"].map((label, i) => (
-      <g key={i}>
-        <rect x="16" y={78 + i * 44} width="168" height="36" rx="8" fill={i === 0 ? "rgba(99,102,241,0.15)" : "transparent"} />
-        <circle cx="36" cy={96 + i * 44} r="6" fill={i === 0 ? "#818CF8" : "#2a3550"} />
-        <text x="52" y={101 + i * 44} fill={i === 0 ? "#E2E8F0" : "#64748B"} fontSize="12" fontFamily="system-ui">{label}</text>
-      </g>
-    ))}
-    {/* Main content area */}
-    <text x="224" y="44" fill="#F1F5F9" fontSize="16" fontWeight="600" fontFamily="system-ui">Visão Geral</text>
-    {/* Stat cards */}
-    {[
-      { label: "Msgs hoje", value: "247", color: "#818CF8", x: 224 },
-      { label: "Produtos", value: "18", color: "#34D399", x: 424 },
-      { label: "Conversas", value: "34", color: "#F59E0B", x: 624 },
-    ].map(({ label, value, color, x }) => (
-      <g key={label}>
-        <rect x={x} y={60} width="176" height="90" rx="10" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
-        <text x={x + 16} y={90} fill="#64748B" fontSize="11" fontFamily="system-ui">{label}</text>
-        <text x={x + 16} y={120} fill={color} fontSize="26" fontWeight="700" fontFamily="system-ui">{value}</text>
-        <circle cx={x + 155} cy={80} r="14" fill={`${color}20`} />
-        <text x={x + 147} y={85} fill={color} fontSize="12" fontFamily="system-ui">↑</text>
-      </g>
-    ))}
-    {/* Chart area */}
-    <rect x="224" y="168" width="376" height="200" rx="10" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
-    <text x="244" y="194" fill="#94A3B8" fontSize="12" fontFamily="system-ui">Mensagens por dia</text>
-    {/* Chart bars */}
-    {[60,90,45,120,80,140,100,160,130,110,170,145].map((h, i) => (
-      <rect key={i} x={254 + i * 28} y={340 - h} width="16" height={h} rx="4" fill={`rgba(99,102,241,${0.3 + (h / 170) * 0.5})`} />
-    ))}
-    {/* Chart line */}
-    <polyline points="262,280 290,250 318,295 346,230 374,260 402,210 430,240 458,200 486,220 514,235 542,195 570,215" stroke="#34D399" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" opacity="0.8" />
-    {/* Right panel - WhatsApp status */}
-    <rect x="616" y="168" width="260" height="200" rx="10" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
-    <text x="636" y="194" fill="#94A3B8" fontSize="12" fontFamily="system-ui">Status WhatsApp</text>
-    <circle cx="648" cy="218" r="6" fill="#34D399" />
-    <text x="664" y="223" fill="#34D399" fontSize="12" fontFamily="system-ui" fontWeight="600">Conectado</text>
-    {/* Messages list */}
-    {["Maria Silva","João Costa","Ana Lima"].map((name, i) => (
-      <g key={i}>
-        <circle cx="648" cy={252 + i * 44} r="14" fill={`rgba(99,102,241,${0.2 + i * 0.1})`} />
-        <text x="644" y={257 + i * 44} fill="#818CF8" fontSize="11" fontFamily="system-ui">{name[0]}</text>
-        <text x="672" y={250 + i * 44} fill="#CBD5E1" fontSize="11" fontFamily="system-ui">{name}</text>
-        <text x="672" y={264 + i * 44} fill="#475569" fontSize="10" fontFamily="system-ui">Cardápio enviado</text>
-        <text x="820" y={250 + i * 44} fill="#475569" fontSize="10" fontFamily="system-ui">{`${i + 1}m`}</text>
-      </g>
-    ))}
-    {/* Bottom section */}
-    <rect x="224" y="384" width="652" height="112" rx="10" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
-    <text x="244" y="410" fill="#94A3B8" fontSize="12" fontFamily="system-ui">Produtos em destaque</text>
-    {["X-Burguer", "Coca-Cola", "Fritas P", "Milk Shake", "X-Bacon"].map((p, i) => (
-      <g key={i}>
-        <rect x={244 + i * 124} y={420} width="112" height="60" rx="8" fill="rgba(129,140,248,0.06)" stroke="rgba(129,140,248,0.1)" strokeWidth="1" />
-        <text x={252 + i * 124} y={448} fill="#E2E8F0" fontSize="11" fontFamily="system-ui">{p}</text>
-        <text x={252 + i * 124} y={465} fill="#34D399" fontSize="12" fontWeight="600" fontFamily="system-ui">R$18</text>
-      </g>
-    ))}
+const ChevronLeft = () => (
+  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="15 18 9 12 15 6" />
+  </svg>
+);
+const ChevronRightIcon = () => (
+  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="9 18 15 12 9 6" />
   </svg>
 );
 
-/* ─── Scroll Reveal Hook ─────────────────────────────────────────────────── */
+/* ─── Scroll Reveal ──────────────────────────────────────────────────────── */
 function useScrollReveal() {
   useEffect(() => {
     const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) e.target.classList.add("lp-visible");
-        });
-      },
+      (entries) => entries.forEach((e) => { if (e.isIntersecting) e.target.classList.add("lp-visible"); }),
       { threshold: 0.08, rootMargin: "0px 0px -40px 0px" }
     );
     document.querySelectorAll(".lp-reveal").forEach((el) => observer.observe(el));
@@ -157,10 +85,12 @@ function useScrollReveal() {
   }, []);
 }
 
-/* ─── Main Page ──────────────────────────────────────────────────────────── */
+/* ─── Page Component ─────────────────────────────────────────────────────── */
 export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
 
   useScrollReveal();
 
@@ -170,38 +100,36 @@ export default function LandingPage() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  const slides = [
+    { src: "/ss-dashboard.png", label: "Início — Visão geral da loja" },
+    { src: "/ss-loja.png", label: "Loja pública — Vitrine do cliente" },
+    { src: "/ss-pedidos1.png", label: "Pedidos — Painel de pedidos" },
+    { src: "/ss-pedidos2.png", label: "Pedidos — Quadro Kanban" },
+    { src: "/ss-pdv.png", label: "PDV — Ponto de venda" },
+  ];
+
+  const nextSlide = useCallback(() => setActiveSlide((p) => (p + 1) % slides.length), [slides.length]);
+  const prevSlide = useCallback(() => setActiveSlide((p) => (p - 1 + slides.length) % slides.length), [slides.length]);
+
+  useEffect(() => {
+    if (isPaused) return;
+    const t = setTimeout(nextSlide, 4500);
+    return () => clearTimeout(t);
+  }, [activeSlide, isPaused, nextSlide]);
+
   const faqs = [
-    {
-      q: "Preciso trocar de número para usar o Entrenet?",
-      a: "Não. Você usa exatamente o mesmo número que já tem no WhatsApp. Basta escanear o QR Code dentro da plataforma.",
-    },
-    {
-      q: "O bot funciona no WhatsApp Business também?",
-      a: "Sim. O Entrenet funciona tanto no WhatsApp comum quanto no WhatsApp Business.",
-    },
-    {
-      q: "O plano tem limite de mensagens ou produtos?",
-      a: "Não. Você pode cadastrar quantos produtos quiser e o bot responde mensagens sem limite — sem cobranças extras.",
-    },
-    {
-      q: "O que acontece se eu cancelar?",
-      a: "Cancele quando quiser, sem taxa. Ao cancelar, seu bot é desativado e a conta fica pausada.",
-    },
-    {
-      q: "Como é o suporte?",
-      a: "Via WhatsApp, de segunda a sábado. Respondemos em até 2 horas durante o horário comercial.",
-    },
+    { q: "Preciso trocar de número para usar o Entrenet?", a: "Não. Você usa exatamente o mesmo número que já tem no WhatsApp. Basta escanear o QR Code dentro da plataforma." },
+    { q: "O bot funciona no WhatsApp Business também?", a: "Sim. O Entrenet funciona tanto no WhatsApp comum quanto no WhatsApp Business." },
+    { q: "O plano tem limite de mensagens ou produtos?", a: "Não. Você pode cadastrar quantos produtos quiser e o bot responde mensagens sem limite — sem cobranças extras." },
+    { q: "O que acontece se eu cancelar?", a: "Cancele quando quiser, sem taxa. Ao cancelar, seu bot é desativado e a conta fica pausada." },
+    { q: "Como é o suporte?", a: "Via WhatsApp, de segunda a sábado. Respondemos em até 2 horas durante o horário comercial." },
   ];
 
   return (
     <>
-      {/* ── Fonts + Keyframes ─────────────────────────────────────────── */}
       <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-      <link
-        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap"
-        rel="stylesheet"
-      />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
       <style>{`
         .lp-root {
@@ -212,7 +140,7 @@ export default function LandingPage() {
           overflow-x: hidden;
         }
         .lp-root * { box-sizing: border-box; }
-        .lp-root h1, .lp-root h2, .lp-root h3, .lp-root h4 {
+        .lp-root h1, .lp-root h2, .lp-root h3 {
           font-family: 'Space Grotesk', system-ui, sans-serif;
           letter-spacing: -0.02em;
         }
@@ -241,25 +169,19 @@ export default function LandingPage() {
           0%,100% { box-shadow: 0 0 20px rgba(99,102,241,0.2), 0 4px 24px rgba(0,0,0,0.5); }
           50%      { box-shadow: 0 0 40px rgba(99,102,241,0.45), 0 4px 24px rgba(0,0,0,0.5); }
         }
-        @keyframes lp-badge-pulse {
-          0%,100% { box-shadow: 0 0 0 0 rgba(52,211,153,0); }
-          60%      { box-shadow: 0 0 0 6px rgba(52,211,153,0); }
-        }
         @keyframes lp-dot-blink {
-          0%,100% { opacity: 1; }
-          50%      { opacity: 0.3; }
+          0%,100% { opacity: 1; } 50% { opacity: 0.3; }
         }
-        @keyframes lp-shimmer-bar {
-          0%   { transform: translateX(-100%); }
-          100% { transform: translateX(400%); }
+        @keyframes lp-slide-in {
+          from { opacity: 0; transform: scale(0.98); }
+          to   { opacity: 1; transform: scale(1); }
         }
 
         /* ── Scroll reveal ── */
         .lp-reveal {
           opacity: 0;
-          transform: translateY(32px);
-          transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1),
-                      transform 0.7s cubic-bezier(0.16,1,0.3,1);
+          transform: translateY(28px);
+          transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1), transform 0.7s cubic-bezier(0.16,1,0.3,1);
         }
         .lp-reveal.lp-visible { opacity: 1; transform: translateY(0); }
         .lp-d1 { transition-delay: 0.07s; }
@@ -283,59 +205,54 @@ export default function LandingPage() {
         .lp-orb-1 {
           position: absolute; pointer-events: none;
           width: 700px; height: 700px; border-radius: 50%;
-          background: radial-gradient(circle, rgba(99,102,241,0.16) 0%, transparent 70%);
+          background: radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%);
           top: -220px; left: -180px;
           animation: lp-orb1 14s ease-in-out infinite;
         }
         .lp-orb-2 {
           position: absolute; pointer-events: none;
           width: 560px; height: 560px; border-radius: 50%;
-          background: radial-gradient(circle, rgba(52,211,153,0.12) 0%, transparent 70%);
+          background: radial-gradient(circle, rgba(52,211,153,0.1) 0%, transparent 70%);
           bottom: -120px; right: -120px;
           animation: lp-orb2 11s ease-in-out infinite;
         }
-        .lp-orb-mid {
-          position: absolute; pointer-events: none;
-          width: 400px; height: 400px; border-radius: 50%;
-          background: radial-gradient(circle, rgba(99,102,241,0.07) 0%, transparent 70%);
-          top: 50%; left: 50%; transform: translate(-50%,-50%);
-        }
-
-        /* ── Dot grid ── */
         .lp-dots {
-          background-image: radial-gradient(circle, rgba(129,140,248,0.13) 1px, transparent 1px);
+          background-image: radial-gradient(circle, rgba(129,140,248,0.12) 1px, transparent 1px);
           background-size: 30px 30px;
         }
 
         /* ── Nav ── */
         .lp-nav {
-          position: fixed; top: 0; left: 0; right: 0; z-index: 50;
-          transition: all 0.35s cubic-bezier(0.16,1,0.3,1);
+          position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+          transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
           padding: 20px 0;
         }
         .lp-nav.lp-scrolled {
           margin: 12px 16px 0;
           border-radius: 18px;
-          background: rgba(11,17,37,0.88);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
+          /* Fully opaque — content behind is completely hidden */
+          background: rgba(4,7,15,0.98);
+          backdrop-filter: blur(24px);
+          -webkit-backdrop-filter: blur(24px);
           border: 1px solid rgba(255,255,255,0.06);
-          box-shadow: 0 8px 40px rgba(0,0,0,0.45);
+          box-shadow: 0 8px 40px rgba(0,0,0,0.6);
           padding: 12px 0;
         }
 
-        /* ── Hero badge ── */
+        /* ── Hero ── */
         .lp-hero-badge { animation: lp-fade-up 0.65s cubic-bezier(0.16,1,0.3,1) 0.05s both; }
         .lp-hero-h1    { animation: lp-fade-up 0.7s  cubic-bezier(0.16,1,0.3,1) 0.18s both; }
         .lp-hero-sub   { animation: lp-fade-up 0.7s  cubic-bezier(0.16,1,0.3,1) 0.32s both; }
         .lp-hero-ctas  { animation: lp-fade-up 0.7s  cubic-bezier(0.16,1,0.3,1) 0.44s both; }
         .lp-hero-stats { animation: lp-fade-up 0.7s  cubic-bezier(0.16,1,0.3,1) 0.56s both; }
+        .lp-live-dot   { animation: lp-dot-blink 2s ease-in-out infinite; }
 
-        /* ── CTA primary button ── */
+        /* ── Buttons ── */
         .lp-btn-primary {
           display: inline-flex; align-items: center; gap: 8px;
           background: linear-gradient(135deg, #5A5CF8, #818CF8);
-          color: #fff; font-weight: 700; font-family: 'Space Grotesk', sans-serif;
+          color: #fff; font-weight: 700;
+          font-family: 'Space Grotesk', sans-serif;
           border-radius: 12px; padding: 14px 26px; font-size: 0.9rem;
           border: none; cursor: pointer; text-decoration: none;
           transition: transform 0.2s ease, filter 0.2s ease;
@@ -343,48 +260,62 @@ export default function LandingPage() {
           white-space: nowrap;
         }
         .lp-btn-primary:hover {
-          transform: translateY(-2px);
-          filter: brightness(1.12);
+          transform: translateY(-2px); filter: brightness(1.12);
           animation: none;
           box-shadow: 0 10px 40px rgba(99,102,241,0.55);
-        }
-        .lp-btn-secondary {
-          display: inline-flex; align-items: center; gap: 8px;
-          border: 1px solid rgba(255,255,255,0.1);
-          color: #CBD5E1; border-radius: 12px; padding: 14px 26px;
-          font-size: 0.9rem; font-weight: 600;
-          cursor: pointer; text-decoration: none;
-          transition: border-color 0.2s, color 0.2s, background 0.2s;
-          white-space: nowrap;
-        }
-        .lp-btn-secondary:hover {
-          border-color: rgba(255,255,255,0.2);
-          color: #fff;
-          background: rgba(255,255,255,0.04);
         }
 
         /* ── Feature cards ── */
         .lp-card {
-          background: rgba(255,255,255,0.025);
+          background: rgba(255,255,255,0.028);
           border: 1px solid rgba(129,140,248,0.1);
           border-radius: 18px; padding: 28px;
           transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
         }
         .lp-card:hover {
-          transform: translateY(-5px);
-          border-color: rgba(129,140,248,0.28);
-          box-shadow: 0 16px 48px rgba(99,102,241,0.1);
+          transform: translateY(-4px);
+          border-color: rgba(129,140,248,0.25);
+          box-shadow: 0 12px 40px rgba(99,102,241,0.08);
         }
-
-        /* ── Icon box ── */
         .lp-icon {
           width: 48px; height: 48px; border-radius: 14px;
           display: flex; align-items: center; justify-content: center;
-          margin-bottom: 20px; transition: transform 0.2s ease;
+          margin-bottom: 20px;
+          transition: transform 0.2s ease;
         }
         .lp-card:hover .lp-icon { transform: scale(1.08); }
 
-        /* ── Pricing card ── */
+        /* ── Bento grid ── */
+        .lp-bento {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 20px;
+        }
+        .lp-bento-wide { grid-column: 1 / 3; }
+        .lp-bento-full { grid-column: 1 / 4; }
+
+        /* ── Stats ── */
+        .lp-stats-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 14px;
+          max-width: 680px;
+          width: 100%;
+        }
+        .lp-stat-card {
+          background: rgba(255,255,255,0.025);
+          border: 1px solid rgba(255,255,255,0.06);
+          border-radius: 18px; padding: 22px 16px; text-align: center;
+        }
+
+        /* ── Section label ── */
+        .lp-label {
+          font-size: 0.7rem; font-weight: 600;
+          letter-spacing: 0.15em; text-transform: uppercase;
+          color: #818CF8; margin-bottom: 12px; display: block;
+        }
+
+        /* ── Pricing ── */
         .lp-pricing {
           background: rgba(99,102,241,0.05);
           border: 1px solid rgba(129,140,248,0.22);
@@ -397,20 +328,53 @@ export default function LandingPage() {
           background: linear-gradient(90deg, transparent, rgba(129,140,248,0.7), transparent);
         }
 
-        /* ── Mockup ── */
-        .lp-mockup {
+        /* ── Screenshot carousel ── */
+        .lp-carousel {
           background: rgba(255,255,255,0.025);
           border: 1px solid rgba(255,255,255,0.07);
           border-radius: 20px; overflow: hidden;
           box-shadow: 0 40px 90px rgba(0,0,0,0.65);
         }
-        .lp-mockup-bar {
+        .lp-carousel-bar {
           background: rgba(255,255,255,0.04);
           padding: 14px 20px;
           display: flex; align-items: center; gap: 8px;
           border-bottom: 1px solid rgba(255,255,255,0.05);
+          flex-shrink: 0;
         }
-        .lp-mockup-dot { width: 11px; height: 11px; border-radius: 50%; }
+        .lp-carousel-dot-win { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+        .lp-carousel-img {
+          display: block; width: 100%; height: auto;
+          animation: lp-slide-in 0.4s ease both;
+        }
+        .lp-carousel-btn {
+          position: absolute; top: 50%; transform: translateY(-50%);
+          width: 36px; height: 36px; border-radius: 50%;
+          background: rgba(4,7,15,0.8);
+          border: 1px solid rgba(255,255,255,0.12);
+          color: #94A3B8; cursor: pointer;
+          display: flex; align-items: center; justify-content: center;
+          transition: background 0.2s, color 0.2s, border-color 0.2s;
+          z-index: 10;
+        }
+        .lp-carousel-btn:hover { background: rgba(99,102,241,0.3); color: #fff; border-color: rgba(129,140,248,0.4); }
+        .lp-carousel-indicator {
+          width: 6px; height: 6px; border-radius: 50%;
+          transition: all 0.3s ease; cursor: pointer;
+          border: none; padding: 0;
+        }
+        .lp-carousel-label {
+          font-size: 0.78rem; color: #475569; text-align: center;
+          margin-top: 14px; font-weight: 500;
+        }
+
+        /* ── Step connector ── */
+        .lp-connector {
+          position: absolute; top: 34px;
+          left: calc(16.67% + 20px); right: calc(16.67% + 20px); height: 1px;
+          background: linear-gradient(90deg, rgba(99,102,241,0.35), rgba(52,211,153,0.25), transparent);
+          pointer-events: none;
+        }
 
         /* ── FAQ ── */
         .lp-faq-item {
@@ -424,100 +388,88 @@ export default function LandingPage() {
           transition: max-height 0.38s cubic-bezier(0.16,1,0.3,1), opacity 0.3s ease;
         }
 
-        /* ── Section label ── */
-        .lp-label {
-          font-family: 'DM Sans', sans-serif;
-          font-size: 0.7rem; font-weight: 600;
-          letter-spacing: 0.15em; text-transform: uppercase;
-          color: #818CF8; margin-bottom: 12px;
-          display: block;
-        }
-
-        /* ── Step number ── */
-        .lp-step-num {
-          font-family: 'Space Grotesk', sans-serif;
-          font-size: 0.75rem; font-weight: 700; color: #334155;
-          letter-spacing: 0.05em;
-        }
-
-        /* ── Stats bar ── */
-        .lp-stat-card {
-          background: rgba(255,255,255,0.025);
-          border: 1px solid rgba(255,255,255,0.06);
-          border-radius: 18px; padding: 22px 16px; text-align: center;
-        }
-
-        /* ── Shimmer line ── */
-        .lp-shimmer-line {
-          position: relative; overflow: hidden;
-          background: rgba(129,140,248,0.12); height: 1px;
-        }
-        .lp-shimmer-line::after {
-          content: ''; position: absolute; top: 0; left: 0;
-          width: 25%; height: 100%;
-          background: linear-gradient(90deg, transparent, rgba(129,140,248,0.8), transparent);
-          animation: lp-shimmer-bar 3s ease-in-out infinite;
-        }
-
-        /* ── Live dot ── */
-        .lp-live-dot { animation: lp-dot-blink 2s ease-in-out infinite; }
-
-        /* ── Trust bar logos (text-based) ── */
-        .lp-trust-item {
-          color: #334155; font-weight: 700; font-size: 0.85rem;
-          letter-spacing: 0.04em; transition: color 0.2s;
-        }
-        .lp-trust-item:hover { color: #64748B; }
-
-        /* ── CTA section gradient bg ── */
+        /* ── CTA section ── */
         .lp-cta-bg {
           background: linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(52,211,153,0.07) 100%);
           border: 1px solid rgba(129,140,248,0.18);
           border-radius: 32px; position: relative; overflow: hidden;
         }
 
-        /* ── Pill tag ── */
+        /* ── Tag pill ── */
         .lp-tag {
           font-size: 0.7rem; font-weight: 600;
           padding: 4px 12px; border-radius: 100px;
           border: 1px solid; display: inline-block;
         }
 
-        /* ── How it works connector ── */
-        .lp-connector {
-          position: absolute; top: 34px;
-          left: calc(16.67% + 20px); right: calc(16.67% + 20px);
-          height: 1px;
-          background: linear-gradient(90deg, rgba(99,102,241,0.4), rgba(52,211,153,0.3), transparent);
-          pointer-events: none;
+        /* ════════════════════════════════════════
+           RESPONSIVE — TABLET (≤1024px)
+        ════════════════════════════════════════ */
+        @media (max-width: 1024px) {
+          .lp-bento { grid-template-columns: 1fr 1fr; }
+          .lp-bento-wide { grid-column: 1 / 3; }
+          .lp-bento-full { grid-column: 1 / 3; }
         }
 
-        /* ── Responsive grids ── */
-        .lp-stats-grid {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 14px;
-        }
-        .lp-bento-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          grid-template-rows: auto auto;
-          gap: 20px;
-        }
-        .lp-bento-wide-left  { grid-column: 1 / 3; }
-        .lp-bento-wide-right { grid-column: 2 / 4; }
+        /* ════════════════════════════════════════
+           RESPONSIVE — MOBILE (≤768px)
+        ════════════════════════════════════════ */
+        @media (max-width: 768px) {
+          /* Nav: logo + CTA only, no links */
+          .lp-nav-links { display: none !important; }
+          .lp-nav.lp-scrolled { margin: 8px 10px 0; }
 
-        @media (min-width: 680px) {
-          .lp-stats-grid { grid-template-columns: repeat(4, 1fr); }
+          /* Hero: compact */
+          .lp-hero { padding: 100px 20px 60px !important; }
+          .lp-hero-badge { margin-bottom: 20px !important; }
+          .lp-hero-ctas { flex-direction: column !important; align-items: stretch !important; }
+          .lp-hero-ctas .lp-btn-primary { justify-content: center; width: 100%; }
+
+          /* Stats: 2x2 */
+          .lp-stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+
+          /* Steps: vertical */
+          .lp-steps-grid { grid-template-columns: 1fr !important; }
+          .lp-connector { display: none !important; }
+
+          /* Features: 1 column */
+          .lp-bento { grid-template-columns: 1fr !important; }
+          .lp-bento-wide, .lp-bento-full { grid-column: 1 / 2 !important; }
+
+          /* Carousel: smaller padding */
+          .lp-carousel-bar { padding: 10px 14px !important; }
+
+          /* Pricing: full width */
+          .lp-pricing-wrap { padding: 0 !important; }
+
+          /* Sections: less vertical padding */
+          .lp-section { padding-top: 64px !important; padding-bottom: 64px !important; }
+          .lp-section-sm { padding-top: 48px !important; padding-bottom: 48px !important; }
+
+          /* CTA final: compact */
+          .lp-cta-inner { padding: 40px 24px !important; }
+          .lp-cta-inner h2 { font-size: clamp(1.8rem, 7vw, 2.4rem) !important; }
+          .lp-cta-btns { flex-direction: column !important; align-items: stretch !important; }
+          .lp-cta-btns .lp-btn-primary { justify-content: center; width: 100%; }
+
+          /* Footer */
+          .lp-footer-inner { flex-direction: column !important; text-align: center; gap: 20px !important; }
+          .lp-footer-links { justify-content: center !important; }
+
+          /* Orbs: smaller on mobile */
+          .lp-orb-1 { width: 300px !important; height: 300px !important; top: -80px !important; left: -80px !important; }
+          .lp-orb-2 { width: 250px !important; height: 250px !important; bottom: -60px !important; right: -60px !important; }
         }
-        @media (max-width: 900px) {
-          .lp-bento-grid { grid-template-columns: 1fr 1fr; }
-          .lp-bento-wide-left { grid-column: 1 / 3; }
-          .lp-bento-wide-right { grid-column: 1 / 3; }
-        }
-        @media (max-width: 560px) {
-          .lp-bento-grid { grid-template-columns: 1fr; }
-          .lp-bento-wide-left, .lp-bento-wide-right { grid-column: 1 / 2; }
+
+        /* ════════════════════════════════════════
+           RESPONSIVE — SMALL MOBILE (≤480px)
+        ════════════════════════════════════════ */
+        @media (max-width: 480px) {
+          .lp-stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
+          .lp-stat-card { padding: 16px 10px !important; }
+          .lp-pricing-card-inner { padding: 28px 20px !important; }
+          /* Hide "nav" login link too on very small */
+          .lp-nav-login { display: none !important; }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -527,11 +479,6 @@ export default function LandingPage() {
             transition-duration: 0.01ms !important;
           }
           .lp-reveal { opacity: 1; transform: none; }
-        }
-
-        @media (max-width: 768px) {
-          .lp-nav.lp-scrolled { margin: 8px 12px 0; }
-          .lp-connector { display: none; }
         }
       `}</style>
 
@@ -543,23 +490,17 @@ export default function LandingPage() {
             <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: "1.2rem", letterSpacing: "-0.02em" }}>
               Entre<span className="lp-gt">net</span>
             </span>
-
-            <nav className="hidden md:flex" style={{ gap: 32 }}>
-              {[["Como funciona", "#como-funciona"], ["Funcionalidades", "#funcionalidades"], ["Preços", "#precos"]].map(([label, href]) => (
-                <a key={label} href={href} style={{ color: "#94A3B8", fontSize: "0.875rem", fontWeight: 500, textDecoration: "none", transition: "color 0.2s" }}
+            <nav className="lp-nav-links" style={{ display: "flex", gap: 32 }}>
+              {[["Como funciona", "#como-funciona"], ["Funcionalidades", "#funcionalidades"], ["Preços", "#precos"]].map(([l, h]) => (
+                <a key={l} href={h} style={{ color: "#94A3B8", fontSize: "0.875rem", fontWeight: 500, textDecoration: "none", transition: "color 0.2s" }}
                   onMouseEnter={e => (e.currentTarget.style.color = "#F1F5F9")}
-                  onMouseLeave={e => (e.currentTarget.style.color = "#94A3B8")}>
-                  {label}
-                </a>
+                  onMouseLeave={e => (e.currentTarget.style.color = "#94A3B8")}>{l}</a>
               ))}
             </nav>
-
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <Link href="/login" style={{ color: "#94A3B8", fontSize: "0.875rem", fontWeight: 500, textDecoration: "none", transition: "color 0.2s" }}
+              <Link href="/login" className="lp-nav-login" style={{ color: "#94A3B8", fontSize: "0.875rem", fontWeight: 500, textDecoration: "none", transition: "color 0.2s" }}
                 onMouseEnter={e => (e.currentTarget.style.color = "#F1F5F9")}
-                onMouseLeave={e => (e.currentTarget.style.color = "#94A3B8")}>
-                Entrar
-              </Link>
+                onMouseLeave={e => (e.currentTarget.style.color = "#94A3B8")}>Entrar</Link>
               <Link href="/cadastro" className="lp-btn-primary" style={{ padding: "10px 20px", fontSize: "0.82rem", animation: "none" }}>
                 Começar grátis
               </Link>
@@ -568,263 +509,261 @@ export default function LandingPage() {
         </header>
 
         {/* ── Hero ───────────────────────────────────────────────────── */}
-        <section className="lp-dots" style={{ position: "relative", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "120px 24px 80px", overflow: "hidden", textAlign: "center" }}>
+        <section className="lp-hero lp-dots" style={{ position: "relative", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "120px 24px 80px", overflow: "hidden", textAlign: "center" }}>
           <div className="lp-orb-1" />
           <div className="lp-orb-2" />
 
-          {/* Live badge */}
           <div className="lp-hero-badge" style={{ marginBottom: 28 }}>
             <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(52,211,153,0.08)", border: "1px solid rgba(52,211,153,0.2)", borderRadius: 100, padding: "8px 18px" }}>
               <span className="lp-live-dot" style={{ width: 7, height: 7, borderRadius: "50%", background: "#34D399", display: "inline-block" }} />
-              <span style={{ color: "#6EE7B7", fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" }}>
-                Bot WhatsApp para lojistas brasileiros
-              </span>
+              <span style={{ color: "#6EE7B7", fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" }}>Bot WhatsApp para lojistas brasileiros</span>
             </div>
           </div>
 
-          {/* Headline */}
-          <h1 className="lp-hero-h1" style={{ margin: "0 0 24px", fontWeight: 800, lineHeight: 1.08, maxWidth: 820, fontSize: "clamp(2.6rem, 6.5vw, 4.8rem)", color: "#F8FAFC" }}>
+          <h1 className="lp-hero-h1" style={{ margin: "0 0 24px", fontWeight: 800, lineHeight: 1.08, maxWidth: 820, fontSize: "clamp(2.4rem, 6.5vw, 4.6rem)", color: "#F8FAFC" }}>
             Transforme seu WhatsApp em uma{" "}
             <span className="lp-gt">máquina de vendas</span>
           </h1>
 
-          {/* Subheadline */}
-          <p className="lp-hero-sub" style={{ color: "#64748B", marginBottom: 44, maxWidth: 580, fontSize: "clamp(1rem, 2vw, 1.125rem)", lineHeight: 1.7 }}>
-            Bot inteligente que atende seus clientes 24h, envia cardápio,
-            responde dúvidas e gerencia seu negócio —
-            enquanto você faz o que realmente importa.
+          <p className="lp-hero-sub" style={{ color: "#64748B", marginBottom: 44, maxWidth: 580, fontSize: "clamp(0.95rem, 2vw, 1.1rem)", lineHeight: 1.7 }}>
+            Bot inteligente que atende seus clientes 24h, envia cardápio, responde dúvidas e gerencia seu negócio — enquanto você faz o que realmente importa.
           </p>
 
-          {/* CTAs */}
           <div className="lp-hero-ctas" style={{ display: "flex", flexWrap: "wrap", gap: 14, justifyContent: "center", marginBottom: 64 }}>
             <Link href="/cadastro" className="lp-btn-primary" style={{ fontSize: "0.95rem", padding: "15px 30px" }}>
               Começar agora — é grátis <ArrowRight />
             </Link>
-            <a
-              href="https://wa.me/558788444564?text=Quero+saber+mais+sobre+o+Entrenet"
-              target="_blank" rel="noopener noreferrer"
-              className="lp-btn-secondary"
-              style={{ fontSize: "0.95rem", padding: "15px 30px" }}
-            >
-              <WhatsAppIcon /> Falar com a equipe
-            </a>
           </div>
 
-          {/* Stats */}
-          <div className="lp-hero-stats lp-stats-grid" style={{ maxWidth: 680, width: "100%" }}>
+          <div className="lp-hero-stats lp-stats-grid">
             {[
               { val: "24h", label: "Atendimento sem parar" },
               { val: "5 min", label: "Para configurar" },
               { val: "R$0", label: "Por mensagem enviada" },
               { val: "∞", label: "Produtos no catálogo" },
             ].map((s, i) => (
-              <div key={i} className="lp-stat-card" style={{ animationDelay: `${i * 0.1}s` }}>
-                <p className="lp-gt" style={{ fontSize: "clamp(1.6rem, 4vw, 2.2rem)", fontWeight: 800, marginBottom: 4, backgroundSize: "200%", animationDelay: `${i * 0.4}s` }}>{s.val}</p>
-                <p style={{ color: "#475569", fontSize: "0.78rem", fontWeight: 500 }}>{s.label}</p>
+              <div key={i} className="lp-stat-card">
+                <p className="lp-gt" style={{ fontSize: "clamp(1.5rem, 3.5vw, 2rem)", fontWeight: 800, marginBottom: 4, backgroundSize: "200%", animationDelay: `${i * 0.4}s` }}>{s.val}</p>
+                <p style={{ color: "#475569", fontSize: "0.76rem", fontWeight: 500 }}>{s.label}</p>
               </div>
             ))}
           </div>
         </section>
 
-        {/* ── Shimmer divider ─────────────────────────────────────────── */}
-        <div style={{ maxWidth: 1152, margin: "0 auto", padding: "0 24px" }}>
-          <div className="lp-shimmer-line" />
-        </div>
-
         {/* ── Como funciona ───────────────────────────────────────────── */}
-        <section id="como-funciona" style={{ maxWidth: 1024, margin: "0 auto", padding: "100px 24px" }}>
-          <div className="lp-reveal" style={{ textAlign: "center", marginBottom: 56 }}>
+        <section id="como-funciona" className="lp-section" style={{ maxWidth: 1024, margin: "0 auto", padding: "96px 24px" }}>
+          <div className="lp-reveal" style={{ textAlign: "center", marginBottom: 52 }}>
             <span className="lp-label">Como funciona</span>
-            <h2 style={{ fontSize: "clamp(2rem, 4vw, 2.8rem)", fontWeight: 800, color: "#F8FAFC", margin: "0 0 16px" }}>
+            <h2 style={{ fontSize: "clamp(1.9rem, 4vw, 2.7rem)", fontWeight: 800, color: "#F8FAFC", margin: "0 0 14px" }}>
               Três passos. <span className="lp-gt">Pronto.</span>
             </h2>
-            <p style={{ color: "#64748B", maxWidth: 440, margin: "0 auto", lineHeight: 1.65 }}>
+            <p style={{ color: "#64748B", maxWidth: 420, margin: "0 auto", lineHeight: 1.65, fontSize: "0.95rem" }}>
               Configure em minutos. O bot começa a trabalhar imediatamente.
             </p>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 24, position: "relative" }}>
-            <div className="lp-connector hidden md:block" />
+          <div className="lp-steps-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24, position: "relative" }}>
+            <div className="lp-connector" />
             {[
               { n: "01", icon: <StoreIcon />, title: "Cadastre sua loja", desc: "Crie sua conta em segundos. Adicione o nome, os produtos, os preços e configure a mensagem do bot.", color: "#818CF8", bg: "rgba(99,102,241,0.12)" },
               { n: "02", icon: <WhatsAppIcon />, title: "Conecte o WhatsApp", desc: "Escaneie o QR Code dentro da plataforma. Seu número fica ativo sem nenhuma troca ou configuração extra.", color: "#34D399", bg: "rgba(52,211,153,0.1)" },
               { n: "03", icon: <BotIcon />, title: "Bot atende sozinho", desc: "Seu cliente envia uma mensagem e recebe o cardápio e o link da loja automaticamente, na hora.", color: "#F59E0B", bg: "rgba(245,158,11,0.1)" },
             ].map((step, i) => (
               <div key={i} className={`lp-reveal lp-card lp-d${i + 1}`}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
-                  <div className="lp-icon" style={{ background: step.bg, color: step.color }}>
-                    {step.icon}
-                  </div>
-                  <span className="lp-step-num">{step.n}</span>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18 }}>
+                  <div className="lp-icon" style={{ background: step.bg, color: step.color }}>{step.icon}</div>
+                  <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "0.75rem", fontWeight: 700, color: "#334155", letterSpacing: "0.05em" }}>{step.n}</span>
                 </div>
-                <h3 style={{ color: "#F1F5F9", fontSize: "1.05rem", fontWeight: 700, marginBottom: 10 }}>{step.title}</h3>
-                <p style={{ color: "#64748B", fontSize: "0.88rem", lineHeight: 1.65 }}>{step.desc}</p>
+                <h3 style={{ color: "#F1F5F9", fontSize: "1.05rem", fontWeight: 700, marginBottom: 8 }}>{step.title}</h3>
+                <p style={{ color: "#64748B", fontSize: "0.87rem", lineHeight: 1.65 }}>{step.desc}</p>
               </div>
             ))}
           </div>
         </section>
 
         {/* ── Features Bento ──────────────────────────────────────────── */}
-        <section id="funcionalidades" style={{ maxWidth: 1152, margin: "0 auto", padding: "20px 24px 100px" }}>
-          <div className="lp-reveal" style={{ textAlign: "center", marginBottom: 56 }}>
+        <section id="funcionalidades" className="lp-section" style={{ maxWidth: 1100, margin: "0 auto", padding: "20px 24px 96px" }}>
+          <div className="lp-reveal" style={{ textAlign: "center", marginBottom: 52 }}>
             <span className="lp-label">Funcionalidades</span>
-            <h2 style={{ fontSize: "clamp(2rem, 4vw, 2.8rem)", fontWeight: 800, color: "#F8FAFC", margin: "0 0 16px" }}>
+            <h2 style={{ fontSize: "clamp(1.9rem, 4vw, 2.7rem)", fontWeight: 800, color: "#F8FAFC", margin: "0 0 14px" }}>
               Tudo que sua loja precisa
             </h2>
-            <p style={{ color: "#64748B", maxWidth: 460, margin: "0 auto", lineHeight: 1.65 }}>
-              Uma plataforma completa para automatizar o atendimento e crescer suas vendas pelo WhatsApp.
+            <p style={{ color: "#64748B", maxWidth: 440, margin: "0 auto", lineHeight: 1.65, fontSize: "0.95rem" }}>
+              Plataforma completa para automatizar vendas e atendimento no WhatsApp.
             </p>
           </div>
 
-          <div className="lp-bento-grid">
-            {/* Large hero card */}
-            <div className="lp-reveal lp-d1 lp-card lp-bento-wide-left" style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(52,211,153,0.05) 100%)", borderColor: "rgba(129,140,248,0.18)" }}>
-              <div style={{ display: "flex", gap: 20, flexWrap: "wrap", alignItems: "flex-start" }}>
-                <div>
-                  <div className="lp-icon" style={{ background: "rgba(99,102,241,0.18)", color: "#818CF8" }}>
-                    <BotIcon />
-                  </div>
-                  <h3 style={{ color: "#F1F5F9", fontSize: "1.3rem", fontWeight: 800, marginBottom: 10 }}>Bot automático 24h</h3>
-                  <p style={{ color: "#64748B", fontSize: "0.9rem", lineHeight: 1.7, maxWidth: 440 }}>
-                    Seu WhatsApp responde sozinho a qualquer hora do dia.
-                    Nunca mais um cliente sem resposta — mesmo quando você está descansando ou fora do trabalho.
-                  </p>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 18 }}>
-                    {["Cardápio automático", "Link da loja", "Resposta instantânea", "Sem limite de msgs"].map((t) => (
-                      <span key={t} className="lp-tag" style={{ color: "#818CF8", borderColor: "rgba(129,140,248,0.25)", background: "rgba(99,102,241,0.08)", fontSize: "0.7rem" }}>{t}</span>
-                    ))}
-                  </div>
-                </div>
+          {/* Grid: Bot(2) + Catálogo / Dashboard + Loja + Config / WhatsApp(full) */}
+          <div className="lp-bento">
+            {/* Row 1 */}
+            <div className="lp-reveal lp-d1 lp-card lp-bento-wide">
+              <div className="lp-icon" style={{ background: "rgba(99,102,241,0.15)", color: "#818CF8" }}><BotIcon /></div>
+              <h3 style={{ color: "#F1F5F9", fontSize: "1.25rem", fontWeight: 800, marginBottom: 10 }}>Bot automático 24h</h3>
+              <p style={{ color: "#64748B", fontSize: "0.9rem", lineHeight: 1.7, maxWidth: 420 }}>
+                Seu WhatsApp responde sozinho a qualquer hora. Nunca mais um cliente sem resposta — mesmo quando você está descansando.
+              </p>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 16 }}>
+                {["Cardápio automático", "Link da loja", "Resposta instantânea", "Sem limite de msgs"].map((t) => (
+                  <span key={t} className="lp-tag" style={{ color: "#818CF8", borderColor: "rgba(129,140,248,0.25)", background: "rgba(99,102,241,0.08)", fontSize: "0.7rem" }}>{t}</span>
+                ))}
               </div>
             </div>
 
-            {/* Catálogo */}
             <div className="lp-reveal lp-d2 lp-card">
               <div className="lp-icon" style={{ background: "rgba(52,211,153,0.12)", color: "#34D399" }}><GridIcon /></div>
               <h3 style={{ color: "#F1F5F9", fontSize: "1.05rem", fontWeight: 700, marginBottom: 8 }}>Catálogo digital</h3>
-              <p style={{ color: "#64748B", fontSize: "0.87rem", lineHeight: 1.6 }}>Produtos ilimitados com nome, preço, emoji e descrição. Organize como quiser.</p>
+              <p style={{ color: "#64748B", fontSize: "0.87rem", lineHeight: 1.6 }}>Produtos ilimitados com nome, preço, emoji e descrição. Organize por categorias.</p>
             </div>
 
-            {/* Dashboard */}
+            {/* Row 2 — 3 cards, fills 3 cols cleanly */}
             <div className="lp-reveal lp-d3 lp-card">
-              <div className="lp-icon" style={{ background: "rgba(139,92,246,0.15)", color: "#A78BFA" }}><ChartIcon /></div>
+              <div className="lp-icon" style={{ background: "rgba(139,92,246,0.14)", color: "#A78BFA" }}><ChartIcon /></div>
               <h3 style={{ color: "#F1F5F9", fontSize: "1.05rem", fontWeight: 700, marginBottom: 8 }}>Dashboard completo</h3>
               <p style={{ color: "#64748B", fontSize: "0.87rem", lineHeight: 1.6 }}>Status do bot em tempo real, conversas recentes e controle de estoque.</p>
             </div>
 
-            {/* Loja pública */}
             <div className="lp-reveal lp-d4 lp-card">
               <div className="lp-icon" style={{ background: "rgba(6,182,212,0.12)", color: "#22D3EE" }}><LinkIcon /></div>
               <h3 style={{ color: "#F1F5F9", fontSize: "1.05rem", fontWeight: 700, marginBottom: 8 }}>Loja pública</h3>
-              <p style={{ color: "#64748B", fontSize: "0.87rem", lineHeight: 1.6 }}>Uma URL bonita com seu catálogo. Divulgue no Instagram, TikTok ou onde quiser.</p>
+              <p style={{ color: "#64748B", fontSize: "0.87rem", lineHeight: 1.6 }}>URL única com seu catálogo. Divulgue no Instagram, TikTok ou onde quiser.</p>
             </div>
 
-            {/* WhatsApp próprio - wide */}
-            <div className="lp-reveal lp-d5 lp-card lp-bento-wide-right" style={{ background: "linear-gradient(135deg, rgba(52,211,153,0.07) 0%, rgba(99,102,241,0.05) 100%)" }}>
-              <div style={{ display: "flex", gap: 20, alignItems: "flex-start", flexWrap: "wrap" }}>
-                <div className="lp-icon" style={{ background: "rgba(52,211,153,0.14)", color: "#34D399", flexShrink: 0 }}><WhatsAppIcon /></div>
-                <div>
-                  <h3 style={{ color: "#F1F5F9", fontSize: "1.05rem", fontWeight: 700, marginBottom: 8 }}>Seu número, sem mudar nada</h3>
-                  <p style={{ color: "#64748B", fontSize: "0.87rem", lineHeight: 1.65, maxWidth: 360 }}>Use o mesmo número de WhatsApp que seus clientes já conhecem. Zero troca, zero burocracia.</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Config */}
-            <div className="lp-reveal lp-d6 lp-card">
+            <div className="lp-reveal lp-d5 lp-card">
               <div className="lp-icon" style={{ background: "rgba(245,158,11,0.12)", color: "#FCD34D" }}><GearIcon /></div>
               <h3 style={{ color: "#F1F5F9", fontSize: "1.05rem", fontWeight: 700, marginBottom: 8 }}>Configuração simples</h3>
               <p style={{ color: "#64748B", fontSize: "0.87rem", lineHeight: 1.6 }}>Mude a mensagem do bot, os produtos e as configurações a qualquer momento.</p>
             </div>
+
+            {/* Row 3 — WhatsApp full width */}
+            <div className="lp-reveal lp-d6 lp-card lp-bento-full">
+              <div style={{ display: "flex", gap: 20, alignItems: "center", flexWrap: "wrap" }}>
+                <div className="lp-icon" style={{ background: "rgba(52,211,153,0.12)", color: "#34D399", flexShrink: 0, marginBottom: 0 }}><WhatsAppIcon /></div>
+                <div>
+                  <h3 style={{ color: "#F1F5F9", fontSize: "1.05rem", fontWeight: 700, marginBottom: 6 }}>Seu número, sem mudar nada</h3>
+                  <p style={{ color: "#64748B", fontSize: "0.87rem", lineHeight: 1.6, maxWidth: 500 }}>Use o mesmo número de WhatsApp que seus clientes já conhecem. Zero troca, zero burocracia, zero migrações.</p>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
-        {/* ── Dashboard Preview ───────────────────────────────────────── */}
-        <section style={{ maxWidth: 1000, margin: "0 auto", padding: "0 24px 100px" }}>
+        {/* ── Screenshot Carousel ─────────────────────────────────────── */}
+        <section className="lp-section" style={{ maxWidth: 960, margin: "0 auto", padding: "0 24px 96px" }}>
           <div className="lp-reveal" style={{ textAlign: "center", marginBottom: 48 }}>
             <span className="lp-label">Plataforma</span>
-            <h2 style={{ fontSize: "clamp(2rem, 4vw, 2.8rem)", fontWeight: 800, color: "#F8FAFC", margin: "0 0 16px" }}>
+            <h2 style={{ fontSize: "clamp(1.9rem, 4vw, 2.7rem)", fontWeight: 800, color: "#F8FAFC", margin: "0 0 14px" }}>
               Controle tudo em um só lugar
             </h2>
-            <p style={{ color: "#64748B", maxWidth: 440, margin: "0 auto", lineHeight: 1.65 }}>
-              Dashboard intuitivo para gerenciar produtos, acompanhar conversas e monitorar o bot.
+            <p style={{ color: "#64748B", maxWidth: 420, margin: "0 auto", lineHeight: 1.65, fontSize: "0.95rem" }}>
+              Dashboard intuitivo para gerenciar produtos, pedidos, estoque e acompanhar o bot.
             </p>
           </div>
 
-          <div className="lp-reveal lp-d1 lp-mockup">
-            <div className="lp-mockup-bar">
-              <div className="lp-mockup-dot" style={{ background: "rgba(239,68,68,0.7)" }} />
-              <div className="lp-mockup-dot" style={{ background: "rgba(234,179,8,0.7)" }} />
-              <div className="lp-mockup-dot" style={{ background: "rgba(34,197,94,0.7)" }} />
-              <div style={{ flex: 1, marginLeft: 12, background: "rgba(255,255,255,0.04)", borderRadius: 8, height: 24, maxWidth: 220 }} />
+          <div className="lp-reveal lp-d1">
+            <div
+              className="lp-carousel"
+              onMouseEnter={() => setIsPaused(true)}
+              onMouseLeave={() => setIsPaused(false)}
+            >
+              {/* Browser bar */}
+              <div className="lp-carousel-bar">
+                <div className="lp-carousel-dot-win" style={{ background: "rgba(239,68,68,0.7)" }} />
+                <div className="lp-carousel-dot-win" style={{ background: "rgba(234,179,8,0.7)" }} />
+                <div className="lp-carousel-dot-win" style={{ background: "rgba(34,197,94,0.7)" }} />
+                <div style={{ flex: 1, marginLeft: 12, background: "rgba(255,255,255,0.04)", borderRadius: 8, height: 24, maxWidth: 200 }} />
+              </div>
+
+              {/* Image */}
+              <div style={{ position: "relative", overflow: "hidden", background: "#0B1121" }}>
+                <Image
+                  key={activeSlide}
+                  src={slides[activeSlide].src}
+                  alt={slides[activeSlide].label}
+                  width={960}
+                  height={540}
+                  className="lp-carousel-img"
+                  style={{ objectFit: "cover", display: "block" }}
+                  priority={activeSlide === 0}
+                />
+
+                {/* Arrow buttons */}
+                <button className="lp-carousel-btn" onClick={prevSlide} style={{ left: 12 }} aria-label="Anterior">
+                  <ChevronLeft />
+                </button>
+                <button className="lp-carousel-btn" onClick={nextSlide} style={{ right: 12 }} aria-label="Próximo">
+                  <ChevronRightIcon />
+                </button>
+              </div>
             </div>
-            <div style={{ padding: "4px 4px 4px" }}>
-              <DashboardMockup />
+
+            {/* Dots + label */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, marginTop: 16 }}>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                {slides.map((_, i) => (
+                  <button
+                    key={i}
+                    className="lp-carousel-indicator"
+                    onClick={() => setActiveSlide(i)}
+                    style={{
+                      width: i === activeSlide ? 20 : 6,
+                      height: 6,
+                      borderRadius: i === activeSlide ? 3 : "50%",
+                      background: i === activeSlide ? "#818CF8" : "rgba(129,140,248,0.25)",
+                      cursor: "pointer",
+                    }}
+                    aria-label={`Slide ${i + 1}`}
+                  />
+                ))}
+              </div>
+              <p className="lp-carousel-label">{slides[activeSlide].label}</p>
             </div>
           </div>
         </section>
 
         {/* ── Pricing ─────────────────────────────────────────────────── */}
-        <section id="precos" style={{ maxWidth: 520, margin: "0 auto", padding: "0 24px 100px" }}>
-          <div className="lp-reveal" style={{ textAlign: "center", marginBottom: 48 }}>
+        <section id="precos" className="lp-pricing-wrap" style={{ maxWidth: 500, margin: "0 auto", padding: "0 24px 96px" }}>
+          <div className="lp-reveal" style={{ textAlign: "center", marginBottom: 44 }}>
             <span className="lp-label">Preços</span>
-            <h2 style={{ fontSize: "clamp(2rem, 4vw, 2.8rem)", fontWeight: 800, color: "#F8FAFC", margin: "0 0 12px" }}>
+            <h2 style={{ fontSize: "clamp(1.9rem, 4vw, 2.7rem)", fontWeight: 800, color: "#F8FAFC", margin: "0 0 12px" }}>
               Plano único, sem surpresas
             </h2>
-            <p style={{ color: "#64748B", lineHeight: 1.6 }}>Tudo incluso. Sem limite de mensagens. Sem contrato.</p>
+            <p style={{ color: "#64748B", lineHeight: 1.6, fontSize: "0.95rem" }}>Tudo incluso. Sem limite de mensagens. Sem contrato.</p>
           </div>
 
-          <div className="lp-reveal lp-d1 lp-pricing" style={{ padding: "40px 36px" }}>
-            <div style={{ marginBottom: 28 }}>
+          <div className="lp-reveal lp-d1 lp-pricing">
+            <div className="lp-pricing-card-inner" style={{ padding: "40px 36px" }}>
               <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(99,102,241,0.12)", border: "1px solid rgba(129,140,248,0.2)", borderRadius: 100, padding: "6px 16px", marginBottom: 24 }}>
                 <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#818CF8", display: "inline-block" }} />
                 <span style={{ color: "#A5B4FC", fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" }}>Plano Completo</span>
               </div>
-
               <div style={{ marginBottom: 6 }}>
-                <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "clamp(3rem, 8vw, 4rem)", fontWeight: 800, color: "#F8FAFC", lineHeight: 1 }}>R$25</span>
-                <span style={{ color: "#64748B", fontSize: "1.1rem", marginLeft: 4 }}>/mês</span>
+                <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "clamp(2.8rem, 8vw, 3.8rem)", fontWeight: 800, color: "#F8FAFC", lineHeight: 1 }}>R$25</span>
+                <span style={{ color: "#64748B", fontSize: "1.05rem", marginLeft: 4 }}>/mês</span>
               </div>
-              <p style={{ color: "#475569", fontSize: "0.85rem" }}>ou r$300 anuais · cancele quando quiser</p>
+              <p style={{ color: "#475569", fontSize: "0.85rem", marginBottom: 28 }}>ou r$300 anuais · cancele quando quiser</p>
+              <div style={{ height: 1, background: "rgba(129,140,248,0.1)", marginBottom: 28 }} />
+              <ul style={{ listStyle: "none", padding: 0, margin: "0 0 32px", display: "flex", flexDirection: "column", gap: 15 }}>
+                {["Bot automático no WhatsApp", "Produtos ilimitados no catálogo", "Dashboard com status em tempo real", "Loja pública com URL própria", "Gestão de estoque e validades", "Configuração de mensagens do bot", "Suporte via WhatsApp"].map((item) => (
+                  <li key={item} style={{ display: "flex", alignItems: "center", gap: 12, color: "#CBD5E1", fontSize: "0.9rem" }}>
+                    <span style={{ color: "#34D399", flexShrink: 0 }}><CheckIcon /></span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <Link href="/cadastro" className="lp-btn-primary" style={{ display: "flex", justifyContent: "center", width: "100%", fontSize: "1rem", padding: "16px 24px" }}>
+                Criar conta grátis <ArrowRight />
+              </Link>
+              <p style={{ textAlign: "center", color: "#334155", fontSize: "0.75rem", marginTop: 14 }}>Sem cartão de crédito para começar</p>
             </div>
-
-            <div style={{ height: 1, background: "rgba(129,140,248,0.1)", margin: "24px 0" }} />
-
-            <ul style={{ listStyle: "none", padding: 0, margin: "0 0 32px", display: "flex", flexDirection: "column", gap: 16 }}>
-              {[
-                "Bot automático no WhatsApp",
-                "Produtos ilimitados no catálogo",
-                "Dashboard com status em tempo real",
-                "Loja pública com URL própria",
-                "Gestão de estoque e validades",
-                "Configuração de mensagens do bot",
-                "Suporte via WhatsApp",
-              ].map((item) => (
-                <li key={item} style={{ display: "flex", alignItems: "center", gap: 12, color: "#CBD5E1", fontSize: "0.9rem" }}>
-                  <span style={{ color: "#34D399", flexShrink: 0 }}><CheckIcon /></span>
-                  {item}
-                </li>
-              ))}
-            </ul>
-
-            <Link href="/cadastro" className="lp-btn-primary" style={{ display: "flex", justifyContent: "center", width: "100%", fontSize: "1rem", padding: "16px 24px" }}>
-              Criar conta grátis <ArrowRight />
-            </Link>
-            <p style={{ textAlign: "center", color: "#334155", fontSize: "0.75rem", marginTop: 14 }}>
-              Sem cartão de crédito para começar
-            </p>
           </div>
         </section>
 
         {/* ── FAQ ──────────────────────────────────────────────────────── */}
-        <section style={{ maxWidth: 680, margin: "0 auto", padding: "0 24px 100px" }}>
-          <div className="lp-reveal" style={{ textAlign: "center", marginBottom: 48 }}>
+        <section className="lp-section-sm" style={{ maxWidth: 660, margin: "0 auto", padding: "0 24px 96px" }}>
+          <div className="lp-reveal" style={{ textAlign: "center", marginBottom: 44 }}>
             <span className="lp-label">Dúvidas</span>
-            <h2 style={{ fontSize: "clamp(2rem, 4vw, 2.5rem)", fontWeight: 800, color: "#F8FAFC", margin: 0 }}>
-              Perguntas frequentes
-            </h2>
+            <h2 style={{ fontSize: "clamp(1.8rem, 4vw, 2.4rem)", fontWeight: 800, color: "#F8FAFC", margin: 0 }}>Perguntas frequentes</h2>
           </div>
-
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {faqs.map((faq, i) => (
               <div key={i} className={`lp-reveal lp-d${Math.min(i + 1, 5)} lp-faq-item`}>
@@ -845,57 +784,42 @@ export default function LandingPage() {
         </section>
 
         {/* ── Final CTA ───────────────────────────────────────────────── */}
-        <section style={{ maxWidth: 1000, margin: "0 auto", padding: "0 24px 100px" }}>
-          <div className="lp-reveal lp-cta-bg" style={{ padding: "clamp(48px, 8vw, 80px) clamp(24px, 6vw, 80px)", textAlign: "center" }}>
-            {/* Glow orb */}
-            <div style={{ position: "absolute", top: "-60px", left: "50%", transform: "translateX(-50%)", width: 380, height: 280, background: "radial-gradient(circle, rgba(99,102,241,0.22) 0%, transparent 70%)", borderRadius: "50%", pointerEvents: "none" }} />
-
-            <h2 style={{ position: "relative", fontSize: "clamp(2rem, 5vw, 3.4rem)", fontWeight: 800, color: "#F8FAFC", lineHeight: 1.1, marginBottom: 16 }}>
-              Comece hoje.<br />
-              <span className="lp-gt">Venda mais amanhã.</span>
-            </h2>
-            <p style={{ position: "relative", color: "#64748B", marginBottom: 40, maxWidth: 440, margin: "0 auto 40px", lineHeight: 1.65 }}>
-              Configure em 5 minutos. Seu bot já pode estar respondendo
-              clientes ainda hoje — sem nenhuma troca de número.
-            </p>
-            <div style={{ position: "relative", display: "flex", flexWrap: "wrap", gap: 14, justifyContent: "center" }}>
-              <Link href="/cadastro" className="lp-btn-primary" style={{ fontSize: "0.95rem", padding: "15px 32px" }}>
-                Criar conta grátis <ArrowRight />
-              </Link>
-              <a
-                href="https://wa.me/558788444564?text=Quero+saber+mais+sobre+o+Entrenet"
-                target="_blank" rel="noopener noreferrer"
-                className="lp-btn-secondary"
-                style={{ fontSize: "0.95rem", padding: "15px 32px" }}
-              >
-                <WhatsAppIcon /> Falar com a equipe
-              </a>
+        <section style={{ maxWidth: 960, margin: "0 auto", padding: "0 24px 96px" }}>
+          <div className="lp-reveal lp-cta-bg">
+            <div className="lp-cta-inner" style={{ padding: "72px 60px", textAlign: "center" }}>
+              <div style={{ position: "absolute", top: "-60px", left: "50%", transform: "translateX(-50%)", width: 380, height: 280, background: "radial-gradient(circle, rgba(99,102,241,0.2) 0%, transparent 70%)", borderRadius: "50%", pointerEvents: "none" }} />
+              <h2 style={{ position: "relative", fontSize: "clamp(2rem, 5vw, 3.2rem)", fontWeight: 800, color: "#F8FAFC", lineHeight: 1.1, marginBottom: 16 }}>
+                Comece hoje.<br />
+                <span className="lp-gt">Venda mais amanhã.</span>
+              </h2>
+              <p style={{ position: "relative", color: "#64748B", maxWidth: 420, margin: "0 auto 40px", lineHeight: 1.65, fontSize: "0.95rem" }}>
+                Configure em 5 minutos. Seu bot já pode estar respondendo clientes ainda hoje.
+              </p>
+              <div className="lp-cta-btns" style={{ position: "relative", display: "flex", flexWrap: "wrap", gap: 14, justifyContent: "center" }}>
+                <Link href="/cadastro" className="lp-btn-primary" style={{ fontSize: "0.95rem", padding: "15px 32px" }}>
+                  Criar conta grátis <ArrowRight />
+                </Link>
+              </div>
             </div>
           </div>
         </section>
 
         {/* ── Footer ──────────────────────────────────────────────────── */}
-        <footer style={{ borderTop: "1px solid rgba(255,255,255,0.05)", padding: "36px 24px" }}>
-          <div style={{ maxWidth: 1152, margin: "0 auto", display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
+        <footer style={{ borderTop: "1px solid rgba(255,255,255,0.05)", padding: "32px 24px" }}>
+          <div className="lp-footer-inner" style={{ maxWidth: 1152, margin: "0 auto", display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 14 }}>
             <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: "1.05rem" }}>
               Entre<span className="lp-gt">net</span>
             </span>
-
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 24, alignItems: "center" }}>
-              {[["Como funciona", "#como-funciona"], ["Funcionalidades", "#funcionalidades"], ["Preços", "#precos"]].map(([label, href]) => (
-                <a key={label} href={href} style={{ color: "#475569", fontSize: "0.82rem", textDecoration: "none", transition: "color 0.2s" }}
+            <div className="lp-footer-links" style={{ display: "flex", flexWrap: "wrap", gap: 22, alignItems: "center" }}>
+              {[["Como funciona", "#como-funciona"], ["Funcionalidades", "#funcionalidades"], ["Preços", "#precos"]].map(([l, h]) => (
+                <a key={l} href={h} style={{ color: "#475569", fontSize: "0.82rem", textDecoration: "none", transition: "color 0.2s" }}
                   onMouseEnter={e => (e.currentTarget.style.color = "#94A3B8")}
-                  onMouseLeave={e => (e.currentTarget.style.color = "#475569")}>
-                  {label}
-                </a>
+                  onMouseLeave={e => (e.currentTarget.style.color = "#475569")}>{l}</a>
               ))}
               <Link href="/login" style={{ color: "#475569", fontSize: "0.82rem", textDecoration: "none", transition: "color 0.2s" }}
                 onMouseEnter={e => (e.currentTarget.style.color = "#94A3B8")}
-                onMouseLeave={e => (e.currentTarget.style.color = "#475569")}>
-                Entrar
-              </Link>
+                onMouseLeave={e => (e.currentTarget.style.color = "#475569")}>Entrar</Link>
             </div>
-
             <p style={{ color: "#1E293B", fontSize: "0.75rem" }}>© {new Date().getFullYear()} Entrenet. Todos os direitos reservados.</p>
           </div>
         </footer>
