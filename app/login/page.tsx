@@ -145,7 +145,7 @@ export default function LoginPage() {
         <div style={{ width: "100%", maxWidth: 400, position: "relative", zIndex: 1 }}>
           {/* Brand */}
           <div style={{ textAlign: "center", marginBottom: 36 }}>
-            <Link href="/" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
               <div style={{
                 width: 34, height: 34,
                 background: "rgba(245,158,11,0.12)",
@@ -160,7 +160,7 @@ export default function LoginPage() {
               <span style={{ fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: "-0.03em" }}>
                 Entre<span className="auth-brand-gradient">net</span>
               </span>
-            </Link>
+            </div>
             <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 14, marginTop: 2 }}>
               Acesse sua conta
             </p>
