@@ -4,8 +4,7 @@ import { useState, useRef } from "react";
 import { Upload, X, Image as ImageIcon, Sparkles, Loader2 } from "lucide-react";
 import type { Product } from "@prisma/client";
 import { suggestTaxClassificationWithAI } from "@/actions/fiscal";
-
-const EMOJIS = ["🍞", "🥐", "🎂", "🧁", "🍕", "🍔", "🌮", "☕", "🧃", "🛍️", "🥩", "🥗", "🥟", "🍫", "🍦", "🍪", "🧀", "🥚", "🥤", "💧", "🌭", "🫕", "🥘", "🍜"];
+import { getStoreEmojis } from "@/lib/store-utils";
 
 type CategoryOption = { id: string; name: string; emoji: string };
 type Tab = "geral" | "fiscal";
@@ -27,9 +26,11 @@ interface Props {
   onSave: (data: SaveData) => Promise<void>;
   initial?: Product & { imageUrl?: string | null; categoryId?: string | null };
   categories: CategoryOption[];
+  storeType?: string;
 }
 
-export function ProductModal({ onClose, onSave, initial, categories }: Props) {
+export function ProductModal({ onClose, onSave, initial, categories, storeType = "GENERAL" }: Props) {
+  const EMOJIS = getStoreEmojis(storeType);
   const [tab, setTab] = useState<Tab>("geral");
 
   // ── Geral ──────────────────────────────────────────────────────────────────

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Upload, X, Loader2, Check, ArrowLeft, FileText, Image as ImageIcon } from "lucide-react";
 import { importProductsBulk } from "@/actions/product";
 import { listCategories } from "@/actions/category";
+import { getStoreEmojis } from "@/lib/store-utils";
 
 type Category = { id: string; name: string; emoji: string };
 
@@ -93,9 +94,8 @@ type ParsedItem = {
 
 type Step = "upload" | "preview" | "saving" | "done";
 
-const EMOJIS = ["🍞", "🥐", "🎂", "🧁", "🍕", "🍔", "🌮", "☕", "🧃", "🛍️", "🥩", "🥗", "🥟", "🍫", "🍦", "🍪", "🧀", "🥚", "🥤", "💧"];
-
-export function ImportModal({ onClose, onDone }: { onClose: () => void; onDone: () => void }) {
+export function ImportModal({ onClose, onDone, storeType = "GENERAL" }: { onClose: () => void; onDone: () => void; storeType?: string }) {
+  const EMOJIS = getStoreEmojis(storeType);
   const [step, setStep] = useState<Step>("upload");
   const [dragging, setDragging] = useState(false);
   const [processing, setProcessing] = useState(false);

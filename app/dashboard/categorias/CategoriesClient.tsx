@@ -3,12 +3,7 @@
 import { useState } from "react";
 import { createCategory, updateCategory, deleteCategory, clearStoreCategories } from "@/actions/category";
 import { X, Trash2 } from "lucide-react";
-
-const EMOJIS = [
-  "🛍️","🍞","🥐","🎂","🧁","🍕","🍔","🌮","☕","🧃",
-  "🥩","🥗","🥟","🍫","🍦","🍪","🧀","🥚","🥤","💧",
-  "🍎","🍌","🍓","🥝","🌭","🫕","🥘","🍜","🍵","🧋",
-];
+import { getStoreEmojis } from "@/lib/store-utils";
 
 type Category = {
   id: string;
@@ -22,13 +17,16 @@ function CategoryModal({
   initial,
   onClose,
   onSave,
+  storeType = "GENERAL",
 }: {
   initial?: Category;
   onClose: () => void;
   onSave: (data: { name: string; emoji: string }) => Promise<void>;
+  storeType?: string;
 }) {
+  const EMOJIS = getStoreEmojis(storeType);
   const [name, setName] = useState(initial?.name ?? "");
-  const [emoji, setEmoji] = useState(initial?.emoji ?? "🛍️");
+  const [emoji, setEmoji] = useState(initial?.emoji ?? EMOJIS[0] ?? "🛍️");
   const [saving, setSaving] = useState(false);
 
   async function handleSave() {
@@ -109,7 +107,7 @@ function CategoryModal({
   );
 }
 
-export function CategoriesClient({ initialCategories }: { initialCategories: Category[] }) {
+export function CategoriesClient({ initialCategories, storeType = "GENERAL" }: { initialCategories: Category[]; storeType?: string }) {
   const [categories, setCategories] = useState(initialCategories);
   const [modal, setModal] = useState<{ open: boolean; editing?: Category }>({ open: false });
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -164,6 +162,7 @@ export function CategoriesClient({ initialCategories }: { initialCategories: Cat
           initial={modal.editing}
           onClose={() => setModal({ open: false })}
           onSave={modal.editing ? handleUpdate : handleCreate}
+          storeType={storeType}
         />
       )}
 

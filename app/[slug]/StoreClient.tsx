@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useRef } from "react";
+import { getStoreTerminology } from "@/lib/store-utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { createOrder } from "@/actions/order";
 import {
@@ -584,6 +585,7 @@ function ProductsView({
   const [search, setSearch] = useState("");
   const [activeCat, setActiveCat] = useState("all");
   const catScrollRef = useRef<HTMLDivElement>(null);
+  const terminology = getStoreTerminology(storeType);
   function scrollCats(dir: "left" | "right") {
     catScrollRef.current?.scrollBy({ left: dir === "right" ? 220 : -220, behavior: "smooth" });
   }
@@ -643,8 +645,8 @@ function ProductsView({
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Buscar produto..."
-            aria-label="Buscar produto"
+            placeholder={`Buscar ${terminology.item.toLowerCase()}...`}
+            aria-label={`Buscar ${terminology.item.toLowerCase()}`}
             className="glass h-14 w-full rounded-2xl border border-border/60 pl-12 pr-12 text-base text-foreground outline-none placeholder:text-muted-foreground transition-all focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
           />
           {search && (
@@ -709,14 +711,14 @@ function ProductsView({
         {/* Grid */}
         <section className="mt-7">
           <SectionLabel>
-            {activeCat === "all" ? "Cardápio" : dbCategories.find(c => c.id === activeCat)?.name ?? "Produtos"}
+            {activeCat === "all" ? terminology.catalog : dbCategories.find(c => c.id === activeCat)?.name ?? terminology.items}
             <span className="ml-2 font-normal normal-case tracking-normal text-muted-foreground/70">
-              {filtered.length} {filtered.length === 1 ? "produto" : "produtos"}
+              {filtered.length} {filtered.length === 1 ? terminology.item.toLowerCase() : terminology.items}
             </span>
           </SectionLabel>
 
           {filtered.length === 0 ? (
-            <p className="mt-8 text-center text-sm text-muted-foreground">Nenhum produto encontrado.</p>
+            <p className="mt-8 text-center text-sm text-muted-foreground">Nenhum {terminology.item.toLowerCase()} encontrado.</p>
           ) : (
             <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
               {filtered.map((p, i) => (

@@ -17,9 +17,11 @@ type ProductWithExtras = Product & {
 export function ProductsClient({
   initialProducts,
   categories,
+  storeType = "GENERAL",
 }: {
   initialProducts: ProductWithExtras[];
   categories: CategoryOption[];
+  storeType?: string;
 }) {
   const [products, setProducts] = useState(initialProducts);
   const [modal, setModal] = useState<{ open: boolean; editing?: ProductWithExtras }>({ open: false });
@@ -85,6 +87,7 @@ export function ProductsClient({
           onSave={modal.editing ? handleUpdate : handleCreate}
           initial={modal.editing}
           categories={categories}
+          storeType={storeType}
         />
       )}
 
@@ -92,6 +95,7 @@ export function ProductsClient({
         <ImportModal
           onClose={() => setShowImport(false)}
           onDone={() => { setShowImport(false); window.location.reload(); }}
+          storeType={storeType}
         />
       )}
 
