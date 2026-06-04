@@ -3,8 +3,14 @@
 import { hash } from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { createInstance } from "@/actions/evolution";
+import type { StoreType } from "@prisma/client";
 
-export async function registerUser(name: string, email: string, password: string) {
+export async function registerUser(
+  name: string,
+  email: string,
+  password: string,
+  storeType: StoreType = "GENERAL"
+) {
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) throw new Error("Email já cadastrado.");
 
@@ -27,6 +33,7 @@ export async function registerUser(name: string, email: string, password: string
         create: {
           name,
           evolutionInstanceName: instanceName,
+          type: storeType,
         },
       },
     },

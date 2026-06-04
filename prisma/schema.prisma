@@ -8,6 +8,14 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum StoreType {
+  FOOD
+  RETAIL
+  SERVICES
+  GAS_WATER
+  GENERAL
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -39,6 +47,7 @@ model Store {
   acceptsPickup            Boolean         @default(true)
   acceptsLocal             Boolean         @default(true)
   theme                    String          @default("amber-dark")
+  type                     StoreType       @default(GENERAL)
   cnpj                     String?
   stateRegistration        String?
   taxRegime                String?         @default("Simples Nacional")

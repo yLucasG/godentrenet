@@ -18,6 +18,25 @@ lines = out.split('\n')
 for line in lines[-40:]:
     print(line)
 
+print("\nRunning DB migrations...")
+# Write SQL to temp file on host, then run psql inside db container with host file mounted
+sql_content = (
+    "DO $body$ BEGIN "
+    "CREATE TYPE \"StoreType\" AS ENUM ('FOOD','RETAIL','SERVICES','GAS_WATER','GENERAL'); "
+    "EXCEPTION WHEN duplicate_object THEN null; END $body$; "
+    "ALTER TABLE \"Store\" ADD COLUMN IF NOT EXISTS \"type\" \"StoreType\" NOT NULL DEFAULT 'GENERAL';"
+)
+# Write to /tmp on host, then docker cp into container and run psql
+write_cmd = f"cat > /tmp/entrenet_migration.sql << 'ENDSQL'\n{sql_content}\nENDSQL"
+ssh.exec_command(write_cmd, timeout=5)
+time.sleep(1)
+run_mig = (
+    "docker cp /tmp/entrenet_migration.sql godentrenet_db:/tmp/migration.sql && "
+    "docker exec godentrenet_db psql -U postgres -d postgres -f /tmp/migration.sql 2>&1"
+)
+stdin_m, stdout_m, _ = ssh.exec_command(run_mig, timeout=20)
+print(stdout_m.read().decode('utf-8', errors='replace').strip())
+
 print("\nRestarting web container...")
 stdin2, stdout2, stderr2 = ssh.exec_command('cd /root/godentrenet && docker compose up -d web 2>&1', timeout=60)
 print(stdout2.read().decode('utf-8', errors='replace')[:300])

@@ -35,6 +35,13 @@ interface Props {
   acceptsPickup: boolean;
   acceptsLocal: boolean;
   theme: string;
+  storeType: string;
+}
+
+function getAddLabel(storeType: string, price?: string): string {
+  if (storeType === "GAS_WATER") return price ? `Pedir ${price}` : "Pedir Produto";
+  if (storeType === "SERVICES")  return price ? `Agendar ${price}` : "Agendar";
+  return price ? `Adicionar ${price}` : "Adicionar";
 }
 interface Category { id: string; name: string; emoji: string; }
 type View = "products" | "checkout" | "success";
@@ -71,11 +78,12 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 // ─── Product Dialog (centered modal — igual ao redesign) ─────────────────────
 function ProductDialog({
-  product, onClose, onAddToCart,
+  product, onClose, onAddToCart, storeType,
 }: {
   product: Product;
   onClose: () => void;
   onAddToCart: (product: Product, qty: number, selectedOptions: ProductOption[]) => void;
+  storeType: string;
 }) {
   const [qty, setQty] = useState(1);
   // single-select options (type: size) vs multi-select (type: addon)
@@ -255,7 +263,7 @@ function ProductDialog({
             className="glow-primary mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-primary to-accent py-4 text-base font-bold text-primary-foreground transition-transform active:scale-[0.98]"
           >
             <Sparkles className="size-5" />
-            Adicionar {fmt(total)}
+            {getAddLabel(storeType, fmt(total))}
           </motion.button>
         </div>
       </motion.div>
@@ -456,11 +464,12 @@ function ProductCard({
 
 // ─── Featured Carousel ────────────────────────────────────────────────────────
 function FeaturedCarousel({
-  featured, onOpenProduct, onAdd,
+  featured, onOpenProduct, onAdd, storeType,
 }: {
   featured: Product[];
   onOpenProduct: (p: Product) => void;
   onAdd: (p: Product) => void;
+  storeType: string;
 }) {
   if (featured.length === 0) return null;
 
@@ -497,7 +506,7 @@ function FeaturedCarousel({
                 onClick={e => { e.stopPropagation(); onAdd(p); }}
                 className="glow-primary flex items-center gap-2 rounded-xl bg-gradient-to-br from-primary to-accent px-4 py-2.5 text-sm font-bold text-primary-foreground transition-transform active:scale-95 sm:w-full sm:justify-center">
                 <Plus className="size-4" strokeWidth={2.5} />
-                Adicionar
+                {getAddLabel(storeType)}
               </button>
             </div>
           </div>
@@ -559,7 +568,7 @@ function FloatingCartBar({
 // ─── Products View ────────────────────────────────────────────────────────────
 function ProductsView({
   storeName, logoUrl, products, dbCategories, cart,
-  onOpenProduct, onAdd, onRemove, onOpenCart,
+  onOpenProduct, onAdd, onRemove, onOpenCart, storeType,
 }: {
   storeName: string;
   logoUrl: string | null;
@@ -570,6 +579,7 @@ function ProductsView({
   onAdd: (p: Product) => void;
   onRemove: (p: Product) => void;
   onOpenCart: () => void;
+  storeType: string;
 }) {
   const [search, setSearch] = useState("");
   const [activeCat, setActiveCat] = useState("all");
@@ -691,7 +701,7 @@ function ProductsView({
           <section className="mt-7">
             <SectionLabel>Em destaque</SectionLabel>
             <div className="mt-3">
-              <FeaturedCarousel featured={featured} onOpenProduct={onOpenProduct} onAdd={onAdd} />
+              <FeaturedCarousel featured={featured} onOpenProduct={onOpenProduct} onAdd={onAdd} storeType={storeType} />
             </div>
           </section>
         )}
@@ -922,7 +932,7 @@ function SuccessView({ onBack }: { onBack: () => void }) {
 // ─── Root Component ───────────────────────────────────────────────────────────
 export function StoreClient({
   storeId, instanceName, storeName, logoUrl,
-  products, categories, acceptsPickup, acceptsLocal, theme,
+  products, categories, acceptsPickup, acceptsLocal, theme, storeType,
 }: Props) {
   const [view, setView] = useState<View>("products");
   const [cart, setCart] = useState<Record<string, number>>({});
@@ -957,6 +967,7 @@ export function StoreClient({
           onOpenProduct={setDialogProduct}
           onAdd={addToCart} onRemove={removeFromCart}
           onOpenCart={() => setCartOpen(true)}
+          storeType={storeType}
         />
       )}
       {view === "checkout" && (
@@ -979,6 +990,7 @@ export function StoreClient({
             product={dialogProduct}
             onClose={() => setDialogProduct(null)}
             onAddToCart={addQtyToCart}
+            storeType={storeType}
           />
         )}
       </AnimatePresence>

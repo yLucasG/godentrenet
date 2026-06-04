@@ -47,6 +47,7 @@ export default async function StorefrontPage({
       }))}
       categories={store.categories}
       theme={store.theme}
+      storeType={store.type}
     />
   );
 }
