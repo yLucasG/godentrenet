@@ -15,6 +15,7 @@ export default async function PdvPage() {
       name: true,
       acceptsPickup: true,
       acceptsLocal: true,
+      type: true,
       products: {
         where: { active: true },
         orderBy: { createdAt: "asc" },
@@ -43,6 +44,7 @@ export default async function PdvPage() {
         categoryId: p.categoryId ?? null,
       }))}
       categories={store.categories}
+      storeType={store.type}
     />
   );
 }

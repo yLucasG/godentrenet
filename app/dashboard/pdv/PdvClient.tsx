@@ -5,7 +5,7 @@ import Link from "next/link";
 import { FileText, X, Copy, CheckCheck, Loader2, Menu, ChevronLeft } from "lucide-react";
 import { createPdvOrder } from "@/actions/order";
 import { generateNFCePayload } from "@/actions/fiscal";
-import { navItems } from "@/app/dashboard/SidebarNav";
+import { getNavItems } from "@/app/dashboard/SidebarNav";
 
 type Product = {
   id: string;
@@ -26,6 +26,7 @@ interface Props {
   acceptsLocal: boolean;
   products: Product[];
   categories: Category[];
+  storeType?: string;
 }
 
 function norm(s: string) {
@@ -41,7 +42,8 @@ const ALL_DELIVERY_OPTS: [DeliveryMethod, string, string][] = [
   ["LOCAL",    "📍", "Local"],
 ];
 
-export function PdvClient({ storeName, acceptsPickup, acceptsLocal, products, categories }: Props) {
+export function PdvClient({ storeName, acceptsPickup, acceptsLocal, products, categories, storeType = "GENERAL" }: Props) {
+  const navItems = getNavItems(storeType);
   // ── Cart ─────────────────────────────────────────────────────────────────
   const [cart, setCart] = useState<Record<string, number>>({});
 
@@ -173,21 +175,24 @@ export function PdvClient({ storeName, acceptsPickup, acceptsLocal, products, ca
               </button>
             </div>
             <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
-              {navItems.map(item => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setNavOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                    item.href === "/dashboard/pdv"
-                      ? "bg-amber-500/10 text-amber-400"
-                      : "text-gray-500 hover:text-gray-200 hover:bg-white/5"
-                  }`}
-                >
-                  <span className="text-base shrink-0">{item.icon}</span>
-                  <span>{item.label}</span>
-                </Link>
-              ))}
+              {navItems.map(item => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setNavOpen(false)}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                      item.href === "/dashboard/pdv"
+                        ? "bg-amber-500/10 text-amber-400"
+                        : "text-gray-500 hover:text-gray-200 hover:bg-white/5"
+                    }`}
+                  >
+                    <Icon size={16} className="shrink-0" />
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
             </nav>
           </div>
         </>

@@ -7,15 +7,23 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const session = await auth();
   if (!session) redirect("/login");
 
-  const pendingOrders = session.user.storeId
-    ? await prisma.order.count({ where: { storeId: session.user.storeId, status: "pending" } })
-    : 0;
+  const [pendingOrders, store] = await Promise.all([
+    session.user.storeId
+      ? prisma.order.count({ where: { storeId: session.user.storeId, status: "pending" } })
+      : Promise.resolve(0),
+    session.user.storeId
+      ? prisma.store.findUnique({ where: { id: session.user.storeId }, select: { type: true } })
+      : Promise.resolve(null),
+  ]);
+
+  const storeType = store?.type ?? "GENERAL";
 
   return (
     <DashboardShell
       storeName={session.user.storeName ?? "Minha Loja"}
       email={session.user.email ?? ""}
       pendingOrders={pendingOrders}
+      storeType={storeType}
     >
       {children}
     </DashboardShell>
