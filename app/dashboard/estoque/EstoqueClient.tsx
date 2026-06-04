@@ -993,16 +993,36 @@ function AbaValidades({
 // ─── Root component ───────────────────────────────────────────────────────────
 type Tab = "insumos" | "fichas" | "validades";
 
+// Abas disponíveis por nicho:
+// FOOD → Insumos + Fichas Técnicas + Validades (cozinha precisa de tudo)
+// demais → apenas Insumos (sem receitas nem validade de alimentos)
+const TABS_BY_TYPE: Record<string, Tab[]> = {
+  FOOD:      ["insumos", "fichas", "validades"],
+  GAS_WATER: ["insumos"],
+  SERVICES:  ["insumos"],
+  RETAIL:    ["insumos"],
+  GENERAL:   ["insumos"],
+};
+
+const TAB_LABELS: Record<Tab, { label: string; icon: string }> = {
+  insumos:   { label: "Insumos",         icon: "📦" },
+  fichas:    { label: "Fichas Técnicas", icon: "🧪" },
+  validades: { label: "Validades",       icon: "📅" },
+};
+
 export function EstoqueClient({
   initialItems,
   products,
   initialExpiries,
+  storeType = "GENERAL",
 }: {
   initialItems: InventoryItem[];
   products: Product[];
   initialExpiries: StockExpiry[];
+  storeType?: string;
 }) {
-  const [tab, setTab] = useState<Tab>("insumos");
+  const availableTabs = TABS_BY_TYPE[storeType] ?? ["insumos"];
+  const [tab, setTab] = useState<Tab>(availableTabs[0]);
   const [items, setItems] = useState<InventoryItem[]>(initialItems);
   const [expiries, setExpiries] = useState<StockExpiry[]>(initialExpiries);
 
@@ -1012,41 +1032,54 @@ export function EstoqueClient({
     return s === "expired" || s === "critical";
   }).length;
 
+  const badgeFor = (key: Tab) => {
+    if (key === "insumos") return lowCount;
+    if (key === "validades") return urgentExpiryCount;
+    return 0;
+  };
+
+  // Descrição contextual da página
+  const pageDesc = storeType === "FOOD"
+    ? "Gerencie insumos, fichas técnicas e validades dos seus produtos."
+    : "Gerencie o estoque de itens da sua loja.";
+
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <div className="mb-6">
         <h1 className="text-white font-bold text-xl">Estoque</h1>
-        <p className="text-gray-500 text-sm mt-1">Gerencie insumos, fichas técnicas e validades dos seus produtos.</p>
+        <p className="text-gray-500 text-sm mt-1">{pageDesc}</p>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 bg-gray-900 border border-gray-800 rounded-xl p-1 w-fit mb-6">
-        {([
-          { key: "insumos", label: "Insumos", icon: "📦", badge: lowCount },
-          { key: "fichas", label: "Fichas Técnicas", icon: "🧪", badge: 0 },
-          { key: "validades", label: "Validades", icon: "📅", badge: urgentExpiryCount },
-        ] as { key: Tab; label: string; icon: string; badge: number }[]).map(t => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-              tab === t.key
-                ? "bg-gray-800 text-white shadow-sm"
-                : "text-gray-500 hover:text-gray-300"
-            }`}
-          >
-            <span>{t.icon}</span>
-            <span>{t.label}</span>
-            {t.badge > 0 && (
-              <span className={`text-white text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center ${
-                t.key === "validades" ? "bg-orange-500" : "bg-red-500"
-              }`}>
-                {t.badge}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
+      {/* Tabs — só mostra se houver mais de uma */}
+      {availableTabs.length > 1 && (
+        <div className="flex gap-1 bg-gray-900 border border-gray-800 rounded-xl p-1 w-fit mb-6">
+          {availableTabs.map(key => {
+            const { label, icon } = TAB_LABELS[key];
+            const badge = badgeFor(key);
+            return (
+              <button
+                key={key}
+                onClick={() => setTab(key)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                  tab === key
+                    ? "bg-gray-800 text-white shadow-sm"
+                    : "text-gray-500 hover:text-gray-300"
+                }`}
+              >
+                <span>{icon}</span>
+                <span>{label}</span>
+                {badge > 0 && (
+                  <span className={`text-white text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center ${
+                    key === "validades" ? "bg-orange-500" : "bg-red-500"
+                  }`}>
+                    {badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {tab === "insumos" && <AbaInsumos items={items} setItems={setItems} />}
       {tab === "fichas" && <AbaFichas products={products} inventoryItems={items} />}

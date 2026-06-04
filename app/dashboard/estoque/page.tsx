@@ -9,6 +9,12 @@ export default async function EstoquePage() {
 
   const storeId = session.user.storeId;
 
+  const store = await prisma.store.findUnique({
+    where: { id: storeId },
+    select: { type: true },
+  });
+  const storeType = store?.type ?? "GENERAL";
+
   const [inventoryItems, products, stockExpiries] = await Promise.all([
     prisma.inventoryItem.findMany({
       where: { storeId },
@@ -42,6 +48,7 @@ export default async function EstoquePage() {
       initialItems={inventoryItems}
       products={products}
       initialExpiries={expiries}
+      storeType={storeType}
     />
   );
 }
