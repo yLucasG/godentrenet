@@ -384,16 +384,93 @@ function CartSheet({
   );
 }
 
-// ─── Product Card (sem overflow-hidden no root para não cortar o stepper) ────
+// ─── Product Card ─────────────────────────────────────────────────────────────
 function ProductCard({
-  product, qty, onOpen, onAdd, onRemove,
+  product, qty, onOpen, onAdd, onRemove, storeType = "GENERAL",
 }: {
   product: Product;
   qty: number;
   onOpen: () => void;
   onAdd: () => void;
   onRemove: () => void;
+  storeType?: string;
 }) {
+  // ── RETAIL: portrait card (Instagram Shopping / Zara style) ──────────────
+  if (storeType === "RETAIL") {
+    return (
+      <div className={`animate-rise group relative flex flex-col overflow-hidden rounded-2xl border transition-all duration-300 ${
+        qty > 0 ? "border-primary/50" : "border-border/60 hover:border-primary/40"
+      }`}>
+        {/* Portrait image 3:4 */}
+        <button
+          type="button"
+          onClick={onOpen}
+          aria-label={`Ver ${product.name}`}
+          className="relative w-full overflow-hidden"
+          style={{ aspectRatio: "3/4" }}
+        >
+          {product.imageUrl ? (
+            <img
+              src={product.imageUrl}
+              alt={product.name}
+              className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-card">
+              <span style={{ fontSize: 72, lineHeight: 1 }}>{product.emoji}</span>
+            </div>
+          )}
+          {/* Qty badge */}
+          {qty > 0 && (
+            <span className="absolute right-2 top-2 flex h-6 min-w-[1.5rem] items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-black text-primary-foreground shadow-lg">
+              {qty}
+            </span>
+          )}
+          {/* Bottom fade */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-1/4"
+            style={{ background: "linear-gradient(to top, rgba(0,0,0,0.45), transparent)" }}
+          />
+        </button>
+
+        {/* Minimal info bar */}
+        <div className="bg-card px-3 py-2.5 flex items-center justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <p className="line-clamp-1 text-sm font-medium text-foreground leading-tight">{product.name}</p>
+            <p className="text-sm font-bold text-primary mt-0.5">{fmt(product.price)}</p>
+          </div>
+          {qty === 0 ? (
+            <button
+              type="button"
+              onClick={onAdd}
+              aria-label={`Adicionar ${product.name}`}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent text-primary-foreground transition-transform active:scale-90"
+            >
+              <Plus className="size-4" strokeWidth={2.5} />
+            </button>
+          ) : (
+            <div
+              className="flex shrink-0 items-center gap-1 rounded-xl bg-secondary p-1"
+              onClick={e => e.stopPropagation()}
+            >
+              <button type="button" onClick={onRemove}
+                className="flex h-7 w-7 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-card/60 active:scale-90">
+                <Minus className="size-3.5" strokeWidth={2.5} />
+              </button>
+              <span className="min-w-[1rem] text-center text-xs font-bold tabular-nums text-foreground select-none">{qty}</span>
+              <button type="button" onClick={onAdd}
+                className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-accent text-primary-foreground transition-transform active:scale-90">
+                <Plus className="size-3.5" strokeWidth={2.5} />
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ── Default card: FOOD, GAS_WATER, SERVICES, GENERAL ─────────────────────
   return (
     <div
       className={`animate-rise group relative flex flex-col rounded-3xl border bg-card transition-all duration-300 hover:-translate-y-1 ${
@@ -402,7 +479,7 @@ function ProductCard({
           : "border-border/60 hover:border-primary/50"
       }`}
     >
-      {/* image — overflow-hidden apenas aqui */}
+      {/* image */}
       <button
         type="button"
         onClick={onOpen}
@@ -720,7 +797,11 @@ function ProductsView({
           {filtered.length === 0 ? (
             <p className="mt-8 text-center text-sm text-muted-foreground">Nenhum {terminology.item.toLowerCase()} encontrado.</p>
           ) : (
-            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
+            <div className={`mt-4 grid gap-2 ${
+              storeType === "RETAIL"
+                ? "grid-cols-2 sm:grid-cols-3"
+                : "grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4"
+            }`}>
               {filtered.map((p, i) => (
                 <motion.div key={p.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -734,6 +815,7 @@ function ProductsView({
                     onOpen={() => onOpenProduct(p)}
                     onAdd={() => onAdd(p)}
                     onRemove={() => onRemove(p)}
+                    storeType={storeType}
                   />
                 </motion.div>
               ))}
