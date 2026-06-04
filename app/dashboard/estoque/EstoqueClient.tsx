@@ -130,17 +130,76 @@ const STATUS_STYLES: Record<ExpiryStatus, { row: string; badge: string; text: st
   },
 };
 
+// ─── Inventory terminology by store type ──────────────────────────────────────
+function getInvTerms(storeType: string) {
+  switch (storeType) {
+    case "FOOD":
+      return {
+        item: "insumo", items: "insumos",
+        newLabel: "Novo Insumo", editLabel: "Editar Insumo",
+        namePlaceholder: "Ex: Carne moída, Pão brioche...",
+        emptyText: "Nenhum insumo cadastrado ainda.",
+        createFirst: "Criar primeiro insumo",
+        deleteConfirm: "Excluir este insumo? Fichas técnicas que o usam serão afetadas.",
+        lowStockLabel: (n: number) => `${n} ${n === 1 ? "insumo" : "insumos"} abaixo do estoque mínimo`,
+      };
+    case "RETAIL":
+      return {
+        item: "item", items: "itens",
+        newLabel: "Novo Item", editLabel: "Editar Item",
+        namePlaceholder: "Ex: Camiseta P, Calça Jeans 38, Tênis 42...",
+        emptyText: "Nenhum item cadastrado ainda.",
+        createFirst: "Cadastrar primeiro item",
+        deleteConfirm: "Excluir este item do estoque?",
+        lowStockLabel: (n: number) => `${n} ${n === 1 ? "item" : "itens"} abaixo do estoque mínimo`,
+      };
+    case "GAS_WATER":
+      return {
+        item: "produto", items: "produtos",
+        newLabel: "Novo Produto", editLabel: "Editar Produto",
+        namePlaceholder: "Ex: Botijão 13kg, Galão 20L...",
+        emptyText: "Nenhum produto cadastrado ainda.",
+        createFirst: "Cadastrar primeiro produto",
+        deleteConfirm: "Excluir este produto do estoque?",
+        lowStockLabel: (n: number) => `${n} ${n === 1 ? "produto" : "produtos"} abaixo do estoque mínimo`,
+      };
+    case "SERVICES":
+      return {
+        item: "material", items: "materiais",
+        newLabel: "Novo Material", editLabel: "Editar Material",
+        namePlaceholder: "Ex: Shampoo, Tinta de cabelo, Esmalte...",
+        emptyText: "Nenhum material cadastrado ainda.",
+        createFirst: "Cadastrar primeiro material",
+        deleteConfirm: "Excluir este material do estoque?",
+        lowStockLabel: (n: number) => `${n} ${n === 1 ? "material" : "materiais"} abaixo do estoque mínimo`,
+      };
+    default:
+      return {
+        item: "item", items: "itens",
+        newLabel: "Novo Item", editLabel: "Editar Item",
+        namePlaceholder: "Ex: Item do estoque...",
+        emptyText: "Nenhum item cadastrado ainda.",
+        createFirst: "Cadastrar primeiro item",
+        deleteConfirm: "Excluir este item do estoque?",
+        lowStockLabel: (n: number) => `${n} ${n === 1 ? "item" : "itens"} abaixo do estoque mínimo`,
+      };
+  }
+}
+
 // ─── Insumo Modal ─────────────────────────────────────────────────────────────
 function InsumoModal({
   item,
   onClose,
   onSaved,
+  storeType = "GENERAL",
 }: {
   item: InventoryItem | null;
   onClose: () => void;
   onSaved: (updated: InventoryItem[]) => void;
+  storeType?: string;
 }) {
   const isEdit = !!item;
+  const terms = getInvTerms(storeType);
   const [form, setForm] = useState<InventoryItemInput>({
     name: item?.name ?? "",
     sku: item?.sku ?? "",
@@ -177,7 +236,7 @@ function InsumoModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
       <div className="w-full max-w-md bg-gray-900 rounded-2xl border border-gray-800 flex flex-col">
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800">
-          <h2 className="text-white font-bold">{isEdit ? "Editar Insumo" : "Novo Insumo"}</h2>
+          <h2 className="text-white font-bold">{isEdit ? terms.editLabel : terms.newLabel}</h2>
           <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors">
             <X size={18} />
           </button>
@@ -190,7 +249,7 @@ function InsumoModal({
               <input
                 value={form.name}
                 onChange={e => set("name", e.target.value)}
-                placeholder="Ex: Carne moída, Pão brioche..."
+                placeholder={terms.namePlaceholder}
                 className="w-full bg-gray-800 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-amber-500 placeholder:text-gray-600"
               />
             </div>
@@ -274,15 +333,18 @@ function InsumoModal({
 function AbaInsumos({
   items,
   setItems,
+  storeType = "GENERAL",
 }: {
   items: InventoryItem[];
   setItems: (items: InventoryItem[]) => void;
+  storeType?: string;
 }) {
+  const terms = getInvTerms(storeType);
   const [modal, setModal] = useState<"new" | InventoryItem | null>(null);
   const [, startTransition] = useTransition();
 
   function handleDelete(id: string) {
-    if (!confirm("Excluir este insumo? Fichas técnicas que o usam serão afetadas.")) return;
+    if (!confirm(terms.deleteConfirm)) return;
     startTransition(async () => {
       await deleteInventoryItem(id);
       setItems(items.filter(i => i.id !== id));
@@ -297,33 +359,33 @@ function AbaInsumos({
         <div className="mb-4 flex items-center gap-2.5 bg-red-500/10 border border-red-500/25 rounded-xl px-4 py-3">
           <AlertTriangle size={16} className="text-red-400 flex-shrink-0" />
           <p className="text-red-400 text-sm">
-            <span className="font-semibold">{lowStock.length} {lowStock.length === 1 ? "insumo" : "insumos"}</span>
-            {" "}abaixo do estoque mínimo:{" "}
+            <span className="font-semibold">{terms.lowStockLabel(lowStock.length)}</span>
+            {" "}:{" "}
             {lowStock.map(i => i.name).join(", ")}
           </p>
         </div>
       )}
 
       <div className="flex items-center justify-between mb-4">
-        <p className="text-gray-500 text-sm">{items.length} {items.length === 1 ? "insumo" : "insumos"} cadastrados</p>
+        <p className="text-gray-500 text-sm">{items.length} {items.length === 1 ? terms.item : terms.items} cadastrados</p>
         <button
           onClick={() => setModal("new")}
           className="flex items-center gap-1.5 text-gray-950 font-bold text-sm px-3 py-2 rounded-full transition-all" style={{ background: "#F59E0B" }}
         >
           <Plus size={15} />
-          Novo Insumo
+          {terms.newLabel}
         </button>
       </div>
 
       {items.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 gap-3 text-gray-700">
           <PackageSearch size={40} strokeWidth={1.2} />
-          <p className="text-sm">Nenhum insumo cadastrado ainda.</p>
+          <p className="text-sm">{terms.emptyText}</p>
           <button
             onClick={() => setModal("new")}
             className="text-amber-500 text-sm hover:text-amber-400 underline underline-offset-2"
           >
-            Criar primeiro insumo
+            {terms.createFirst}
           </button>
         </div>
       ) : (
@@ -400,6 +462,7 @@ function AbaInsumos({
           item={modal === "new" ? null : modal}
           onClose={() => setModal(null)}
           onSaved={setItems}
+          storeType={storeType}
         />
       )}
     </div>
@@ -1081,7 +1144,7 @@ export function EstoqueClient({
         </div>
       )}
 
-      {tab === "insumos" && <AbaInsumos items={items} setItems={setItems} />}
+      {tab === "insumos" && <AbaInsumos items={items} setItems={setItems} storeType={storeType} />}
       {tab === "fichas" && <AbaFichas products={products} inventoryItems={items} />}
       {tab === "validades" && (
         <AbaValidades entries={expiries} setEntries={setExpiries} inventoryItems={items} />
